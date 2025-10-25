@@ -3,12 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>3D Tiktok Carousel</title>
+<title>Glitch Neon 3D Carousel - CSM Mohasin</title>
 <style>
-* {
-  margin: 0;
-  padding: 0;
-}
+* { margin: 0; padding: 0; box-sizing: border-box; }
 
 html, body {
   height: 100%;
@@ -18,11 +15,15 @@ html, body {
 body {
   overflow: hidden;
   display: flex;
-  background: #111;
+  justify-content: center;
+  align-items: center;
+  background: radial-gradient(circle at center, #000 0%, #020617 60%, #000 100%);
   perspective: 1000px;
   transform-style: preserve-3d;
+  font-family: 'Poppins', sans-serif;
 }
 
+/* Containers */
 #drag-container, #spin-container {
   position: relative;
   display: flex;
@@ -31,49 +32,119 @@ body {
   transform: rotateX(-10deg);
 }
 
+/* Image & Video */
 #drag-container img, #drag-container video {
   transform-style: preserve-3d;
   position: absolute;
-  left: 0;
-  top: 0;
-  width: 100%;
-  height: 100%;
-  box-shadow: 0 0 8px #fff;
-  box-reflect: below 10px linear-gradient(transparent, transparent, #0005);
+  left: 0; top: 0;
+  width: 110px;
+  height: 155px;
+  border-radius: 10px;
+  object-fit: cover;
+  box-shadow: 0 0 10px #ff00ff;
+  animation: neonGlow 6s linear infinite;
+  filter: brightness(0.85);
+  transition: all 0.4s ease;
 }
 
 #drag-container img:hover, #drag-container video:hover {
-  box-shadow: 0 0 15px #fffd;
-  box-reflect: below 10px linear-gradient(transparent, transparent, #0007);
+  transform: scale(1.1) rotateY(8deg);
+  filter: brightness(1.1);
+  animation: neonGlowFast 2s linear infinite;
 }
 
-#drag-container p {
-  font-family: Serif;
-  position: absolute;
-  top: 100%;
-  left: 50%;
-  transform: translate(-50%,-50%) rotateX(90deg);
-  color: #fff;
+#drag-container img, #drag-container video {
+  -webkit-box-reflect: below 8px linear-gradient(transparent, transparent, rgba(255,255,255,0.05));
 }
 
+/* Ground */
 #ground {
   width: 900px;
   height: 900px;
   position: absolute;
-  top: 100%;
-  left: 50%;
+  top: 100%; left: 50%;
   transform: translate(-50%,-50%) rotateX(90deg);
-  background: radial-gradient(circle at center, #9993, transparent);
+  background: radial-gradient(circle at center, rgba(0,255,200,0.1), transparent);
+  filter: blur(20px);
 }
 
-@keyframes spin {
-  from { transform: rotateY(0deg); }
-  to { transform: rotateY(360deg); }
+/* Rotation */
+@keyframes spin { from { transform: rotateY(0deg); } to { transform: rotateY(360deg); } }
+@keyframes spinRevert { from { transform: rotateY(360deg); } to { transform: rotateY(0deg); } }
+
+/* Neon Animation (lighter version) */
+@keyframes neonGlow {
+  0%   { box-shadow: 0 0 10px #ff00ff; }
+  25%  { box-shadow: 0 0 10px #00ffff; }
+  50%  { box-shadow: 0 0 10px #00ff00; }
+  75%  { box-shadow: 0 0 10px #ff9900; }
+  100% { box-shadow: 0 0 10px #ff00ff; }
 }
 
-@keyframes spinRevert {
-  from { transform: rotateY(360deg); }
-  to { transform: rotateY(0deg); }
+@keyframes neonGlowFast {
+  0%   { box-shadow: 0 0 12px #ff00ff; }
+  25%  { box-shadow: 0 0 12px #00ffff; }
+  50%  { box-shadow: 0 0 12px #00ff00; }
+  75%  { box-shadow: 0 0 12px #ff9900; }
+  100% { box-shadow: 0 0 12px #ff00ff; }
+}
+
+/* --- Glitch Text Effect --- */
+.glitch {
+  position: absolute;
+  top: 105%;
+  left: 50%;
+  transform: translate(-50%, -50%) rotateX(90deg);
+  color: #00fff2;
+  font-size: 1rem;
+  font-weight: bold;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  text-shadow: 0 0 6px #00fff2;
+  animation: glitch-flicker 2s infinite;
+}
+
+.glitch::before,
+.glitch::after {
+  content: attr(data-text);
+  position: absolute;
+  left: 0;
+  top: 0;
+  opacity: 0.8;
+  clip: rect(0, 900px, 0, 0);
+}
+
+.glitch::before {
+  color: #ff005e;
+  animation: glitch-top 2s infinite linear alternate-reverse;
+}
+
+.glitch::after {
+  color: #00fff2;
+  animation: glitch-bottom 2s infinite linear alternate-reverse;
+}
+
+@keyframes glitch-top {
+  0% { clip: rect(0, 9999px, 0, 0); }
+  10% { clip: rect(5px, 9999px, 35px, 0); transform: translate(-2px, -2px); }
+  20% { clip: rect(15px, 9999px, 65px, 0); transform: translate(2px, 0); }
+  30% { clip: rect(25px, 9999px, 85px, 0); transform: translate(-1px, 1px); }
+  40% { clip: rect(35px, 9999px, 95px, 0); transform: translate(0, 0); }
+  100% { clip: rect(0, 9999px, 0, 0); transform: none; }
+}
+
+@keyframes glitch-bottom {
+  0% { clip: rect(0, 9999px, 0, 0); }
+  10% { clip: rect(45px, 9999px, 65px, 0); transform: translate(2px, 1px); }
+  20% { clip: rect(25px, 9999px, 85px, 0); transform: translate(-1px, 0); }
+  30% { clip: rect(15px, 9999px, 55px, 0); transform: translate(1px, -1px); }
+  40% { clip: rect(35px, 9999px, 95px, 0); transform: translate(0, 1px); }
+  100% { clip: rect(0, 9999px, 0, 0); transform: none; }
+}
+
+@keyframes glitch-flicker {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.8; }
 }
 </style>
 </head>
@@ -81,36 +152,34 @@ body {
 
 <div id="drag-container">
   <div id="spin-container">
-    <!-- Images -->
     <img src="https://images.pexels.com/photos/206395/pexels-photo-206395.jpeg?auto=compress&cs=tinysrgb&dpr=1&w=500" alt="">
     <img src="https://images.pexels.com/photos/1391498/pexels-photo-1391498.jpeg?auto=compress&cs=tinysrgb&dpr=1&w=500" alt="">
     <img src="https://i.postimg.cc/xCH6wX3D/JILIK-s-IMAGE2-jpg-the-history-wapkizs-com.jpg" alt="">
     <img src="https://images.pexels.com/photos/1758144/pexels-photo-1758144.jpeg?auto=compress&cs=tinysrgb&dpr=1&w=500" alt="">
     <img src="https://images.pexels.com/photos/1382734/pexels-photo-1382734.jpeg?auto=compress&cs=tinysrgb&dpr=1&w=500" alt="">
     <img src="https://images.pexels.com/photos/1462636/pexels-photo-1462636.jpeg?auto=compress&cs=tinysrgb&dpr=1&w=500" alt="">
-
     <a target="_blank" href="https://images.pexels.com/photos/139829/pexels-photo-139829.jpeg">
       <img src="https://images.pexels.com/photos/139829/pexels-photo-139829.jpeg?auto=compress&cs=tinysrgb&dpr=1&w=500" alt="">
     </a>
-
-    <video controls autoplay loop>
-      <source src="https://player.vimeo.com/external/322244668.sd.mp4?s=338c48ac2dfcb1d4c0689968b5baf94eee6ca0c1&profile_id=165&oauth2_token_id=57447761" type="video/mp4">
+    <video controls autoplay loop muted>
+      <source src="https://player.vimeo.com/external/322244668.sd.mp4?s=338c48ac2dfcb1d4c0689968b5baf94eee6ca0c1&profile_id=165" type="video/mp4">
     </video>
 
-    <p>Created by Csm Mohasin Alam</p>
+    <p class="glitch" data-text="✨ CSM Mohasin Alam ✨">✨ CSM Mohasin Alam ✨</p>
   </div>
   <div id="ground"></div>
 </div>
-
+<audio autoplay loop>
+  <source src="https://github.com/csm-mohasin/csm-mohasin.github.io/raw/refs/heads/main/Humnava%20Mere%20%5BSlowed+Reverb%5D%20Song%20Lyrics%20_%20Jubin%20Nautiyal%20%5BQTHzRZJpcC0%5D.mp3" type="audio/mpeg">
+</audio>
 <script>
 var radius = 240;
 var autoRotate = true;
 var rotateSpeed = -60;
-var imgWidth = 120;
-var imgHeight = 170;
+var imgWidth = 110;
+var imgHeight = 155;
 
 setTimeout(init, 1000);
-
 var odrag = document.getElementById('drag-container');
 var ospin = document.getElementById('spin-container');
 var aImg = ospin.getElementsByTagName('img');
@@ -126,7 +195,8 @@ ground.style.height = radius * 3 + "px";
 
 function init(delayTime) {
   for (var i = 0; i < aEle.length; i++) {
-    aEle[i].style.transform = "rotateY(" + (i * (360 / aEle.length)) + "deg) translateZ(" + radius + "px)";
+    aEle[i].style.transform = 
+      "rotateY(" + (i * (360 / aEle.length)) + "deg) translateZ(" + radius + "px)";
     aEle[i].style.transition = "transform 1s";
     aEle[i].style.transitionDelay = delayTime || (aEle.length - i) / 4 + "s";
   }
@@ -142,10 +212,7 @@ function playSpin(yes) {
   ospin.style.animationPlayState = (yes?'running':'paused');
 }
 
-var sX, sY, nX, nY, desX = 0,
-    desY = 0,
-    tX = 0,
-    tY = 10;
+var sX, sY, nX, nY, desX = 0, desY = 0, tX = 0, tY = 10;
 
 if (autoRotate) {
   var animationName = (rotateSpeed > 0 ? 'spin' : 'spinRevert');
@@ -155,13 +222,13 @@ if (autoRotate) {
 document.onpointerdown = function (e) {
   clearInterval(odrag.timer);
   e = e || window.event;
-  var sX = e.clientX,
-      sY = e.clientY;
+  sX = e.clientX;
+  sY = e.clientY;
 
   this.onpointermove = function (e) {
     e = e || window.event;
-    var nX = e.clientX,
-        nY = e.clientY;
+    nX = e.clientX;
+    nY = e.clientY;
     desX = nX - sX;
     desY = nY - sY;
     tX += desX * 0.1;
@@ -171,7 +238,7 @@ document.onpointerdown = function (e) {
     sY = nY;
   };
 
-  this.onpointerup = function (e) {
+  this.onpointerup = function () {
     odrag.timer = setInterval(function () {
       desX *= 0.95;
       desY *= 0.95;
@@ -186,11 +253,10 @@ document.onpointerdown = function (e) {
     }, 17);
     this.onpointermove = this.onpointerup = null;
   };
-
   return false;
 };
 
-document.onmousewheel = function(e) {
+document.onwheel = function(e) {
   e = e || window.event;
   var d = e.wheelDelta / 20 || -e.detail;
   radius += d;
