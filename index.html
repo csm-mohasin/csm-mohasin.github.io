@@ -1,6 +1,174 @@
 <!DOCTYPE html>
 <html lang="en">
+<head><html lang="bn">
 <head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dynamic Rainbow Neon Cursor</title>
+<style>
+  body {
+    background: #080808;
+    color: #fff;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    overflow: hidden;
+    font-family: "Poppins", sans-serif;
+  }
+
+  h1 {
+    font-size: 2rem;
+    margin-bottom: 40px;
+    color: #ff0099;
+  }
+
+  button, a {
+    position: relative;
+    background: #111;
+    border: 2px solid #ff0099;
+    color: #ff0099;
+    padding: 18px 50px;
+    font-size: 1.1rem;
+    border-radius: 50px;
+    cursor: none;
+    overflow: hidden;
+    transition: transform 0.3s ease;
+    text-decoration: none;
+    margin: 10px;
+    display: inline-block;
+  }
+
+  button::before,
+  a::before {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    background: radial-gradient(circle, rgba(255,0,153,0.4) 0%, transparent 70%);
+    transform: translate(-50%, -50%);
+    border-radius: 50%;
+    transition: width 0.3s ease, height 0.3s ease;
+  }
+
+  button:hover::before,
+  a:hover::before {
+    width: 250px;
+    height: 250px;
+  }
+
+  /* Custom Cursor */
+  .cursor {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 30px;
+    height: 30px;
+    border: 2px solid #ffffff;
+    border-radius: 50%;
+    pointer-events: none;
+    transform: translate(-50%, -50%);
+    transition: transform 0.2s ease, border-color 0.1s ease, box-shadow 0.1s ease;
+    z-index: 9999;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: transparent;
+  }
+
+  /* Center dot inside cursor */
+  .cursor .dot {
+    width: 8px;
+    height: 8px;
+    background: #ffffff;
+    border-radius: 50%;
+    animation: pulse 1.2s infinite ease-in-out;
+  }
+
+  @keyframes pulse {
+    0%, 100% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.4); opacity: 0.6; }
+  }
+
+  /* Hover scale */
+  .cursor.hovered {
+    transform: translate(-50%, -50%) scale(1.5);
+  }
+</style>
+</head>
+<body>
+
+<h1>🌈 Dynamic Rainbow Neon Cursor</h1>
+<button>Hover Me</button>
+<a href="#">Link Hover</a>
+<button>Another Button</button>
+
+<div class="cursor"><div class="dot"></div></div>
+
+<script>
+  const cursor = document.querySelector('.cursor');
+  const interactiveElements = document.querySelectorAll('button, a');
+
+  const colors = ["#ff0000", "#ff9900", "#ffff00", "#33ff00", "#00ffff", "#0000ff", "#9900ff"];
+  let colorIndex = 0;
+
+  let mouseX = 0, mouseY = 0;
+  let currentX = 0, currentY = 0;
+
+  // Smooth trailing cursor
+  window.addEventListener('mousemove', (e) => {
+    mouseX = e.clientX;
+    mouseY = e.clientY;
+  });
+
+  function animateCursor() {
+    currentX += (mouseX - currentX) * 0.15;
+    currentY += (mouseY - currentY) * 0.15;
+    cursor.style.left = `${currentX}px`;
+    cursor.style.top = `${currentY}px`;
+    requestAnimationFrame(animateCursor);
+  }
+  animateCursor();
+
+  // Magnetic effect + dynamic rainbow glow
+  interactiveElements.forEach(el => {
+    el.addEventListener('mouseenter', () => {
+      cursor.classList.add('hovered');
+    });
+
+    el.addEventListener('mousemove', (e) => {
+      const rect = el.getBoundingClientRect();
+      const x = e.clientX - rect.left - rect.width / 2;
+      const y = e.clientY - rect.top - rect.height / 2;
+      el.style.transform = `translate(${x * 0.3}px, ${y * 0.3}px)`;
+
+      // Change cursor color dynamically
+      const color = colors[colorIndex];
+      cursor.style.borderColor = color;
+      cursor.style.boxShadow = `0 0 20px ${color}, 0 0 40px ${color}, 0 0 60px ${color}`;
+      cursor.querySelector('.dot').style.background = color;
+
+      colorIndex = (colorIndex + 1) % colors.length;
+    });
+
+    el.addEventListener('mouseleave', () => {
+      el.style.transform = 'translate(0,0)';
+      cursor.classList.remove('hovered');
+
+      // Reset to default white
+      cursor.style.borderColor = "#ffffff";
+      cursor.style.boxShadow = "none";
+      cursor.querySelector('.dot').style.background = "#ffffff";
+    });
+  });
+</script>
+
+</body>
+</html>
+
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>3D Carousel + Pink Neon Audio Visualizer - CSM Mohasin</title>
