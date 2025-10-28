@@ -4,59 +4,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Dynamic Rainbow Neon Cursor</title>
 <style>
-  body {
-    background: #080808;
-    color: #fff;
-    height: 100vh;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    flex-direction: column;
-    overflow: hidden;
-    font-family: "Poppins", sans-serif;
-  }
-
-  h1 {
-    font-size: 2rem;
-    margin-bottom: 40px;
-    color: #ff0099;
-  }
-
-  button, a {
-    position: relative;
-    background: #111;
-    border: 2px solid #ff0099;
-    color: #ff0099;
-    padding: 18px 50px;
-    font-size: 1.1rem;
-    border-radius: 50px;
-    cursor: none;
-    overflow: hidden;
-    transition: transform 0.3s ease;
-    text-decoration: none;
-    margin: 10px;
-    display: inline-block;
-  }
-
-  button::before,
-  a::before {
-    content: "";
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    width: 0;
-    height: 0;
-    background: radial-gradient(circle, rgba(255,0,153,0.4) 0%, transparent 70%);
-    transform: translate(-50%, -50%);
-    border-radius: 50%;
-    transition: width 0.3s ease, height 0.3s ease;
-  }
-
-  button:hover::before,
-  a:hover::before {
-    width: 250px;
-    height: 250px;
-  }
+  
 
   /* Custom Cursor */
   .cursor {
