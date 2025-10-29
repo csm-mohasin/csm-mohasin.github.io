@@ -1,37 +1,31 @@
-/*
- * Website Credit Protection Script for Csm Mohasin Alam
- */
+</script>  
 
-// এনক্রিপ্টেড ভ্যালুগুলি (Base64)
-const _var1 = 'RGV2ZWxvcGVkIGJ5IENzbSBNb2hhc2luIEFsYW0=';  // "Developed by Csm Mohasin Alam"
-const _var2 = 'aHR0cHM6Ly9jc20tbW9oYXNpbi5naXRodWIuaW8=';   // "https://csm-mohasin.github.io"
-const _var3 = 'ZGV2LWNyZWRpdC1saW5r';                           // "dev-credit-link" 
-
-// Base64 ডিকোড করার ফাংশন
-function decodeBase64(encoded) {
-    return atob(encoded); 
-}
-
-// মূল সুরক্ষা ফাংশন
-function runSecurityCheck() {
-    const requiredText = decodeBase64(_var1);
-    const originalURL = decodeBase64(_var2);
-    const elementID = decodeBase64(_var3);
-
-    const creditElement = document.getElementById(elementID);
+<script>
+(function() {
+    var devName = "Csm Mohasin Alam";
+    var devLink = "https://csm-mohasin.github.io";
+    var footerEl = document.getElementById('footerCredit');
     
-    let isStolen = false;
-
-    // ক্রেডিট চেক
-    if (!creditElement || creditElement.textContent.trim() !== requiredText || creditElement.href !== originalURL) {
-        isStolen = true;
+    function checkCredit() {
+        if (!footerEl) return;
+        var footerHTML = footerEl.innerHTML;
+        
+        // Check 1: If the developer's name is not present
+        if (footerHTML.indexOf(devName) === -1) {
+            window.location.replace(devLink);
+            return;
+        }
+        
+        // Check 2: If the correct link is not present or link text is altered
+        var anchor = footerEl.querySelector('a[href="' + devLink + '"]');
+        if (!anchor || anchor.innerText.indexOf(devName) === -1) {
+            window.location.replace(devLink);
+            return;
+        }
     }
-
-    // যদি চুরি হয়, তবে রিডাইরেক্ট করা
-    if (isStolen) {
-        window.location.replace(originalURL);
-        while(true) {} // নিশ্চিত করার জন্য লুপ
-    }
-}
-
-window.onload = runSecurityCheck;
+    
+    // Run check immediately and periodically (every 5 seconds)
+    checkCredit();
+    setInterval(checkCredit, 5000); 
+})();
+</script>
