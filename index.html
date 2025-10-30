@@ -5,105 +5,77 @@
 
 <*----loader*---->
 
-    <!DOCTYPE html>
-<html lang="en">
+    
+
+
+<!DOCTYPE html>
+<html lang="bn">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Professional Loader</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MP4 Loading Animation</title>
 
 <style>
-*{
-  margin:0; padding:0; box-sizing:border-box;
-  font-family: 'Inter', sans-serif;
-}
-body{
-  background:#ffffff;
-  overflow:hidden;
-}
-
-/* Loader wrapper */
-#loader{
-  position:fixed;
-  inset:0;
-  display:flex;
-  justify-content:center;
-  align-items:center;
-  background:#fff;
-  z-index:9999;
-  transition:opacity .6s ease, visibility .6s ease;
+#loader {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: #0a0a0a;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 99999;
+  transition: opacity 0.5s ease;
 }
 
-/* Dots container */
-.loader-dots{
-  display:flex;
-  gap:12px;
+#loader video {
+  width: 80%;
 }
 
-/* Single dot */
-.loader-dots span{
-  width:14px;
-  height:14px;
-  background:#111;
-  border-radius:50%;
-  display:inline-block;
-  animation: pulse 1.2s infinite ease-in-out;
-  box-shadow:0 0 0 0 rgba(0,0,0,0.2);
-}
-
-/* Stagger animation delay */
-.loader-dots span:nth-child(2){
-  animation-delay:0.2s;
-}
-.loader-dots span:nth-child(3){
-  animation-delay:0.4s;
-}
-
-/* Keyframe */
-@keyframes pulse {
-  0%{ transform:scale(1); opacity:1; box-shadow:0 0 0 0 rgba(0,0,0,0.2); }
-  50%{ transform:scale(1.4); opacity:.5; box-shadow:0 0 0 10px rgba(0,0,0,0.0); }
-  100%{ transform:scale(1); opacity:1; box-shadow:0 0 0 0 rgba(0,0,0,0); }
-}
-
-/* Hide animation */
-.hide-loader{
-  opacity:0;
-  visibility:hidden;
+.hidden {
+  opacity: 0;
+  pointer-events: none;
 }
 </style>
-</head>
 
+</head>
 <body>
 
-<!-- LOADER -->
+<!-- Loader -->
 <div id="loader">
-  <div class="loader-dots">
-    <span></span><span></span><span></span>
-  </div>
+  <video autoplay loop muted playsinline>
+    <source src="https://github.com/csm-mohasin/csm-mohasin.github.io/raw/refs/heads/main/lv_0_20251030183958.mp4" type="video/mp4">
+  </video>
 </div>
 
-<!-- Main Content -->
-<div style="padding:80px; text-align:center; font-size:28px;">
-✅ Page Loaded — Professional UI Ready!
-</div>
+<div id="content" style="padding:20px; display:none;">
+  
+  </div>
 
 <script>
-// Min 4 second load lock
-const minTime = 4000;
-const start = Date.now();
+const minLoadTime = 6000;
+const startTime = Date.now();
 
-window.addEventListener("load", () => {
-  const remain = minTime - (Date.now() - start);
+window.addEventListener("load", function() {
+  const timeSpent = Date.now() - startTime;
+  const delay = Math.max(0, minLoadTime - timeSpent);
+
   setTimeout(() => {
-    document.getElementById("loader").classList.add("hide-loader");
-    document.body.style.overflow="auto";
-  }, remain > 0 ? remain : 0);
+    document.getElementById("loader").classList.add("hidden");
+    setTimeout(() => {
+      document.getElementById("loader").style.display = "none";
+      document.getElementById("content").style.display = "block";
+    }, 500);
+  }, delay);
 });
 </script>
 
 </body>
 </html>
+
+
 
 
 <*---loader---*>
