@@ -6,86 +6,67 @@
 <*----loader*---->
 
     <!DOCTYPE html>
-<html lang="bn">
+<html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Professional Loader</title>
 
 <style>
-/* Bangla Font */
-@import url('https://banglawebfonts.pages.dev/css/bensen-handwriting.css');
-
 *{
-  margin:0;
-  padding:0;
-  box-sizing:border-box;
+  margin:0; padding:0; box-sizing:border-box;
+  font-family: 'Inter', sans-serif;
 }
 body{
-  font-family: 'Bensen Handwriting', sans-serif;
   background:#ffffff;
   overflow:hidden;
 }
 
-/* Loader Screen */
-.loader-wrapper{
+/* Loader wrapper */
+#loader{
   position:fixed;
   inset:0;
-  background: radial-gradient(circle at center, #ff3399, #660033);
   display:flex;
   justify-content:center;
   align-items:center;
-  flex-direction:column;
+  background:#fff;
   z-index:9999;
-  transition:opacity .9s ease,visibility .9s ease;
+  transition:opacity .6s ease, visibility .6s ease;
 }
 
-/* Twisting Loader */
-.loader{
-  width:90px;
-  height:90px;
-  border-radius:50%;
-  border:6px solid rgba(255,255,255,0.3);
-  position:relative;
-  animation: twist 1.4s ease-in-out infinite;
-  filter:drop-shadow(0 0 14px #ff99cc);
+/* Dots container */
+.loader-dots{
+  display:flex;
+  gap:12px;
 }
 
-/* Glow dot inside ring */
-.loader:before{
-  content:"";
-  position:absolute;
-  top:-6px;
-  left:50%;
-  transform:translateX(-50%);
+/* Single dot */
+.loader-dots span{
   width:14px;
   height:14px;
-  background:#fff;
+  background:#111;
   border-radius:50%;
-  box-shadow:0 0 15px #fff,0 0 30px #ff99cc;
+  display:inline-block;
+  animation: pulse 1.2s infinite ease-in-out;
+  box-shadow:0 0 0 0 rgba(0,0,0,0.2);
 }
 
-/* Twist keyframes */
-@keyframes twist{
-  0%{ transform:rotate(0) scale(1); }
-  50%{ transform:rotate(200deg) scale(1.12); }
-  100%{ transform:rotate(360deg) scale(1); }
+/* Stagger animation delay */
+.loader-dots span:nth-child(2){
+  animation-delay:0.2s;
+}
+.loader-dots span:nth-child(3){
+  animation-delay:0.4s;
 }
 
-/* Text */
-.loader-text{
-  margin-top:25px;
-  color:#fff;
-  font-size:30px;
-  letter-spacing:2px;
-  text-shadow:0 0 15px #ff99cc,0 0 30px #fff;
-  animation:fadeTxt 2s ease-in-out infinite;
-}
-@keyframes fadeTxt{
-  0%,100%{opacity:.5;}
-  50%{opacity:1;}
+/* Keyframe */
+@keyframes pulse {
+  0%{ transform:scale(1); opacity:1; box-shadow:0 0 0 0 rgba(0,0,0,0.2); }
+  50%{ transform:scale(1.4); opacity:.5; box-shadow:0 0 0 10px rgba(0,0,0,0.0); }
+  100%{ transform:scale(1); opacity:1; box-shadow:0 0 0 0 rgba(0,0,0,0); }
 }
 
-/* Hide */
+/* Hide animation */
 .hide-loader{
   opacity:0;
   visibility:hidden;
@@ -95,28 +76,29 @@ body{
 
 <body>
 
-<!-- Loader -->
-<div class="loader-wrapper" id="loader">
-  <div class="loader"></div>
-  <div class="loader-text">লোড হচ্ছে...</div>
+<!-- LOADER -->
+<div id="loader">
+  <div class="loader-dots">
+    <span></span><span></span><span></span>
+  </div>
 </div>
 
-<!-- Demo Content -->
-<div class="main-content" style="padding:80px; text-align:center; font-size:32px;">
-✅ পেজ লোড শেষ!
+<!-- Main Content -->
+<div style="padding:80px; text-align:center; font-size:28px;">
+✅ Page Loaded — Professional UI Ready!
 </div>
 
 <script>
-/* Minimum 4s wait even if page loads faster */
+// Min 4 second load lock
 const minTime = 4000;
 const start = Date.now();
 
 window.addEventListener("load", () => {
-  const rest = minTime - (Date.now() - start);
+  const remain = minTime - (Date.now() - start);
   setTimeout(() => {
     document.getElementById("loader").classList.add("hide-loader");
     document.body.style.overflow="auto";
-  }, rest > 0 ? rest : 0);
+  }, remain > 0 ? remain : 0);
 });
 </script>
 
