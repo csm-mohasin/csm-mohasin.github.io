@@ -1,17 +1,102 @@
-<form action="https://formspree.io/f/mzzkvaeb" method="POST">
-    
-    <h3>আমাকে মেসেজ পাঠান</h3>
 
-    <label for="name">আপনার নাম:</label>
-    <input type="text" id="name" name="name" required>
+<style>
+/* পুরো সেকশনের স্টাইল */
+#contact-section {
+    padding: 40px 20px;
+    background-color: #f4f7f6; /* হালকা ধূসর ব্যাকগ্রাউন্ড */
+}
+
+.form-heading {
+    text-align: center;
+    color: #333;
+    margin-bottom: 30px;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* ফর্ম কন্টেইনার স্টাইল */
+.contact-form {
+    max-width: 550px; /* ফর্মের সর্বোচ্চ প্রস্থ */
+    margin: 0 auto; /* কেন্দ্রবিন্দুতে রাখার জন্য */
+    padding: 30px;
+    border-radius: 10px;
+    background-color: #ffffff; /* সাদা ব্যাকগ্রাউন্ড */
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); /* হালকা শ্যাডো */
+}
+
+/* লেবেল স্টাইল */
+.contact-form label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
+    color: #555;
+    font-size: 14px;
+}
+
+/* ইনপুট ফিল্ড এবং টেক্সটএরিয়া স্টাইল */
+.contact-form input[type="text"], 
+.contact-form input[type="email"], 
+.contact-form textarea {
+    width: 100%;
+    padding: 12px;
+    margin-bottom: 20px;
+    border: 1px solid #ced4da;
+    border-radius: 6px;
+    box-sizing: border-box; 
+    font-size: 15px;
+    transition: border-color 0.3s;
+}
+
+/* ফোকাস করলে বর্ডার কালার পরিবর্তন */
+.contact-form input:focus, 
+.contact-form textarea:focus {
+    border-color: #007bff;
+    outline: none;
+}
+
+/* সাবমিট বাটন স্টাইল */
+.contact-form button[type="submit"] {
+    display: block; /* পুরো প্রস্থ জুড়ে বাটন */
+    width: 100%;
+    background-color: #28a745; /* সবুজ বাটন */
+    color: white;
+    padding: 14px 20px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: bold;
+    transition: background-color 0.3s ease;
+}
+
+.contact-form button[type="submit"]:hover {
+    background-color: #1e7e34; /* হোভারে গাঢ় সবুজ */
+}
+
+    </style>
+
+<section id="contact-section">
+    <h2 class="form-heading">আমার সাথে যোগাযোগ করুন</h2>
     
-    <label for="email">আপনার ইমেল:</label>
-    <input type="email" id="email" name="_replyto" required>
+    <form action="YOUR_FORMSPREE_ENDPOINT_URL" method="POST" class="contact-form">
+        
+        <label for="name">আপনার নাম:</label>
+        <input type="text" id="name" name="name" required>
+        
+        <label for="email">আপনার ইমেল:</label>
+        <input type="email" id="email" name="_replyto" required>
+        
+        <label for="address">আপনার ঠিকানা (ঐচ্ছিক):</label>
+        <input type="text" id="address" name="address">
+        
+        <label for="subject">বার্তার বিষয়:</label>
+        <input type="text" id="subject" name="subject" required>
+        
+        <label for="message">আপনার মেসেজ:</label>
+        <textarea id="message" name="message" rows="6" required></textarea>
+        
+        <input type="hidden" name="_subject" value="GitHub Page থেকে নতুন মেসেজ!">
+        
+        <button type="submit">মেসেজ পাঠান</button>
+    </form>
+</section>
     
-    <label for="message">আপনার মেসেজ:</label>
-    <textarea id="message" name="message" rows="5" required></textarea>
-    
-    <input type="hidden" name="_subject" value="আমার GitHub পেজ থেকে নতুন মেসেজ!">
-    
-    <button type="submit">মেসেজ পাঠান</button>
-</form>
