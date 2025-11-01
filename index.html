@@ -1,84 +1,77 @@
-
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GitHub Pages Google Sign-in</title>
-    <style>
-        body { font-family: Arial, sans-serif; text-align: center; margin-top: 50px; }
-        #user-info { margin-top: 20px; padding: 15px; border: 1px solid #ccc; max-width: 400px; margin: 20px auto; }
-        .success { color: green; font-weight: bold; }
-        .error { color: red; }
-    </style>
-</head>
-<body>
-
-    <h2>GitHub Pages + Google Sign-in</h2>
-
-    <button onclick="signInWithGoogle()">
-        Google দিয়ে লগইন করুন
-    </button>
+<script type="module">
+    // প্রয়োজনীয় ফাংশনগুলো ইমপোর্ট করা
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-app.js";
+    import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-auth.js";
     
-    <div id="user-info">
-        লগইন করার জন্য অপেক্ষা করছে...
-    </div>
+    // **আপনার Firebase কনফিগারেশন (পূর্বের মতোই থাকবে)**
+    const firebaseConfig = {
+        apiKey: "AIzaSyCsGBSRCHVUhXQZ5DNMEZWgQWk1gxMF1E4", 
+        authDomain: "signup-d32c5.firebaseapp.com",
+        projectId: "signup-d32c5",
+        storageBucket: "signup-d32c5.firebasestorage.app",
+        messagingSenderId: "583812949955",
+        appId: "1:583812949955:web:fab1bb7be94bc1b4ab3f76",
+        measurementId: "G-VLC3QHK8CG"
+    };
+    // --------------------------------------------------------------------
 
-    <script type="module">
-        // প্রয়োজনীয় ফাংশনগুলো ইমপোর্ট করা
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-app.js";
-        import { getAuth, GoogleAuthProvider, signInWithPopup } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-auth.js";
-        
-        // **আপনার Firebase কনফিগারেশন (উপরে কপি করা কোড বসান)**
-        const firebaseConfig = {
-            apiKey: "AIzaSyCsGBSRCHVUhXQZ5DNMEZWgQWk1gxMF1E4", 
-            authDomain: "signup-d32c5.firebaseapp.com",
-            projectId: "signup-d32c5",
-            storageBucket: "signup-d32c5.firebasestorage.app",
-            messagingSenderId: "583812949955",
-            appId: "1:583812949955:web:fab1bb7be94bc1b4ab3f76",
-            measurementId: "G-VLC3QHK8CG"
-        };
-        // --------------------------------------------------------------------
+    // Firebase এবং Authentication ইনিশিয়ালাইজ করা
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const provider = new GoogleAuthProvider();
 
-        // Firebase এবং Authentication ইনিশিয়ালাইজ করা
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const provider = new GoogleAuthProvider();
+    // === নতুন ফাংশন: ইউজারের অবস্থা পর্যবেক্ষণ করা (সেশন ধরে রাখা) ===
+    onAuthStateChanged(auth, (user) => {
+        const userInfoDiv = document.getElementById('user-info');
+        const authButton = document.getElementById('auth-button');
 
-        // লগইন ফাংশনটিকে গ্লোবাল করা যাতে HTML বাটন থেকে অ্যাক্সেস করা যায়
-        window.signInWithGoogle = function() {
-            signInWithPopup(auth, provider)
-                .then((result) => {
-                    // লগইন সফল হলে, ইউজারের ডেটা পাওয়া যাবে
-                    const user = result.user;
-
-                    // 🎉 ইউজারের নাম এবং ইমেইল অ্যাক্সেস করা
-                    const userName = user.displayName;
-                    const userEmail = user.email;
-
-                    console.log("ইউজারের নাম:", userName);
-                    console.log("ইউজারের ইমেইল:", userEmail);
-
-                    // ওয়েবসাইটের UI-তে ডেটা প্রদর্শন করা
-                    document.getElementById('user-info').innerHTML = `
-                        <p class="success">লগইন সফল হয়েছে!</p>
-                        <p>নাম: <strong>${userName}</strong></p>
-                        <p>ইমেইল: <strong>${userEmail}</strong></p>
-                    `;
-                })
-                .catch((error) => {
-                    // ত্রুটি দেখা দিলে
-                    const errorMessage = error.message;
-                    document.getElementById('user-info').innerHTML = `
-                        <p class="error">লগইন ত্রুটি: ${errorMessage}</p>
-                    `;
-                    console.error("লগইন ত্রুটি:", error);
-                });
+        if (user) {
+            // ইউজার লগইন অবস্থায় আছেন
+            userInfoDiv.innerHTML = `
+                <p class="success">লগইন অবস্থায় আছেন!</p>
+                <p>নাম: <strong>${user.displayName}</strong></p>
+                <p>ইমেইল: <strong>${user.email}</strong></p>
+            `;
+            authButton.innerText = "লগআউট করুন";
+            authButton.onclick = logOutUser; // লগআউট ফাংশন সেট করা
+        } else {
+            // ইউজার লগআউট অবস্থায় আছেন
+            userInfoDiv.innerHTML = `লগইন করার জন্য অপেক্ষা করছে...`;
+            authButton.innerText = "Google দিয়ে লগইন করুন";
+            authButton.onclick = signInWithGoogle; // লগইন ফাংশন সেট করা
         }
-    </script>
+    });
+    
+    // লগআউট ফাংশন
+    const logOutUser = function() {
+        signOut(auth).then(() => {
+            console.log("সফলভাবে লগআউট করা হয়েছে");
+            // onAuthStateChanged অটোমেটিক UI আপডেট করবে
+        }).catch((error) => {
+            console.error("লগআউট ত্রুটি:", error);
+        });
+    }
 
-</body>
-</html>
+    // লগইন ফাংশনটিকে গ্লোবাল করা
+    window.signInWithGoogle = function() {
+        signInWithPopup(auth, provider)
+            .then((result) => {
+                // সফল লগইন: onAuthStateChanged সেশনটি ধরে নেবে
+                console.log("সফলভাবে লগইন করা হয়েছে");
+            })
+            .catch((error) => {
+                console.error("লগইন ত্রুটি:", error.message);
+                document.getElementById('user-info').innerHTML = `<p class="error">লগইন ত্রুটি: ${error.message}</p>`;
+            });
+    }
+</script>
 
+<button id="auth-button" onclick="signInWithGoogle()">
+    Google দিয়ে লগইন করুন
+</button>
+<div id="user-info">
+    লগইন করার জন্য অপেক্ষা করছে...
+</div>
 
 <head> <meta charset="utf-8" />  
 
