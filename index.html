@@ -1,131 +1,183 @@
-  <script type="module">
-    // ইমপোর্ট
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-app.js";
-    import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-auth.js";
-    import { getFirestore, doc, setDoc, getDoc, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-firestore.js"; // 🔥 getDoc, collection, getDocs ইমপোর্ট করা হয়েছে
-    
-    // **আপনার Firebase কনফিগারেশন** (এই অংশ অপরিবর্তিত থাকবে)
-    const firebaseConfig = {
-        apiKey: "AIzaSyCsGBSRCHVUhXQZ5DNMEZWgQWk1gxMF1E4", 
-        authDomain: "signup-d32c5.firebaseapp.com",
-        projectId: "signup-d32c5",
-        storageBucket: "signup-d32c5.firebasestorage.app",
-        messagingSenderId: "583812949955",
-        appId: "1:583812949955:web:fab1bb7be94bc1b4ab3f76",
-        measurementId: "G-VLC3QHK8CG"
-    };
-    // --------------------------------------------------------------------
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GitHub Pages Admin Dashboard</title>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; margin-top: 50px; background-color: #f4f7f6; }
+        .container { max-width: 800px; margin: auto; padding: 20px; background: #fff; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        #user-info, #admin-content { margin-top: 20px; padding: 15px; border-radius: 6px; }
+        #user-info { border: 1px solid #ddd; }
+        .success { color: #007bff; font-weight: bold; }
+        .error { color: #dc3545; }
+        #admin-content { border: 2px solid #007bff; padding: 20px; background-color: #e9f5ff; }
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        th, td { border: 1px solid #ccc; padding: 10px; text-align: left; }
+        th { background-color: #007bff; color: white; }
+        button { padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; background-color: #28a745; color: white; font-size: 16px; margin-bottom: 20px; }
+        button:hover { background-color: #218838; }
+    </style>
+</head>
+<body>
 
-    // Firebase ইনিশিয়ালাইজ করা
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const db = getFirestore(app); 
-    const provider = new GoogleAuthProvider();
+    <div class="container">
+        <h1>GitHub Pages সুরক্ষা</h1>
 
-    // === ফাংশন ১: ডেটাবেসে ইউজার ডেটা সেভ করা ===
-    const saveUserData = async (user) => { /* পূর্বের মতোই থাকবে */
-        const userData = {
-            name: user.displayName,
-            email: user.email,
-            lastLogin: new Date().toISOString(),
+        <button id="auth-button" onclick="signInWithGoogle()">
+            Google দিয়ে লগইন করুন
+        </button>
+        
+        <div id="user-info">
+            লগইন করার জন্য অপেক্ষা করছে...
+        </div>
+
+        <div id="admin-content" style="display:none;">
+            <h2>🔐 সুরক্ষিত অ্যাডমিন ড্যাশবোর্ড</h2>
+            <p>সকল ইউজারের ডেটা লোড হচ্ছে...</p>
+            </div>
+    </div>
+
+    <script type="module">
+        // প্রয়োজনীয় ফাংশনগুলো ইমপোর্ট করা
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-app.js";
+        import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-auth.js";
+        import { getFirestore, doc, setDoc, getDoc, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-firestore.js";
+        
+        // **আপনার Firebase কনফিগারেশন (পূর্বের মতোই থাকবে)**
+        const firebaseConfig = {
+            apiKey: "AIzaSyCsGBSRCHVUhXQZ5DNMEZWgQWk1gxMF1E4", 
+            authDomain: "signup-d32c5.firebaseapp.com",
+            projectId: "signup-d32c5",
+            storageBucket: "signup-d32c5.firebasestorage.app",
+            messagingSenderId: "583812949955",
+            appId: "1:583812949955:web:fab1bb7be94bc1b4ab3f76",
+            measurementId: "G-VLC3QHK8CG"
         };
-        try {
-            await setDoc(doc(db, "users", user.uid), userData, { merge: true });
-            console.log("ইউজার ডেটা সফলভাবে সেভ হয়েছে/আপডেট হয়েছে!"); 
-        } catch (error) {
-            console.error("ডেটা সেভ করার সময় ত্রুটি:", error); 
-        }
-    };
+        // --------------------------------------------------------------------
 
-    // === 🔥 নতুন ফাংশন ২: অ্যাডমিন স্ট্যাটাস চেক করা ===
-    const checkAdminStatus = async (uid) => {
-        try {
-            const adminDocRef = doc(db, "admins", uid);
-            const adminDoc = await getDoc(adminDocRef);
-            return adminDoc.exists() && adminDoc.data().isAdmin === true;
-        } catch (error) {
-            console.error("অ্যাডমিন চেক করার সময় ত্রুটি:", error);
-            return false;
-        }
-    }
+        // Firebase ইনিশিয়ালাইজ করা
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app); 
+        const provider = new GoogleAuthProvider();
 
-    // === 🔥 নতুন ফাংশন ৩: সব ইউজার ডেটা দেখানো ===
-    const displayAllUsers = async () => {
-        const usersCol = collection(db, "users");
-        const userSnapshot = await getDocs(usersCol);
-        
-        let userListHTML = '<h3>সকল ইউজার:</h3><table border="1"><tr><th>নাম</th><th>ইমেইল</th><th>শেষ লগইন</th></tr>';
-        
-        userSnapshot.forEach(doc => {
-            const userData = doc.data();
-            userListHTML += `
-                <tr>
-                    <td>${userData.name}</td>
-                    <td>${userData.email}</td>
-                    <td>${new Date(userData.lastLogin).toLocaleDateString()}</td>
-                </tr>
-            `;
-        });
-
-        userListHTML += '</table>';
-        document.getElementById('admin-content').innerHTML = userListHTML;
-    }
-
-
-    // === ইউজারের অবস্থা পর্যবেক্ষণ করা (UI এবং অ্যাডমিন লজিক) ===
-    onAuthStateChanged(auth, async (user) => { // async যোগ করা হয়েছে
-        const userInfoDiv = document.getElementById('user-info');
-        const authButton = document.getElementById('auth-button');
-        const adminContentDiv = document.getElementById('admin-content'); // নতুন
-
-        if (user) {
-            saveUserData(user); 
-            
-            // 🔥 অ্যাডমিন স্ট্যাটাস চেক করা
-            const isAdmin = await checkAdminStatus(user.uid);
-
-            userInfoDiv.innerHTML = `
-                <p class="success">লগইন অবস্থায় আছেন! ${isAdmin ? '(অ্যাডমিন)' : ''}</p>
-                <p>নাম: <strong>${user.displayName}</strong></p>
-                <p>ইমেইল: <strong>${user.email}</strong></p>
-            `;
-            authButton.innerText = "লগআউট করুন";
-            authButton.onclick = logOutUser;
-
-            // 🔥 যদি অ্যাডমিন হয়, তবে সুরক্ষিত কন্টেন্ট দেখাও
-            if (isAdmin) {
-                adminContentDiv.style.display = 'block';
-                displayAllUsers(); // সব ইউজারদের ডেটা দেখাও
-            } else {
-                adminContentDiv.style.display = 'none';
-                adminContentDiv.innerHTML = '<p style="color:red;">এই পেজ দেখার অনুমতি আপনার নেই।</p>';
+        // === ফাংশন ১: ডেটাবেসে ইউজার ডেটা সেভ করা ===
+        const saveUserData = async (user) => {
+            const userData = {
+                name: user.displayName,
+                email: user.email,
+                lastLogin: new Date().toISOString(),
+            };
+            try {
+                // 'users' কালেকশনের মধ্যে ইউজারের UID কে ডকুমেন্ট ID হিসেবে ব্যবহার করে ডেটা সেভ করা 
+                await setDoc(doc(db, "users", user.uid), userData, { merge: true });
+                console.log("ইউজার ডেটা সফলভাবে সেভ হয়েছে/আপডেট হয়েছে!"); 
+            } catch (error) {
+                console.error("ডেটা সেভ করার সময় ত্রুটি:", error); 
             }
-        } else {
-            // ইউজার লগআউট অবস্থায় আছেন
-            userInfoDiv.innerHTML = `লগইন করার জন্য অপেক্ষা করছে...`;
-            authButton.innerText = "Google দিয়ে লগইন করুন";
-            authButton.onclick = signInWithGoogle; 
-            adminContentDiv.style.display = 'none'; // লগআউট অবস্থায় অ্যাডমিন কন্টেন্ট হাইড
-        }
-    });
-    
-    // লগআউট এবং লগইন ফাংশন পূর্বের মতোই থাকবে
-    const logOutUser = function() { /* ... */ }
-    window.signInWithGoogle = function() { /* ... */ }
-</script>
-<br><br><br><br><div id="user-info">
-    লগইন করার জন্য অপেক্ষা করছে...
-</div>
+        };
 
-<div id="admin-content" style="display:none; margin-top: 30px; border: 2px solid #007bff; padding: 20px;">
-    <h2>🔐 সুরক্ষিত অ্যাডমিন ড্যাশবোর্ড</h2>
-    <p>অ্যাডমিন ডেটা লোড হচ্ছে...</p>
-    </div><button id="auth-button" onclick="signInWithGoogle()">
-    Google দিয়ে লগইন করুন
-</button>
-<div id="user-info">
-    লগইন করার জন্য অপেক্ষা করছে...
-</div>
+        // === ফাংশন ২: অ্যাডমিন স্ট্যাটাস চেক করা ===
+        const checkAdminStatus = async (uid) => {
+            try {
+                const adminDocRef = doc(db, "admins", uid);
+                const adminDoc = await getDoc(adminDocRef);
+                // যদি ডকুমেন্টটি থাকে এবং 'isAdmin' ফিল্ড true হয়
+                return adminDoc.exists() && adminDoc.data().isAdmin === true;
+            } catch (error) {
+                console.error("অ্যাডমিন চেক করার সময় ত্রুটি:", error);
+                return false;
+            }
+        }
+
+        // === ফাংশন ৩: সব ইউজার ডেটা দেখানো ===
+        const displayAllUsers = async () => {
+            const usersCol = collection(db, "users");
+            const userSnapshot = await getDocs(usersCol);
+            
+            let userListHTML = '<table><tr><th>নাম</th><th>ইমেইল</th><th>শেষ লগইন</th></tr>';
+            
+            userSnapshot.forEach(doc => {
+                const userData = doc.data();
+                const lastLoginDate = new Date(userData.lastLogin).toLocaleDateString();
+                userListHTML += `
+                    <tr>
+                        <td>${userData.name}</td>
+                        <td>${userData.email}</td>
+                        <td>${lastLoginDate}</td>
+                    </tr>
+                `;
+            });
+
+            userListHTML += '</table>';
+            document.getElementById('admin-content').innerHTML = `
+                <h2>🔐 সুরক্ষিত অ্যাডমিন ড্যাশবোর্ড</h2>
+                ${userListHTML}
+            `;
+        }
+
+
+        // === ইউজারের অবস্থা পর্যবেক্ষণ করা (UI এবং অ্যাডমিন লজিক) ===
+        onAuthStateChanged(auth, async (user) => {
+            const userInfoDiv = document.getElementById('user-info');
+            const authButton = document.getElementById('auth-button');
+            const adminContentDiv = document.getElementById('admin-content'); 
+
+            if (user) {
+                // ১. ডেটা সেভ করা ও অ্যাডমিন স্ট্যাটাস চেক করা
+                saveUserData(user); 
+                const isAdmin = await checkAdminStatus(user.uid);
+
+                // ২. UI আপডেট: নাম ও অ্যাডমিন স্ট্যাটাস দেখানো
+                userInfoDiv.innerHTML = `
+                    <p class="success">লগইন অবস্থায় আছেন! ${isAdmin ? '<span style="color:red; font-weight:bold;">(অ্যাডমিন)</span>' : ''}</p>
+                    <p>নাম: <strong>${user.displayName}</strong></p>
+                    <p>ইমেইল: <strong>${user.email}</strong></p>
+                `;
+                authButton.innerText = "লগআউট করুন";
+                authButton.onclick = logOutUser;
+
+                // ৩. যদি অ্যাডমিন হয়, তবে সুরক্ষিত কন্টেন্ট দেখাও
+                if (isAdmin) {
+                    adminContentDiv.style.display = 'block';
+                    displayAllUsers(); // সব ইউজারদের ডেটা দেখাও
+                } else {
+                    adminContentDiv.style.display = 'none';
+                    adminContentDiv.innerHTML = '<p style="color:red;">এই পেজ দেখার অনুমতি আপনার নেই।</p>';
+                }
+            } else {
+                // ইউজার লগআউট অবস্থায় আছেন
+                userInfoDiv.innerHTML = `লগইন করার জন্য অপেক্ষা করছে...`;
+                authButton.innerText = "Google দিয়ে লগইন করুন";
+                authButton.onclick = signInWithGoogle; 
+                adminContentDiv.style.display = 'none'; 
+            }
+        });
+        
+        // লগআউট ফাংশন
+        const logOutUser = function() {
+            signOut(auth).then(() => {
+                console.log("সফলভাবে লগআউট করা হয়েছে");
+            }).catch((error) => {
+                console.error("লগআউট ত্রুটি:", error);
+            });
+        }
+
+        // লগইন ফাংশন
+        window.signInWithGoogle = function() {
+            signInWithPopup(auth, provider)
+                .then((result) => {
+                    console.log("সফলভাবে লগইন করা হয়েছে");
+                })
+                .catch((error) => {
+                    console.error("লগইন ত্রুটি:", error.message);
+                    document.getElementById('user-info').innerHTML = `<p class="error">লগইন ত্রুটি: ${error.message}</p>`;
+                });
+        }
+    </script>
+</body>
+</html>
 <!*----loader*---->
 
     
