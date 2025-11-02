@@ -1,190 +1,166 @@
+        
 <!DOCTYPE html>
 <html lang="bn">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GitHub Pages Admin Dashboard</title>
-    <style>
-        body { font-family: Arial, sans-serif; text-align: center; margin-top: 50px; background-color: #f4f7f6; }
-        .container { max-width: 800px; margin: auto; padding: 20px; background: #fff; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-        #user-info, #admin-content { margin-top: 20px; padding: 15px; border-radius: 6px; }
-        #user-info { border: 1px solid #ddd; }
-        .success { color: #007bff; font-weight: bold; }
-        .error { color: #dc3545; }
-        #admin-content { border: 2px solid #007bff; padding: 20px; background-color: #e9f5ff; }
-        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
-        th, td { border: 1px solid #ccc; padding: 10px; text-align: left; }
-        th { background-color: #007bff; color: white; }
-        button { padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer; background-color: #28a745; color: white; font-size: 16px; margin-bottom: 20px; }
-        button:hover { background-color: #218838; }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GitHub Admin Panel</title>
+
+<style>
+body{
+    font-family: Arial, sans-serif;
+    text-align: center;
+    background:#f4f7f6;
+    margin-top:40px;
+}
+.container{
+    max-width:800px;
+    margin:auto;
+    background:#fff;
+    padding:20px;
+    border-radius:8px;
+    box-shadow:0 4px 6px rgba(0,0,0,0.1);
+}
+button{
+    background:#28a745;
+    color:#fff;
+    border:none;
+    padding:10px 18px;
+    margin-top:15px;
+    font-size:17px;
+    cursor:pointer;
+    border-radius:5px;
+}
+button:hover{ background:#218838; }
+
+table{ width:100%; border-collapse:collapse; margin-top:15px; }
+th,td{ border:1px solid #ccc; padding:8px; text-align:left; }
+th{ background:#007bff; color:#fff; }
+#admin-box{
+    margin-top:20px;
+    border:2px solid #007bff;
+    padding:18px;
+    border-radius:8px;
+    background:#e9f5ff;
+    display:none;
+}
+.success{color:#007bff; font-weight:bold;}
+</style>
 </head>
+
 <body>
-
 <div class="container">
-    <h1>GitHub Pages সুরক্ষা</h1>
+<h2>GitHub Admin Dashboard 🔐</h2>
 
-    <button id="auth-button" onclick="signInWithGoogle()">
-        Google দিয়ে লগইন করুন
-    </button>
-    
-    <div id="user-info">লগইন করার জন্য অপেক্ষা করছে...</div>
+<button id="loginBtn">Google দিয়ে লগইন করুন</button>
+<div id="userInfo">লগইন করা হয়নি...</div>
 
-    <div id="admin-content" style="display:none;">
-        <h2>🔐 সুরক্ষিত অ্যাডমিন ড্যাশবোর্ড</h2>
-        <p>সকল ইউজারের ডেটা লোড হচ্ছে...</p>
-    </div>
+<div id="admin-box"></div>
 </div>
 
 <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-app.js";
-    import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-auth.js";
-    import { getFirestore, doc, setDoc, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-firestore.js";
-    
-    const firebaseConfig = {
-        apiKey: "AIzaSyCsGBSRCHVUhXQZ5DNMEZWgQWk1gxMF1E4",
-        authDomain: "signup-d32c5.firebaseapp.com",
-        projectId: "signup-d32c5",
-        storageBucket: "signup-d32c5.firebasestorage.app",
-        messagingSenderId: "583812949955",
-        appId: "1:583812949955:web:fab1bb7be94bc1b4ab3f76",
-        measurementId: "G-VLC3QHK8CG"
-    };
+/* ✅ Firebase Imports */
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-app.js";
+import { 
+  getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut 
+} from "https://www.gstatic.com/firebasejs/10.0.0/firebase-auth.js";
 
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const db = getFirestore(app); 
-    const provider = new GoogleAuthProvider();
+import { 
+  getFirestore, doc, setDoc, getDocs, collection, updateDoc 
+} from "https://www.gstatic.com/firebasejs/10.0.0/firebase-firestore.js";
 
-    // ✅ YOUR ADMIN EMAIL SET HERE
-    const adminEmail = "csmmohasinalam@gmail.com";
+/* ✅ Firebase Config */
+const firebaseConfig = {
+  apiKey: "AIzaSyCsGBSRCHVUhXQZ5DNMEZWgQWk1gxMF1E4",
+  authDomain: "signup-d32c5.firebaseapp.com",
+  projectId: "signup-d32c5",
+  storageBucket: "signup-d32c5.appspot.com",
+  messagingSenderId: "583812949955",
+  appId: "1:583812949955:web:fab1bb7be94bc1b4ab3f76",
+  measurementId: "G-VLC3QHK8CG"
+};
 
-    const saveUserData = async (user) => {
-        const userData = {
-            name: user.displayName,
-            email: user.email,
-            lastLogin: new Date().toISOString(),
-        };
-        await setDoc(doc(db, "users", user.uid), userData, { merge: true });
-    };
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+const provider = new GoogleAuthProvider();
 
-    const checkAdminStatus = async (user) => {
-        return user.email === adminEmail;
-    };
+/* ✅ Admin Email */
+const adminEmail = "csmmohasinalam@gmail.com";
 
-    const displayAllUsers = async () => {
-        const userSnapshot = await getDocs(collection(db, "users"));
-        let html = '<table><tr><th>নাম</th><th>ইমেইল</th><th>শেষ লগইন</th></tr>';
-
-        userSnapshot.forEach(doc => {
-            const u = doc.data();
-            html += `<tr><td>${u.name}</td><td>${u.email}</td><td>${new Date(u.lastLogin).toLocaleDateString()}</td></tr>`;
-        });
-
-        html += "</table>";
-        document.getElementById('admin-content').innerHTML = `<h2>🔐 Admin Dashboard</h2>${html}`;
-    };
-
-    onAuthStateChanged(auth, async (user) => {
-        const info = document.getElementById('user-info');
-        const btn = document.getElementById('auth-button');
-        const adminBox = document.getElementById('admin-content');
-
-        if (user) {
-            saveUserData(user);
-            const isAdmin = await checkAdminStatus(user);
-
-            info.innerHTML = `
-                <p class="success">Logged in ${isAdmin ? '(Admin)' : ''}</p>
-                <p>Name: <strong>${user.displayName}</strong></p>
-                <p>Email: <strong>${user.email}</strong></p>
-            `;
-
-            btn.textContent = "লগআউট করুন";
-            btn.onclick = () => signOut(auth);
-
-            if (isAdmin) {
-                adminBox.style.display = 'block';
-                displayAllUsers();
-            } else {
-                adminBox.style.display = 'none';
-            }
-
-        } else {
-            info.textContent = "লগইন করার জন্য অপেক্ষা করছে...";
-            btn.textContent = "Google দিয়ে লগইন করুন";
-            btn.onclick = signInWithGoogle;
-            adminBox.style.display = "none";
-        }
-    });
-
-    window.signInWithGoogle = () => {
-        signInWithPopup(auth, provider);
-    };
-
-            async function getUserLocation() {
-  if (!navigator.geolocation) {
-    alert("Your browser does not support location access!");
-    return null;
-  }
-
-  return new Promise((resolve, reject) => {
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        resolve({
-          lat: position.coords.latitude,
-          lng: position.coords.longitude
-        });
-      },
-      (error) => {
-        console.error("Location error:", error);
-        resolve(null);
-      }
-    );
-  });
+/* ✅ Save or Update User Data */
+async function saveUser(user){
+  await setDoc(doc(db,"users",user.uid),{
+    name:user.displayName,
+    email:user.email,
+    lastLogin:new Date().toISOString()
+  },{merge:true});
 }
-</script><script>
-  // Firebase auth change listener
-  firebase.auth().onAuthStateChanged(function(user) {
-    if (user) {
-      // user logged in
-      console.log("User logged-in:", user.email);
 
-      // Ask for location
-      if ("geolocation" in navigator) {
-        navigator.geolocation.getCurrentPosition(
-          function(position) {
-            const lat = position.coords.latitude;
-            const lon = position.coords.longitude;
-
-            console.log("Location found:", lat, lon);
-
-            // Save to Firestore
-            firebase.firestore()
-              .collection("users")
-              .doc(user.uid)
-              .update({
-                location: {
-                  latitude: lat,
-                  longitude: lon,
-                  timestamp: new Date()
-                }
-              })
-              .then(() => console.log("Location saved ✅"))
-              .catch(err => console.error("Error saving location ❌", err));
-          },
-
-          // If user denies permission
-          function(error) {
-            console.log("Location permission denied ❌");
-          }
-        );
-      } else {
-        console.log("Geolocation not supported on this device ❌");
-      }
-    }
+/* ✅ Show All Users for Admin */
+async function loadUsers(){
+  const snap = await getDocs(collection(db,"users"));
+  let html = `<h3>👤 User List</h3><table><tr><th>Name</th><th>Email</th><th>Last Login</th></tr>`;
+  
+  snap.forEach(d=>{
+    const u = d.data();
+    html+=`<tr><td>${u.name}</td><td>${u.email}</td><td>${new Date(u.lastLogin).toLocaleString()}</td></tr>`;
   });
+  
+  html+="</table>";
+  document.getElementById("admin-box").innerHTML = html;
+}
+
+/* ✅ Save Location */
+async function saveLocation(uid){
+  if(!("geolocation" in navigator)) return;
+
+  navigator.geolocation.getCurrentPosition(async pos=>{
+    await updateDoc(doc(db,"users",uid),{
+      location:{
+        lat:pos.coords.latitude,
+        lng:pos.coords.longitude,
+        time:new Date()
+      }
+    });
+    console.log("✅ Location Saved");
+  }, ()=> console.log("❌ Location Denied"));
+}
+
+/* ✅ Auth Listener */
+onAuthStateChanged(auth, async user=>{
+  const ui = document.getElementById("userInfo");
+  const adminBox = document.getElementById("admin-box");
+  const btn = document.getElementById("loginBtn");
+
+  if(user){
+    await saveUser(user);
+    await saveLocation(user.uid);
+
+    btn.textContent="লগআউট করুন";
+    btn.onclick=()=>signOut(auth);
+
+    ui.innerHTML = `
+      <p class="success">Logged in ✅</p>
+      <p>Name: <b>${user.displayName}</b></p>
+      <p>Email: <b>${user.email}</b></p>
+    `;
+
+    if(user.email === adminEmail){
+      adminBox.style.display="block";
+      loadUsers();
+    }
+    else adminBox.style.display="none";
+
+  } else {
+    ui.textContent="লগইন করা হয়নি...";
+    btn.textContent="Google দিয়ে লগইন করুন";
+    btn.onclick=()=>signInWithPopup(auth,provider);
+    adminBox.style.display="none";
+  }
+});
 </script>
+
 </body>
 </html>
 <!*----loader*---->
