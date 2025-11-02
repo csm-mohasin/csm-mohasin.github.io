@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Send Location</title>
+</head>
+<body>
+<button id="start">Start GPS</button>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getDatabase, ref, set } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyCsGBSRCHVUhXQZ5DNMEZWgQWk1gxMF1E4",
+  authDomain: "signup-d32c5.firebaseapp.com",
+  projectId: "signup-d32c5",
+  storageBucket: "signup-d32c5.firebasestorage.app",
+  messagingSenderId: "583812949955",
+  appId: "1:583812949955:web:fab1bb7be94bc1b4ab3f76",
+  measurementId: "G-VLC3QHK8CG"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+
+document.getElementById("start").onclick = () => {
+  navigator.geolocation.watchPosition((pos)=>{
+    set(ref(db, "userLocation"), {
+      lat: pos.coords.latitude,
+      lng: pos.coords.longitude
+    });
+  });
+};
+</script>
+
+</body>
+</html>
