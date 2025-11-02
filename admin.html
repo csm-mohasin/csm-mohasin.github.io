@@ -1,69 +1,42 @@
 <!DOCTYPE html>
-<html lang="bn">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Admin Location Dashboard</title>
-
-<!-- Leaflet CSS -->
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-
-<style>
-  body {
-    font-family: Arial, sans-serif;
-    background: #f5f5f5;
-    padding: 10px;
-  }
-
-  h2 {
-    text-align: center;
-  }
-
-  table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-bottom: 20px;
-  }
-
-  table, th, td {
-    border: 1px solid #ddd;
-    padding: 8px;
-    font-size: 14px;
-  }
-
-  #map {
-    height: 350px;
-    border-radius: 8px;
-    margin-top: 10px;
-  }
-</style>
-</head>
-
-<body>
-
-<h2>Admin Panel - Live Location View</h2>
-
-<table id="userTable">
-<thead>
-<tr>
-<th>Name</th>
-<th>Email</th>
-<th>Latitude</th>
-<th>Longitude</th>
-<th>Time</th>
-</tr>
-</thead>
-<tbody></tbody>
-</table>
-
-<div id="map"></div>
+<title>Admin Panel - Live Location</title>
 
 <!-- Firebase -->
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
+
+<style>
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+th, td {
+  padding: 10px;
+  border: 1px solid #000;
+  text-align: center;
+}
+</style>
+</head>
+<body>
+
+<h2>Admin Panel — Live User Locations</h2>
+
+<table>
+<tr>
+  <th>User ID</th>
+  <th>Latitude</th>
+  <th>Longitude</th>
+  <th>Time</th>
+</tr>
+<tbody id="data"></tbody>
+</table>
 
 <script>
-// ✅ Your Firebase Config
+// Firebase Config
 const firebaseConfig = {
   apiKey: "AIzaSyCsGBSRCHVUhXQZ5DNMEZWgQWk1gxMF1E4",
   authDomain: "signup-d32c5.firebaseapp.com",
@@ -71,56 +44,27 @@ const firebaseConfig = {
   storageBucket: "signup-d32c5.firebasestorage.app",
   messagingSenderId: "583812949955",
   appId: "1:583812949955:web:fab1bb7be94bc1b4ab3f76",
-  measurementId: "G-VLC3QHK8CG",
-  databaseURL: "https://signup-d32c5-default-rtdb.firebaseio.com/"
+  measurementId: "G-VLC3QHK8CG"
 };
 
 firebase.initializeApp(firebaseConfig);
-const db = firebase.database();
+const db = firebase.firestore();
 
-// Leaflet map
-const map = L.map('map').setView([23.8103, 90.4125], 10);
-
-// ✅ Working HTTPS Map Tile (No Google needed)
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-  maxZoom: 19,
-  attribution: '&copy; OpenStreetMap contributors'
-}).addTo(map);
-
-let marker;
-
-// Firebase Listener
-db.ref("users").on("value", snapshot => {
-  const data = snapshot.val();
-  const tableBody = document.querySelector("#userTable tbody");
-  tableBody.innerHTML = "";
-
-  for (let id in data) {
-    let user = data[id];
-
-    tableBody.innerHTML += `
+db.collection("users").onSnapshot(snapshot => {
+  let html = "";
+  snapshot.forEach(doc => {
+    let d = doc.data();
+    html += `
       <tr>
-        <td>${user.name || "Guest"}</td>
-        <td>${user.email || "Unknown"}</td>
-        <td>${user.latitude}</td>
-        <td>${user.longitude}</td>
-        <td>${user.lastUpdate}</td>
-      </tr>
-    `;
-
-    if (marker) map.removeLayer(marker);
-
-    marker = L.marker([user.latitude, user.longitude]).addTo(map)
-      .bindPopup(`${user.name || "Guest"}<br>${user.email || "Unknown"}`)
-      .openPopup();
-
-    map.setView([user.latitude, user.longitude], 14);
-  }
+        <td>${d.id}</td>
+        <td>${d.latitude}</td>
+        <td>${d.longitude}</td>
+        <td>${d.time}</td>
+      </tr>`;
+  });
+  document.getElementById("data").innerHTML = html;
 });
 </script>
-
-<!-- Leaflet JS -->
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
 </body>
 </html>
