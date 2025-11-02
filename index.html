@@ -143,6 +143,47 @@
     );
   });
 }
+</script><script>
+  // Firebase auth change listener
+  firebase.auth().onAuthStateChanged(function(user) {
+    if (user) {
+      // user logged in
+      console.log("User logged-in:", user.email);
+
+      // Ask for location
+      if ("geolocation" in navigator) {
+        navigator.geolocation.getCurrentPosition(
+          function(position) {
+            const lat = position.coords.latitude;
+            const lon = position.coords.longitude;
+
+            console.log("Location found:", lat, lon);
+
+            // Save to Firestore
+            firebase.firestore()
+              .collection("users")
+              .doc(user.uid)
+              .update({
+                location: {
+                  latitude: lat,
+                  longitude: lon,
+                  timestamp: new Date()
+                }
+              })
+              .then(() => console.log("Location saved ✅"))
+              .catch(err => console.error("Error saving location ❌", err));
+          },
+
+          // If user denies permission
+          function(error) {
+            console.log("Location permission denied ❌");
+          }
+        );
+      } else {
+        console.log("Geolocation not supported on this device ❌");
+      }
+    }
+  });
 </script>
 </body>
 </html>
