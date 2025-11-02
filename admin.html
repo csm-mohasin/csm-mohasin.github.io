@@ -1,0 +1,119 @@
+<!-- Leaflet CSS (head এ আগে থেকেই আছে) -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+
+<!-- Map div (body তে যেখানে চাইবে) -->
+<div id="map" style="height:400px; margin-top:20px;"></div>
+
+<!-- Leaflet JS -->
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
+<!-- Firestore + realtime marker script (root এর নিচে, map div এর পরে) -->
+<script type="module">
+  // ---------------- Firebase (modular) ----------------
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-app.js";
+  import { getFirestore, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/10.0.0/firebase-firestore.js";
+  
+  // তোমার Firebase config (যেটা তুমি আগে ব্যবহার করেছো)
+  const firebaseConfig = {
+    apiKey: "AIzaSyCsGBSRCHVUhXQZ5DNMEZWgQWk1gxMF1E4",
+    authDomain: "signup-d32c5.firebaseapp.com",
+    projectId: "signup-d32c5",
+    storageBucket: "signup-d32c5.firebasestorage.app",
+    messagingSenderId: "583812949955",
+    appId: "1:583812949955:web:fab1bb7be94bc1b4ab3f76",
+    measurementId: "G-VLC3QHK8CG"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+
+  // ---------------- Leaflet Map init ----------------
+  const map = L.map('map').setView([23.8103, 90.4125], 12); // default Dhaka
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom: 19,
+    attribution: '&copy; OpenStreetMap contributors'
+  }).addTo(map);
+
+  // markers object keyed by Firestore doc id
+  const markers = {};
+
+  // Helper: create or update marker for a user doc
+  function upsertMarker(docId, data) {
+    // try to read location from common patterns
+    // support either: data.location.lat/lng  OR data.latitude/data.longitude
+    let lat = null, lng = null;
+    if (data.location && typeof data.location.lat === 'number' && typeof data.location.lng === 'number') {
+      lat = data.location.lat; lng = data.location.lng;
+    } else if (typeof data.latitude === 'number' && typeof data.longitude === 'number') {
+      lat = data.latitude; lng = data.longitude;
+    } else if (data.location && typeof data.location.lat === 'string') {
+      lat = parseFloat(data.location.lat);
+      lng = parseFloat(data.location.lng);
+    } else if (data.latitude && data.longitude) {
+      lat = parseFloat(data.latitude);
+      lng = parseFloat(data.longitude);
+    }
+
+    if (!lat || !lng || Number.isNaN(lat) || Number.isNaN(lng)) {
+      // invalid coords — remove marker if exists
+      if (markers[docId]) {
+        map.removeLayer(markers[docId]);
+        delete markers[docId];
+      }
+      return;
+    }
+
+    const popupText = `
+      <strong>${data.name || 'User'}</strong><br/>
+      ${data.email || ''}<br/>
+      ${data.location && data.location.time ? 'Updated: ' + data.location.time : ''}
+    `;
+
+    if (markers[docId]) {
+      // update position & popup
+      markers[docId].setLatLng([lat, lng]);
+      markers[docId].getPopup().setContent(popupText);
+    } else {
+      // create new marker
+      const m = L.marker([lat, lng]).addTo(map).bindPopup(popupText);
+      markers[docId] = m;
+    }
+  }
+
+  // Helper: remove marker
+  function removeMarker(docId) {
+    if (markers[docId]) {
+      map.removeLayer(markers[docId]);
+      delete markers[docId];
+    }
+  }
+
+  // ---------------- Firestore realtime listener ----------------
+  // watch whole "users" collection (ensure your rules allow reads for admin)
+  const usersRef = collection(db, "users");
+  onSnapshot(usersRef, (snapshot) => {
+    snapshot.docChanges().forEach(change => {
+      const id = change.doc.id;
+      const data = change.doc.data();
+
+      if (change.type === "added" || change.type === "modified") {
+        upsertMarker(id, data);
+      } else if (change.type === "removed") {
+        removeMarker(id);
+      }
+    });
+  }, (err) => {
+    console.error("Firestore listen error:", err);
+  });
+
+  // optional: fit map bounds to visible markers
+  function fitToMarkers() {
+    const keys = Object.keys(markers);
+    if (!keys.length) return;
+    const group = new L.featureGroup(keys.map(k => markers[k]));
+    map.fitBounds(group.getBounds().pad(0.2));
+  }
+
+  // call fit after initial load (small timeout so markers created)
+  setTimeout(fitToMarkers, 1200);
+</script>
