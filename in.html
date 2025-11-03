@@ -2,15 +2,41 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Location Permission</title>
+<title>Live Location Sender</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+body {
+  font-family: Arial, sans-serif;
+  text-align: center;
+  background: #eef3f8;
+  padding: 50px 10px;
+}
+.card {
+  background: #fff;
+  padding: 20px;
+  border-radius: 10px;
+  width: 90%;
+  max-width: 400px;
+  margin: auto;
+  box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+}
+button {
+  background: #28a745;
+  color: white;
+  border: none;
+  padding: 12px 16px;
+  font-size: 16px;
+  border-radius: 8px;
+}
+</style>
 
 <!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
 
 <script>
-// Your Firebase Config
+// ✅ Your Firebase Config
 const firebaseConfig = {
   apiKey: "AIzaSyCsGBSRCHVUhXQZ5DNMEZWgQWk1gxMF1E4",
   authDomain: "signup-d32c5.firebaseapp.com",
@@ -18,57 +44,52 @@ const firebaseConfig = {
   storageBucket: "signup-d32c5.firebasestorage.app",
   messagingSenderId: "583812949955",
   appId: "1:583812949955:web:fab1bb7be94bc1b4ab3f76",
-  measurementId: "G-VLC3QHK8CG",
   databaseURL: "https://signup-d32c5-default-rtdb.firebaseio.com/"
 };
-
 firebase.initializeApp(firebaseConfig);
-const db = firebase.database();
+var dbRef = firebase.database().ref("location");
+</script>
 
-function requestLocation(){
+</head>
+<body>
+
+<div class="card">
+  <h2>📍 Share Live Location</h2>
+  <p>Press start to allow live tracking</p>
+  <button onclick="startTracking()">Start Live Tracking</button>
+  <p id="status"></p>
+</div>
+
+<script>
+function startTracking() {
   if (!navigator.geolocation) {
-    alert("Your phone doesn't support geolocation!");
+    alert("Geolocation not supported!");
     return;
   }
 
-  navigator.geolocation.getCurrentPosition(success, error);
-}
+  document.getElementById("status").innerText = "Requesting permission...";
 
-async function success(position){
-  let lat = position.coords.latitude;
-  let lon = position.coords.longitude;
+  navigator.geolocation.watchPosition(
+    position => {
+      let lat = position.coords.latitude;
+      let lon = position.coords.longitude;
 
-  // Battery Info
-  let battery = "Unknown";
-  try {
-    const bat = await navigator.getBattery();
-    battery = (bat.level * 100) + "%";
-  } catch {}
+      dbRef.set({
+        latitude: lat,
+        longitude: lon,
+        time: new Date().toISOString()
+      });
 
-  // Device Info
-  let device = navigator.userAgent;
-
-  // Save to Firebase
-  db.ref("location").push({
-    latitude: lat,
-    longitude: lon,
-    battery: battery,
-    device: device,
-    time: new Date().toLocaleString()
-  });
-
-  document.getElementById("status").innerHTML = 
-  "✅ Location Received & Saved <br> 📍 Lat: "+lat+" <br>📍 Lon: "+lon+"<br>🔋 Battery: "+battery;
-}
-
-function error(){
-  alert("❌ Location permission denied. Please allow GPS.");
+      document.getElementById("status").innerText =
+        "✅ Live Tracking Active\nLat: " + lat + "\nLon: " + lon;
+    },
+    error => {
+      alert("Location permission denied!");
+    },
+    { enableHighAccuracy: true, maximumAge: 0, timeout: 5000 }
+  );
 }
 </script>
-</head>
 
-<body onload="requestLocation()">
-<h2>📍 Waiting for Location Permission...</h2>
-<p id="status">Please Allow Location Access</p>
 </body>
 </html>
