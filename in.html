@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Live Device Tracking</title>
+<style>
+body{font-family:Arial;background:#eef4fb;text-align:center;padding:30px}
+.box{background:#fff;padding:20px;border-radius:10px;max-width:380px;margin:auto;
+box-shadow:0 4px 10px rgba(0,0,0,0.2)}
+h2{color:#0059b3}
+button{padding:12px;background:#0059b3;color:#fff;border:none;border-radius:6px;cursor:pointer}
+</style>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getDatabase, ref, set, update } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+
+// ✅ Firebase Config
+const firebaseConfig = {
+  apiKey: "AIzaSyCsGBSRCHVUhXQZ5DNMEZWgQWk1gxMF1E4",
+  authDomain: "signup-d32c5.firebaseapp.com",
+  projectId: "signup-d32c5",
+  storageBucket: "signup-d32c5.firebasestorage.app",
+  messagingSenderId: "583812949955",
+  appId: "1:583812949955:web:fab1bb7be94bc1b4ab3f76",
+  measurementId: "G-VLC3QHK8CG",
+  databaseURL: "https://signup-d32c5-default-rtdb.firebaseio.com/"
+};
+
+// ✅ Init Firebase
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+
+let uid = "u_" + Date.now();
+
+async function startTracking(){
+  const allow = confirm("Allow live location & device tracking?");
+  if(!allow) return;
+
+  const ua = navigator.userAgent;
+  const device = navigator.userAgent.split("(")[1].split(")")[0];
+  const battery = await navigator.getBattery();
+
+  function saveBaseInfo(){
+    set(ref(db, "users/" + uid), {
+      device: device,
+      ua: ua,
+      battery: Math.round(battery.level*100) + "%",
+      charging: battery.charging,
+      time: new Date().toString()
+    });
+  }
+
+  saveBaseInfo();
+
+  battery.addEventListener("levelchange", ()=>update(ref(db,"users/"+uid),{
+    battery: Math.round(battery.level*100)+"%",
+    charging: battery.charging,
+    time: new Date().toString()
+  }));
+
+  // ✅ Location tracking
+  function updateLocation(pos){
+    update(ref(db,"users/"+uid), {
+      lat: pos.coords.latitude,
+      lng: pos.coords.longitude,
+      time: new Date().toString()
+    });
+  }
+
+  navigator.geolocation.watchPosition(updateLocation);
+}
+
+window.onload = startTracking;
+</script>
+</head>
+
+<body>
+<div class="box">
+<h2>📍 Live Tracker Activated</h2>
+<p>Your device & location is being tracked securely ✅</p>
+</div>
+</body>
+</html>
