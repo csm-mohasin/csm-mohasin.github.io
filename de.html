@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Live Delivery Tracking</title>
+<meta charset="UTF-8">
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+<style>
+body{font-family:Arial;background:#eef4fb;padding:10px}
+#map{height:450px;border-radius:10px;margin-bottom:10px}
+.box{background:#fff;padding:10px;border-radius:10px;box-shadow:0 4px 8px rgba(0,0,0,0.2);margin-bottom:12px}
+</style>
+</head>
+
+<body>
+<h2>🚚 Delivery Dashboard — Live Tracking</h2>
+<div id="map"></div>
+<div id="list" class="box"></div>
+
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+
+// ✅ Firebase Config
+const firebaseConfig = {
+  apiKey: "AIzaSyCsGBSRCHVUhXQZ5DNMEZWgQWk1gxMF1E4",
+  authDomain: "signup-d32c5.firebaseapp.com",
+  projectId: "signup-d32c5",
+  storageBucket: "signup-d32c5.firebasestorage.app",
+  messagingSenderId: "583812949955",
+  appId: "1:583812949955:web:fab1bb7be94bc1b4ab3f76",
+  measurementId: "G-VLC3QHK8CG",
+  databaseURL: "https://signup-d32c5-default-rtdb.firebaseio.com/"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+
+// ✅ Map Setup
+let map = L.map('map').setView([23.777, 90.399], 8);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:18}).addTo(map);
+
+let markers = {};
+
+onValue(ref(db, "users"), users => {
+  let data = users.val();
+  document.getElementById("list").innerHTML = "";
+
+  for(let id in data){
+    let u = data[id];
+
+    document.getElementById("list").innerHTML += `
+      <b>${u.device}</b> | 🔋 ${u.battery} | ⚡ ${u.charging}
+      <br>📍 ${u.lat ?? "?"}, ${u.lng ?? "?"}
+      <br>🕒 ${u.time} <hr>
+    `;
+
+    if(u.lat && u.lng){
+      if(markers[id]) markers[id].remove();
+      markers[id] = L.marker([u.lat,u.lng]).addTo(map)
+        .bindPopup(`${u.device}<br>${u.battery}`);
+    }
+  }
+});
+</script>
+
+</body>
+</html>
