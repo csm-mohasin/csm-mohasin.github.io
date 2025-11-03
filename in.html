@@ -1,67 +1,105 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<title>User Live Location</title>
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>📍 Live Location Sender</title>
 
 <style>
-body{font-family:Arial;background:#eef6ff;text-align:center;padding:20px}
-.card{background:white;padding:15px;border-radius:12px;max-width:350px;margin:auto}
-button{padding:12px 18px;background:#007bff;color:#fff;border:none;border-radius:8px;font-size:16px;margin-top:10px}
+  body {
+    font-family: Arial;
+    background: #e9f3ff;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+  }
+  .box {
+    background: white;
+    padding: 25px;
+    width: 90%;
+    max-width: 400px;
+    border-radius: 15px;
+    text-align: center;
+    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+  }
+  button {
+    background: #007bff;
+    color: white;
+    padding: 12px 20px;
+    border: none;
+    border-radius: 8px;
+    font-size: 18px;
+    cursor: pointer;
+  }
+  button:active {
+    transform: scale(0.96);
+  }
+  .status {
+    margin-top: 10px;
+    font-size: 16px;
+    font-weight: bold;
+  }
 </style>
-
-<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
-
-<script>
-const firebaseConfig = {
- apiKey:"AIzaSyCsGBSRCHVUhXQZ5DNMEZWgQWk1gxMF1E4",
- authDomain:"signup-d32c5.firebaseapp.com",
- projectId:"signup-d32c5",
- storageBucket:"signup-d32c5.firebasestorage.app",
- messagingSenderId:"583812949955",
- appId:"1:583812949955:web:fab1bb7be94bc1b4ab3f76",
- databaseURL:"https://signup-d32c5-default-rtdb.firebaseio.com/"
-};
-firebase.initializeApp(firebaseConfig);
-
-let uid = "usr_" + Math.random().toString(36).substr(2,6);
-
-async function getBattery(){
-  try {
-    const b = await navigator.getBattery();
-    return Math.round(b.level*100);
-  } catch { return 0; }
-}
-
-async function send(){
-  let bat = await getBattery();
-  navigator.geolocation.getCurrentPosition(pos=>{
-    let lat=pos.coords.latitude, lon=pos.coords.longitude;
-
-    firebase.database().ref("users/"+uid).set({
-      lat, lon,
-      battery:bat,
-      device:navigator.userAgent,
-      time:new Date().toLocaleString(),
-      location:""
-    });
-    document.getElementById("st").innerText = "✅ Live location sending...";
-  },()=>{
-    alert("Location permission on kore chan!");
-  });
-}
-setInterval(send,5000);
-</script>
 </head>
 <body>
 
-<div class="card">
-<h2>📍 Live Location ON</h2>
-<p id="st">Press start below</p>
-<button onclick="send()">Start Tracking</button>
+<div class="box">
+  <h2>📍 Live Location Sharing</h2>
+  <p id="info">Press Start to send your real-time location</p>
+  <button onclick="startTracking()">Start Tracking</button>
+  <p class="status" id="statusText">🛑 Not sending</p>
 </div>
+
+<script>
+const DB_URL = "https://signup-d32c5-default-rtdb.firebaseio.com/location.json"; // ✅ your path
+
+async function sendToFirebase(lat, lon, battery, device) {
+  await fetch(DB_URL, {
+    method: "PUT",
+    body: JSON.stringify({
+      latitude: lat,
+      longitude: lon,
+      battery: battery,
+      device: device,
+      time: new Date().toISOString()
+    })
+  });
+}
+
+function startTracking() {
+  document.getElementById("statusText").innerText = "✅ Sending Live Location...";
+
+  if (!navigator.geolocation) {
+    alert("GPS not supported!");
+    return;
+  }
+
+  navigator.geolocation.watchPosition(async pos => {
+    const lat = pos.coords.latitude;
+    const lon = pos.coords.longitude;
+
+    let battery = "Unknown";
+    if (navigator.getBattery) {
+      const b = await navigator.getBattery();
+      battery = Math.round(b.level * 100) + "%";
+    }
+
+    const device = navigator.userAgent;
+
+    sendToFirebase(lat, lon, battery, device);
+    document.getElementById("info").innerText = `📌 Lat: ${lat} | Lon: ${lon}`;
+
+  }, err => {
+    alert("Location permission denied!");
+  }, {
+    enableHighAccuracy: true,
+    maximumAge: 0,
+    timeout: 5000
+  });
+}
+</script>
 
 </body>
 </html>
