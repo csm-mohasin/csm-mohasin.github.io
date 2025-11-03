@@ -1,93 +1,224 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="bn">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>🚚 Delivery Tracking with Distance</title>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Pro Delivery Dashboard — Live</title>
 
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<!-- Leaflet + Routing CSS -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+<link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.css"/>
 
 <style>
-body { margin:0; font-family:Arial; background:#e8f2ff; text-align:center; }
-#map { height:90vh; width:95vw; margin:auto; border-radius:12px; box-shadow:0 3px 10px rgba(0,0,0,0.2); }
-#info { padding:8px; background:white; width:95vw; margin:auto; font-size:18px; font-weight:bold; }
+  body{font-family:Arial;margin:0;background:#f3f8ff}
+  header{background:#fff;padding:12px 16px;box-shadow:0 2px 6px rgba(0,0,0,.06);display:flex;align-items:center;justify-content:space-between}
+  header h1{margin:0;font-size:18px}
+  .wrap{display:flex;gap:12px;padding:12px;max-width:1100px;margin:12px auto}
+  #map {flex:1;min-height:70vh;border-radius:10px;box-shadow:0 6px 18px rgba(0,0,0,.08)}
+  .side{width:340px;background:#fff;border-radius:10px;padding:12px;box-shadow:0 6px 18px rgba(0,0,0,.06)}
+  .user-row{padding:8px;border-bottom:1px solid #eee;display:flex;justify-content:space-between;align-items:center;}
+  .user-info{font-size:13px}
+  .btn{background:#0a84ff;color:#fff;border:0;padding:6px 10px;border-radius:6px;cursor:pointer}
+  .small{font-size:12px;color:#666}
+  .badge{background:#e6f0ff;padding:6px;border-radius:8px;font-weight:600}
 </style>
-</head>
 
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+</head>
 <body>
 
-<h2>🚚 Delivery Live Tracking</h2>
-<div id="info">Distance: Calculating...</div>
-<div id="map"></div>
+<header>
+  <h1>🚀 Pro Delivery Dashboard — Live</h1>
+  <div class="small">Multiple users • Battery & Device info • ETA & Route</div>
+</header>
 
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<div class="wrap">
+  <div id="map"></div>
 
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-app.js";
-import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-database.js";
+  <div class="side">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+      <div><strong>Live users</strong> <div class="small">Click "Navigate" to draw route</div></div>
+      <div class="badge" id="selectedCount">0</div>
+    </div>
 
-// ✅ Firebase config
+    <div id="list" style="max-height:66vh;overflow:auto"></div>
+    <div style="margin-top:10px" class="small">Tip: Click a user row to center on them; Navigate draws ETA from your device.</div>
+  </div>
+</div>
+
+<!-- Leaflet + Routing -->
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.js"></script>
+
+<script>
+/* --------------- Firebase config (same as index) --------------- */
 const firebaseConfig = {
-  apiKey: "YOUR_KEY",
-  authDomain: "YOUR_DOMAIN",
-  databaseURL: "https://signup-d32c5-default-rtdb.firebaseio.com/",
+  apiKey: "AIzaSyCsGBSRCHVUhXQZ5DNMEZWgQWk1gxMF1E4",
+  authDomain: "signup-d32c5.firebaseapp.com",
   projectId: "signup-d32c5",
-  storageBucket: "signup-d32c5.appspot.com",
-  messagingSenderId: "YOUR_ID",
-  appId: "YOUR_APP_ID"
+  storageBucket: "signup-d32c5.firebasestorage.app",
+  messagingSenderId: "583812949955",
+  appId: "1:583812949955:web:fab1bb7be94bc1b4ab3f76",
+  databaseURL: "https://signup-d32c5-default-rtdb.firebaseio.com/"
 };
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
 
-const app = initializeApp(firebaseConfig);
-const db = getDatabase(app);
-const locationRef = ref(db, "location");
+/* --------------- Map setup --------------- */
+const map = L.map('map').setView([23.75,90.39], 12);
+const normal = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+const satellite = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}');
+L.control.layers({Normal: normal, Satellite: satellite}).addTo(map);
 
-// ✅ Map
-const map = L.map("map").setView([23.75, 90.39], 13);
-L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png").addTo(map);
+/* --------------- Icons --------------- */
+const userIcon = L.icon({iconUrl:'https://cdn-icons-png.flaticon.com/512/149/149071.png', iconSize:[36,36]});
+const driverIcon = L.icon({iconUrl:'https://cdn-icons-png.flaticon.com/512/1995/1995502.png', iconSize:[42,42]});
 
-// ✅ Icons
-const deliveryIcon = L.icon({ iconUrl:"https://cdn-icons-png.flaticon.com/512/1995/1995502.png", iconSize:[40,40] });
-const userIcon     = L.icon({ iconUrl:"https://cdn-icons-png.flaticon.com/512/149/149071.png", iconSize:[35,35] });
+/* --------------- State --------------- */
+let users = {}; // clientId => {marker, data}
+let listDiv = document.getElementById('list');
+let selectedCount = document.getElementById('selectedCount');
 
-let deliveryMarker, userMarker, routeLine;
+let routingControl = null;
+let myLat=null, myLon=null;
+let myMarker = null;
 
-let userLat = null, userLon = null;
+/* ------------------ Get my location (delivery guy) ------------------ */
+if(navigator.geolocation){
+  navigator.geolocation.watchPosition(p=>{
+    myLat = p.coords.latitude; myLon = p.coords.longitude;
+    if(!myMarker){
+      myMarker = L.marker([myLat,myLon], {icon:driverIcon}).addTo(map).bindPopup('You (delivery)');
+      map.setView([myLat,myLon], 14);
+    } else {
+      myMarker.setLatLng([myLat,myLon]);
+    }
+  }, err=>{
+    console.warn('Enable location for routing & ETA');
+  }, {enableHighAccuracy:true});
+} else {
+  alert('Geolocation unavailable');
+}
 
-// ✅ Get user location (customer)
-navigator.geolocation.watchPosition(pos => {
-  userLat = pos.coords.latitude;
-  userLon = pos.coords.longitude;
-
-  if (!userMarker) {
-    userMarker = L.marker([userLat, userLon], { icon:userIcon }).addTo(map);
-  } else {
-    userMarker.setLatLng([userLat, userLon]);
-  }
+/* --------------- Listen to all users (locations collection) --------------- */
+const refLocations = db.ref('locations');
+refLocations.on('value', snapshot=>{
+  const val = snapshot.val() || {};
+  renderUserList(val);
 });
 
-// ✅ Firebase live delivery location
-onValue(locationRef, snap => {
-  const data = snap.val();
-  const dLat = data.latitude;
-  const dLon = data.longitude;
-
-  if (!deliveryMarker) {
-    deliveryMarker = L.marker([dLat, dLon], { icon:deliveryIcon }).addTo(map);
-  } else {
-    deliveryMarker.setLatLng([dLat, dLon]);
+/* --------------- Render list & markers --------------- */
+function renderUserList(all){
+  // remove markers not in all
+  const keys = Object.keys(all);
+  for(const id in users){
+    if(!all[id]){
+      // remove marker and UI
+      map.removeLayer(users[id].marker);
+      delete users[id];
+    }
   }
 
-  // ✅ Draw line route
-  if (userLat && userLon) {
-    if (routeLine) map.removeLayer(routeLine);
-    routeLine = L.polyline([[userLat, userLon],[dLat, dLon]], { weight:4 }).addTo(map);
+  // add/update
+  keys.forEach(id=>{
+    const d = all[id];
+    // create marker if not exists
+    if(!users[id]){
+      const m = L.marker([d.latitude, d.longitude], {icon:userIcon}).addTo(map);
+      m.bindPopup(popupHtml(d));
+      m.on('click', ()=> {
+        map.setView([d.latitude, d.longitude], 15);
+      });
+      users[id] = {marker: m, data: d};
+    } else {
+      // update
+      users[id].marker.setLatLng([d.latitude, d.longitude]);
+      users[id].marker.setPopupContent(popupHtml(d));
+      users[id].data = d;
+    }
+  });
 
-    // ✅ Calculate distance
-    const dist = map.distance([userLat, userLon],[dLat, dLon]) / 1000;
-    document.getElementById("info").innerHTML = `📏 Distance: ${dist.toFixed(2)} km away`;
-  }
+  // render list UI
+  listDiv.innerHTML = '';
+  const sorted = keys.sort(); // simple order
+  sorted.forEach(id=>{
+    const d = all[id];
+    const row = document.createElement('div');
+    row.className = 'user-row';
+    row.innerHTML = `
+      <div style="flex:1">
+        <div style="font-weight:600">${d.clientId || id}</div>
+        <div class="user-info small">${d.model||''} • ${d.city||d.country||''}</div>
+        <div class="small">Battery: ${d.battery||'N/A'} • Updated: ${new Date(d.time||Date.now()).toLocaleString()}</div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:6px;margin-left:8px">
+        <button class="btn" onclick="navigateTo('${id}')">Navigate</button>
+        <button class="btn" style="background:#fff;color:#0a84ff;border:1px solid #e6f0ff" onclick="centerUser('${id}')">Center</button>
+      </div>
+    `;
+    listDiv.appendChild(row);
+  });
+
+  selectedCount.innerText = sorted.length;
+}
+
+/* --------------- popup html for marker --------------- */
+function popupHtml(d){
+  return `<div style="min-width:200px">
+    <b>${d.clientId || 'user'}</b><br>
+    <span class="small">${d.model || ''}</span><br>
+    📍 ${d.city ? d.city + ', ' + (d.country||'') : (d.place||'')}<br>
+    🔋 ${d.battery || 'N/A'} • ${d.charging? 'charging':'not charging'} <br>
+    🕒 ${new Date(d.time || Date.now()).toLocaleString()}
+  </div>`;
+}
+
+/* --------------- center user --------------- */
+function centerUser(id){
+  const u = users[id];
+  if(!u) return;
+  map.setView([u.data.latitude, u.data.longitude], 15);
+  u.marker.openPopup();
+}
+
+/* --------------- navigate to user: draw route from my location to user --------------- */
+function navigateTo(clientId){
+  const u = users[clientId];
+  if(!u) { alert('User not found'); return; }
+  if(!myLat || !myLon){ alert('Allow your location (delivery device) for routing'); return; }
+
+  // remove old
+  if(routingControl){ map.removeControl(routingControl); routingControl = null; }
+
+  routingControl = L.Routing.control({
+    waypoints: [
+      L.latLng(myLat, myLon),
+      L.latLng(u.data.latitude, u.data.longitude)
+    ],
+    addWaypoints: false,
+    routeWhileDragging: false,
+    showAlternatives: false
+  }).on('routesfound', function(e){
+    const route = e.routes[0];
+    const timeSec = route.summary.totalTime;
+    const distMeters = route.summary.totalDistance;
+    const min = Math.floor(timeSec/60);
+    const sec = Math.floor(timeSec%60);
+    // show popup on user marker
+    u.marker.bindPopup(`<b>${u.data.clientId||clientId}</b><br>ETA: ${min}m ${sec}s • ${ (distMeters/1000).toFixed(2) } km`).openPopup();
+
+  }).addTo(map);
+  // center to route
+  map.fitBounds(L.latLngBounds([ [myLat,myLon], [u.data.latitude, u.data.longitude] ]), {padding:[40,40]});
+}
+
+/* --------------- initial load: pull existing once --------------- */
+refLocations.once('value').then(snap=>{
+  renderUserList(snap.val() || {});
 });
+
 </script>
-
 </body>
 </html>
