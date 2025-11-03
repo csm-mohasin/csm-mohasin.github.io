@@ -1,90 +1,89 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Delivery Live Tracking</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <style>
-    body{
-      font-family: Arial, sans-serif;
-      padding: 20px;
-      background: #f7f9fc;
-      color:#222;
-    }
-    .box{
-      background:#fff;
-      padding:15px;
-      border-radius:8px;
-      box-shadow:0 0 10px rgba(0,0,0,0.1);
-      margin-bottom:15px;
-    }
-    #distance{
-      font-size:20px;
-      color:green;
-      font-weight:bold;
-    }
-    button{
-      padding:10px 15px;
-      background:#007bff;
-      color:white;
-      border:none;
-      border-radius:6px;
-      cursor:pointer;
-    }
-  </style>
+<title>Delivery Live Location</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<style>
+body {
+  font-family: Arial, sans-serif;
+  padding: 20px;
+  background: #f7f9fc;
+}
+.box{
+  background:#fff;
+  padding:15px;
+  border-radius:8px;
+  box-shadow:0 0 10px rgba(0,0,0,0.1);
+  margin-bottom:15px;
+}
+#distance{
+  font-size:20px;
+  color:green;
+  font-weight:bold;
+}
+button{
+  padding:10px 15px;
+  background:#007bff;
+  color:white;
+  border:none;
+  border-radius:6px;
+  cursor:pointer;
+}
+</style>
 </head>
 <body>
 
-  <h2>Delivery Live Location</h2>
+<h2>Delivery Live Location</h2>
 
-  <div class="box">
-    <p>Your live distance from delivery person:</p>
-    <p id="distance">Calculating...</p>
-  </div>
+<div class="box">
+  <p>Your live distance from delivery person:</p>
+  <p id="distance">Calculating...</p>
+</div>
 
-  <div class="box">
-    <button onclick="getLocation()">Get Live Location</button>
-  </div>
+<div class="box">
+  <button onclick="getLocation()">Get Live Location</button>
+</div>
 
 <script>
-  // Delivery person's location (example fixed point)
-  const deliveryLat = 23.8103; // Dhaka
-  const deliveryLng = 90.4125;
+const deliveryLat = 23.8103;   // Dhaka
+const deliveryLng = 90.4125;
 
-  function getLocation() {
-    if (navigator.geolocation) {
-      navigator.geolocation.watchPosition(showDistance, errorHandler);
-    } else {
-      document.getElementById("distance").innerHTML = "Geolocation not supported!";
-    }
+function getLocation() {
+  if (!navigator.geolocation) {
+    document.getElementById("distance").innerText = "Geolocation not supported!";
+    return;
   }
 
-  function showDistance(position) {
-    const userLat = position.coords.latitude;
-    const userLng = position.coords.longitude;
+  navigator.geolocation.watchPosition(
+    showDistance,
+    (error) => {
+      document.getElementById("distance").innerText =
+        "Location Off! Please Enable GPS & Allow Permission";
+    },
+    { enableHighAccuracy: true, timeout: 5000 }
+  );
+}
 
-    const dist = calculateDistance(userLat, userLng, deliveryLat, deliveryLng);
-    
-    document.getElementById("distance").innerHTML =
-      dist.toFixed(2) + " km away";
-  }
+function showDistance(position) {
+  const userLat = position.coords.latitude;
+  const userLng = position.coords.longitude;
 
-  function calculateDistance(lat1, lon1, lat2, lon2) {
-    const R = 6371; // km
-    const dLat = (lat2-lat1) * Math.PI/180;
-    const dLon = (lon2-lon1) * Math.PI/180;
+  const distance = calculateDistance(userLat, userLng, deliveryLat, deliveryLng);
+  document.getElementById("distance").innerText = distance.toFixed(2) + " km away";
+}
 
-    const a =
-      Math.sin(dLat/2) * Math.sin(dLat/2) +
-      Math.cos(lat1 * Math.PI/180) * Math.cos(lat2 * Math.PI/180) *
-      Math.sin(dLon/2) * Math.sin(dLon/2);
+function calculateDistance(lat1, lon1, lat2, lon2){
+  const R = 6371;
+  const dLat = (lat2-lat1) * Math.PI/180;
+  const dLon = (lon2-lon1) * Math.PI/180;
 
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-    return R * c;
-  }
+  const a = Math.sin(dLat/2)*Math.sin(dLat/2) +
+    Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180) *
+    Math.sin(dLon/2)*Math.sin(dLon/2);
 
-  function errorHandler(error) {
-    document.getElementById("distance").innerHTML = "Location permission denied!";
-  }
+  return R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)));
+}
 </script>
 
 </body>
