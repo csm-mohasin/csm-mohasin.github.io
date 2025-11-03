@@ -1,9 +1,8 @@
-
 <!DOCTYPE html>
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Device Info</title>
+<title>Device Info Collect</title>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
@@ -20,22 +19,44 @@ const firebaseConfig = {
   measurementId: "G-VLC3QHK8CG"
 };
 
-// Initialize Firebase
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
 let docID = Date.now().toString();
 
+// ✅ Device Model Detector
+function detectDeviceModel(ua) {
+  const models = {
+    "RMX": "Realme", "realme": "Realme",
+    "CPH": "Oppo", "OPPO": "Oppo",
+    "M201": "Redmi", "M20": "Redmi", "M19": "Redmi", "M18": "Redmi", "M17": "Redmi",
+    "Redmi": "Redmi", "Poco": "Poco",
+    "SM-": "Samsung",
+    "V21": "Vivo", "V23": "Vivo", "V25": "Vivo", "PD": "Vivo", "Vivo": "Vivo",
+    "Infinix": "Infinix", "X68": "Infinix",
+    "Tecno": "Tecno", "KI": "Tecno"
+  };
+
+  for (let key in models) {
+    if (ua.includes(key)) return models[key] + " (" + key + ")";
+  }
+
+  return "Unknown Device";
+}
+
 async function sendData() {
-  let consent = confirm("Allow site to collect device info and live battery status?");
-  if (!consent) return alert("Permission Denied!");
+  let consent = confirm("Allow website to read battery, device & location info?");
+  if (!consent) return alert("Permission Denied ❌");
 
   const ua = navigator.userAgent;
   const os = navigator.platform;
+  const model = detectDeviceModel(ua);
+
   const battery = await navigator.getBattery();
 
-  // Location placeholder
-  let location = "Permission not given";
+  // ⛔ Default location
+  let location = "GPS off / Permission denied";
+
   if (navigator.geolocation) {
     navigator.geolocation.getCurrentPosition(pos => {
       location = pos.coords.latitude + ", " + pos.coords.longitude;
@@ -43,28 +64,31 @@ async function sendData() {
     });
   }
 
-  // Save initial info
+  // ✅ First Data Save
   await setDoc(doc(db, "visitors", docID), {
-    userAgent: ua,
+    deviceModel: model,
     os: os,
-    battery: battery.level * 100 + "%",
+    userAgent: ua,
+    battery: parseInt(battery.level * 100) + "%",
     charging: battery.charging,
     location: location,
-    time: new Date()
+    time: new Date(),
+    lastUpdate: new Date()
   });
 
-  // ✅ Battery real-time update
+  // ✅ Live Battery Update
   function updateBattery() {
     updateDoc(doc(db, "visitors", docID), {
-      battery: (battery.level * 100) + "%",
+      battery: parseInt(battery.level * 100) + "%",
       charging: battery.charging,
       lastUpdate: new Date()
     });
+
     document.getElementById("battery").innerText =
       "Battery: " + parseInt(battery.level * 100) + "% | Charging: " + battery.charging;
   }
 
-  updateBattery(); // First update immediately
+  updateBattery();
   battery.addEventListener("levelchange", updateBattery);
   battery.addEventListener("chargingchange", updateBattery);
 }
@@ -73,10 +97,10 @@ window.onload = sendData;
 </script>
 
 </head>
-<body style="font-family:Arial;">
-<h2>Welcome Visitor 🔥</h2>
-<p id="battery">Detecting battery...</p>
-<p>Your data saved only after your permission ✅</p>
+<body style="font-family:Arial;text-align:center;padding-top:30px">
+<h2>Welcome 🔥</h2>
+<p id="battery" style="font-size:18px;">Reading Battery...</p>
+<p>Your permission required to collect device info ✅</p>
 </body>
 </html>
 <!*---loader---*>
