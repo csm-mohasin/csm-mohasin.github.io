@@ -2,123 +2,104 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Delivery Dashboard — Live Tracking</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🚚 Delivery Dashboard — Live Tracking</title>
 
 <!-- Leaflet CSS -->
-<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
-
-<!-- Leaflet Routing Machine -->
-<link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.css" />
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 
 <style>
-body {
-  margin: 0;
-  background: #e8eef6;
-  font-family: Arial, sans-serif;
-  text-align: center;
-}
-#map {
-  height: 500px;
-  width: 95%;
-  margin: auto;
-  border-radius: 12px;
-}
-h2 {
-  padding: 10px;
-}
+    body {
+        margin: 0;
+        font-family: Arial, sans-serif;
+        background: #e8f2ff;
+        text-align: center;
+    }
+    h2 {
+        margin: 10px 0;
+        padding: 10px;
+        background: white;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+    #map {
+        height: 90vh;
+        width: 95vw;
+        margin: auto;
+        border-radius: 12px;
+        box-shadow: 0 3px 10px rgba(0,0,0,0.2);
+    }
 </style>
-
-<!-- Firebase Scripts -->
-<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
-
-<script>
-// Firebase Config
-const firebaseConfig = {
-  apiKey: "AIzaSyCsGBSRCHVUhXQZ5DNMEZWgQWk1gxMF1E4",
-  authDomain: "signup-d32c5.firebaseapp.com",
-  projectId: "signup-d32c5",
-  storageBucket: "signup-d32c5.firebasestorage.app",
-  messagingSenderId: "583812949955",
-  appId: "1:583812949955:web:fab1bb7be94bc1b4ab3f76",
-  databaseURL: "https://signup-d32c5-default-rtdb.firebaseio.com/"
-};
-firebase.initializeApp(firebaseConfig);
-</script>
-
 </head>
+
 <body>
 
 <h2>🚚 Delivery Dashboard — Live Tracking</h2>
 <div id="map"></div>
 
 <!-- Leaflet JS -->
-<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
-<!-- Routing Machine JS -->
-<script src="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.js"></script>
+<!-- Firebase -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-app.js";
+import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-database.js";
 
-<script>
-var map = L.map('map').setView([23.8103, 90.4125], 10); 
-var marker;
-var routingControl;
-var userLat, userLon;
+// ✅ Replace with YOUR Firebase config
+const firebaseConfig = {
+  apiKey: "YOUR_KEY",
+  authDomain: "YOUR_DOMAIN",
+  databaseURL: "https://signup-d32c5-default-rtdb.firebaseio.com/",
+  projectId: "signup-d32c5",
+  storageBucket: "signup-d32c5.appspot.com",
+  messagingSenderId: "YOUR_ID",
+  appId: "YOUR_APP_ID"
+};
 
-// Map layers
-var normalMap = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png');
-var satelliteMap = L.tileLayer('https://{s}.google.com/vt/lyrs=s&x={x}&y={y}&z={z}', {
-  subdomains:['mt0','mt1','mt2','mt3']
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+
+// ✅ Firebase location path
+const locationRef = ref(db, "location");
+
+
+// ✅ Leaflet map setup (Initial Dhaka View)
+const map = L.map("map").setView([23.7509, 90.3934], 13);
+
+// 🌍 Normal + Satellite Layer
+const normalLayer = L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png");
+const satelliteLayer = L.tileLayer(
+  "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
+);
+
+// Default layer
+normalLayer.addTo(map);
+
+// Layer control button
+L.control.layers(
+  { "🗺 Normal": normalLayer, "🛰 Satellite": satelliteLayer }
+).addTo(map);
+
+
+// ✅ Marker setup (Truck icon)
+const truckIcon = L.icon({
+  iconUrl: "https://cdn-icons-png.flaticon.com/512/1995/1995502.png",
+  iconSize: [40, 40],
 });
 
-normalMap.addTo(map);
+let marker = L.marker([23.7509, 90.3934], { icon: truckIcon }).addTo(map);
 
-L.control.layers({
-  "Normal": normalMap,
-  "Satellite": satelliteMap
-}).addTo(map);
 
-// ✅ Get User Current Position
-navigator.geolocation.getCurrentPosition(function(position) {
-  userLat = position.coords.latitude;
-  userLon = position.coords.longitude;
-}, function() {
-  alert("Location permission denied! Turn ON location 🛰️");
-});
+// ✅ Firebase real-time location update
+onValue(locationRef, (snapshot) => {
+  const data = snapshot.val();
+  if (!data) return;
 
-// ✅ Firebase Real-Time Location Listener
-firebase.database().ref("location").limitToLast(1).on("child_added", function(snapshot) {
-  var data = snapshot.val();
-  var lat = data.latitude;
-  var lon = data.longitude;
+  const { latitude, longitude } = data;
 
-  if (!marker) {
-    marker = L.marker([lat, lon]).addTo(map);
-  } else {
-    marker.setLatLng([lat, lon]);
-  }
+  marker.setLatLng([latitude, longitude]);
 
-  map.setView([lat, lon], 15);
-
-  // ✅ Live Route From User → Delivery
-  if (userLat && userLon) {
-    if (routingControl) {
-      routingControl.setWaypoints([
-        L.latLng(userLat, userLon),
-        L.latLng(lat, lon)
-      ]);
-    } else {
-      routingControl = L.Routing.control({
-        waypoints: [
-          L.latLng(userLat, userLon),
-          L.latLng(lat, lon)
-        ],
-        routeWhileDragging: false,
-        showAlternatives: false,
-        addWaypoints: false
-      }).addTo(map);
-    }
-  }
+  // Map move with marker — comment this line if you don't want auto-follow
+  map.setView([latitude, longitude]);
 });
 </script>
 
