@@ -3,48 +3,30 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>🚚 Delivery Dashboard — Live Tracking</title>
+<title>🚚 Delivery Tracking with Distance</title>
 
-<!-- Leaflet CSS -->
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 
 <style>
-    body {
-        margin: 0;
-        font-family: Arial, sans-serif;
-        background: #e8f2ff;
-        text-align: center;
-    }
-    h2 {
-        margin: 10px 0;
-        padding: 10px;
-        background: white;
-        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-    }
-    #map {
-        height: 90vh;
-        width: 95vw;
-        margin: auto;
-        border-radius: 12px;
-        box-shadow: 0 3px 10px rgba(0,0,0,0.2);
-    }
+body { margin:0; font-family:Arial; background:#e8f2ff; text-align:center; }
+#map { height:90vh; width:95vw; margin:auto; border-radius:12px; box-shadow:0 3px 10px rgba(0,0,0,0.2); }
+#info { padding:8px; background:white; width:95vw; margin:auto; font-size:18px; font-weight:bold; }
 </style>
 </head>
 
 <body>
 
-<h2>🚚 Delivery Dashboard — Live Tracking</h2>
+<h2>🚚 Delivery Live Tracking</h2>
+<div id="info">Distance: Calculating...</div>
 <div id="map"></div>
 
-<!-- Leaflet JS -->
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
-<!-- Firebase -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-app.js";
 import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-database.js";
 
-// ✅ Replace with YOUR Firebase config
+// ✅ Firebase config
 const firebaseConfig = {
   apiKey: "YOUR_KEY",
   authDomain: "YOUR_DOMAIN",
@@ -57,49 +39,53 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
-
-// ✅ Firebase location path
 const locationRef = ref(db, "location");
 
+// ✅ Map
+const map = L.map("map").setView([23.75, 90.39], 13);
+L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png").addTo(map);
 
-// ✅ Leaflet map setup (Initial Dhaka View)
-const map = L.map("map").setView([23.7509, 90.3934], 13);
+// ✅ Icons
+const deliveryIcon = L.icon({ iconUrl:"https://cdn-icons-png.flaticon.com/512/1995/1995502.png", iconSize:[40,40] });
+const userIcon     = L.icon({ iconUrl:"https://cdn-icons-png.flaticon.com/512/149/149071.png", iconSize:[35,35] });
 
-// 🌍 Normal + Satellite Layer
-const normalLayer = L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png");
-const satelliteLayer = L.tileLayer(
-  "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
-);
+let deliveryMarker, userMarker, routeLine;
 
-// Default layer
-normalLayer.addTo(map);
+let userLat = null, userLon = null;
 
-// Layer control button
-L.control.layers(
-  { "🗺 Normal": normalLayer, "🛰 Satellite": satelliteLayer }
-).addTo(map);
+// ✅ Get user location (customer)
+navigator.geolocation.watchPosition(pos => {
+  userLat = pos.coords.latitude;
+  userLon = pos.coords.longitude;
 
-
-// ✅ Marker setup (Truck icon)
-const truckIcon = L.icon({
-  iconUrl: "https://cdn-icons-png.flaticon.com/512/1995/1995502.png",
-  iconSize: [40, 40],
+  if (!userMarker) {
+    userMarker = L.marker([userLat, userLon], { icon:userIcon }).addTo(map);
+  } else {
+    userMarker.setLatLng([userLat, userLon]);
+  }
 });
 
-let marker = L.marker([23.7509, 90.3934], { icon: truckIcon }).addTo(map);
+// ✅ Firebase live delivery location
+onValue(locationRef, snap => {
+  const data = snap.val();
+  const dLat = data.latitude;
+  const dLon = data.longitude;
 
+  if (!deliveryMarker) {
+    deliveryMarker = L.marker([dLat, dLon], { icon:deliveryIcon }).addTo(map);
+  } else {
+    deliveryMarker.setLatLng([dLat, dLon]);
+  }
 
-// ✅ Firebase real-time location update
-onValue(locationRef, (snapshot) => {
-  const data = snapshot.val();
-  if (!data) return;
+  // ✅ Draw line route
+  if (userLat && userLon) {
+    if (routeLine) map.removeLayer(routeLine);
+    routeLine = L.polyline([[userLat, userLon],[dLat, dLon]], { weight:4 }).addTo(map);
 
-  const { latitude, longitude } = data;
-
-  marker.setLatLng([latitude, longitude]);
-
-  // Map move with marker — comment this line if you don't want auto-follow
-  map.setView([latitude, longitude]);
+    // ✅ Calculate distance
+    const dist = map.distance([userLat, userLon],[dLat, dLon]) / 1000;
+    document.getElementById("info").innerHTML = `📏 Distance: ${dist.toFixed(2)} km away`;
+  }
 });
 </script>
 
