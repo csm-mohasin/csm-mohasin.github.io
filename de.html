@@ -2,20 +2,19 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Live Delivery Tracking</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>🚚 Delivery Live View</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
 
 <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 <script src="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.js"></script>
 
 <style>
-body{margin:0;font-family:Arial;background:#eef4ff}
-header{padding:14px;font-size:20px;font-weight:700;text-align:center;background:#fff}
+body{margin:0;font-family:Arial;background:#eaf3ff}
+header{padding:12px;font-size:20px;font-weight:bold;background:#007bff;color:white}
 #map{height:70vh;margin:10px;border-radius:10px}
-#box{background:#fff;margin:10px;padding:12px;border-radius:10px;font-size:18px;font-weight:600}
-button{padding:10px 18px;margin:10px auto;display:block;background:#007bff;color:#fff;
-border:none;border-radius:8px;font-size:16px}
+.card{background:white;margin:10px;padding:12px;border-radius:10px}
+.info{font-size:16px;margin-bottom:5px}
 </style>
 
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
@@ -39,72 +38,78 @@ firebase.initializeApp(firebaseConfig);
 
 <header>📍 Live Delivery Tracking</header>
 
-<div id="box">Distance: Calculating...</div>
+<div class="card">
+<b>User:</b> <span id="uid">USER-1</span><br>
+<div class="info">Distance: <span id="dist">--</span> km</div>
+<div class="info">ETA: <span id="eta">--</span> mins</div>
+</div>
+
 <div id="map"></div>
-<button onclick="track()">Get Live Location</button>
 
 <script>
-let map=L.map("map");
+// change target user id here:
+const USER_ID = "USER-1";
+
+let map = L.map("map");
 L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png").addTo(map);
 
-let userLat,userLon,driverLat,driverLon;
-let userMarker,driverMarker,route;
+let myLat, myLon, userMarker, myMarker, route;
 
+// get driver's own GPS
+navigator.geolocation.watchPosition(p=>{
+    myLat = p.coords.latitude;
+    myLon = p.coords.longitude;
+
+    if(!map._loaded) map.setView([myLat,myLon],14);
+
+    if(!myMarker){
+        myMarker = L.marker([myLat,myLon], {title:"You"}).addTo(map);
+    } else {
+        myMarker.setLatLng([myLat,myLon]);
+    }
+});
+
+// distance function
 function calc(a,b,c,d){
- let R=6371,dLat=(c-a)*Math.PI/180,dLon=(d-b)*Math.PI/180;
- let x=Math.sin(dLat/2)**2 + Math.cos(a*Math.PI/180)*Math.cos(c*Math.PI/180)*Math.sin(dLon/2)**2;
+ var R=6371,dLat=(c-a)*Math.PI/180,dLon=(d-b)*Math.PI/180;
+ var x=Math.sin(dLat/2)**2 + Math.cos(a*Math.PI/180)*Math.cos(c*Math.PI/180)*Math.sin(dLon/2)**2;
  return R*(2*Math.atan2(Math.sqrt(x),Math.sqrt(1-x)));
 }
 
-// 🔥 Firebase driver location listener
-firebase.database().ref("liveLocation").on("value",snap=>{
- let d=snap.val(); 
- driverLat=d.lat; driverLon=d.lng;
+// show route & ETA
+function showRoute(lat,lon){
+ if(route) map.removeControl(route);
 
- if(!driverMarker){
-  driverMarker=L.marker([driverLat,driverLon]).addTo(map).bindPopup("Delivery Rider");
+ route = L.Routing.control({
+   waypoints:[L.latLng(myLat,myLon),L.latLng(lat,lon)],
+   addWaypoints:false,
+   lineOptions:{addWaypoints:false}
+ }).addTo(map);
+
+ let d = calc(myLat,myLon,lat,lon);
+ let eta = Math.round((d / 30) * 60); // 30km/h
+
+ document.getElementById("dist").innerText = d.toFixed(2);
+ document.getElementById("eta").innerText = eta;
+}
+
+// get user location from firebase
+firebase.database().ref("users/" + USER_ID).on("value",snap=>{
+ let u = snap.val();
+ if(!u) return;
+
+ let lat = u.lat, lon = u.lon;
+
+ if(!userMarker){
+   userMarker = L.marker([lat,lon],{title:"Customer"}).addTo(map);
  } else {
-  driverMarker.setLatLng([driverLat,driverLon]);
+   userMarker.setLatLng([lat,lon]);
  }
 
- updateRoute();
+ if(myLat && myLon){
+   showRoute(lat,lon);
+ }
 });
-
-// 📍 Customer own location
-function track(){
- navigator.geolocation.watchPosition(p=>{
-   userLat=p.coords.latitude; userLon=p.coords.longitude;
-
-   if(!userMarker){
-     map.setView([userLat,userLon],14);
-     userMarker=L.marker([userLat,userLon]).addTo(map).bindPopup("Your Location");
-   } else {
-     userMarker.setLatLng([userLat,userLon]);
-   }
-
-   updateRoute();
- });
-}
-
-// 🛣️ Show route + distance + ETA
-function updateRoute(){
- if(!userLat||!driverLat) return;
-
- let dist=calc(driverLat,driverLon,userLat,userLon);
- let eta=Math.round((dist/30)*60);
-
- document.getElementById("box").innerHTML=
- `Distance: ${dist.toFixed(2)} km | ETA: ${eta} min`;
-
- if(route) map.removeControl(route);
- route=L.Routing.control({
-   waypoints:[
-     L.latLng(driverLat,driverLon),
-     L.latLng(userLat,userLon)
-   ],
-   addWaypoints:false
- }).addTo(map);
-}
 </script>
 
 </body>
