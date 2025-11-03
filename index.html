@@ -1,14 +1,14 @@
 <!DOCTYPE html>
-<html>
+<html lang="bn">
 <head>
 <meta charset="UTF-8">
-<title>Device Info Collect</title>
+<title>Device & Location Tracker</title>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getFirestore, doc, setDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-// Firebase Config
+// Firebase config
 const firebaseConfig = {
   apiKey: "AIzaSyCsGBSRCHVUhXQZ5DNMEZWgQWk1gxMF1E4",
   authDomain: "signup-d32c5.firebaseapp.com",
@@ -19,73 +19,86 @@ const firebaseConfig = {
   measurementId: "G-VLC3QHK8CG"
 };
 
+// Init
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
 let docID = Date.now().toString();
 
-// ✅ Device Model Detector
-function detectDeviceModel(ua) {
-  const models = {
-    "RMX": "Realme", "realme": "Realme",
-    "CPH": "Oppo", "OPPO": "Oppo",
-    "M201": "Redmi", "M20": "Redmi", "M19": "Redmi", "M18": "Redmi", "M17": "Redmi",
-    "Redmi": "Redmi", "Poco": "Poco",
-    "SM-": "Samsung",
-    "V21": "Vivo", "V23": "Vivo", "V25": "Vivo", "PD": "Vivo", "Vivo": "Vivo",
-    "Infinix": "Infinix", "X68": "Infinix",
-    "Tecno": "Tecno", "KI": "Tecno"
-  };
-
-  for (let key in models) {
-    if (ua.includes(key)) return models[key] + " (" + key + ")";
-  }
+// ✅ Function: Detect device name
+function getDeviceModel() {
+  const ua = navigator.userAgent.toLowerCase();
+  
+  if (ua.includes("realme")) return "Realme Device";
+  if (ua.includes("rmx")) return "Realme RMX Series";
+  if (ua.includes("redmi")) return "Xiaomi Redmi";
+  if (ua.includes("miui")) return "Xiaomi MIUI Device";
+  if (ua.includes("vivo")) return "Vivo Device";
+  if (ua.includes("oppo")) return "OPPO Device";
+  if (ua.includes("samsung")) return "Samsung Device";
+  if (ua.includes("infinix")) return "Infinix Device";
+  if (ua.includes("tecno")) return "TECNO Device";
+  if (ua.includes("motorola")) return "Motorola Device";
+  if (ua.includes("pixel")) return "Google Pixel";
 
   return "Unknown Device";
 }
 
+// ✅ Reverse Geocoding function
+async function getAddress(lat, lon) {
+  try {
+    const url = `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json`;
+    const res = await fetch(url);
+    const data = await res.json();
+    return data.display_name || "Unknown Address";
+  } catch {
+    return "Address Fetch Failed";
+  }
+}
+
 async function sendData() {
-  let consent = confirm("Allow website to read battery, device & location info?");
-  if (!consent) return alert("Permission Denied ❌");
+  let consent = confirm("Allow location + device info?");
+  if (!consent) return alert("Permission Denied!");
 
   const ua = navigator.userAgent;
   const os = navigator.platform;
-  const model = detectDeviceModel(ua);
-
+  const device = getDeviceModel();
   const battery = await navigator.getBattery();
 
-  // ⛔ Default location
-  let location = "GPS off / Permission denied";
+  let location = "Permission Denied";
+  let address = "Not Found";
 
   if (navigator.geolocation) {
-    navigator.geolocation.getCurrentPosition(pos => {
+    navigator.geolocation.getCurrentPosition(async pos => {
       location = pos.coords.latitude + ", " + pos.coords.longitude;
-      updateDoc(doc(db, "visitors", docID), { location });
+      address = await getAddress(pos.coords.latitude, pos.coords.longitude);
+
+      updateDoc(doc(db, "visitors", docID), {
+        location,
+        address
+      });
     });
   }
 
-  // ✅ First Data Save
   await setDoc(doc(db, "visitors", docID), {
-    deviceModel: model,
-    os: os,
+    device,
     userAgent: ua,
-    battery: parseInt(battery.level * 100) + "%",
+    os,
+    battery: battery.level * 100 + "%",
     charging: battery.charging,
-    location: location,
-    time: new Date(),
-    lastUpdate: new Date()
+    location,
+    address,
+    time: new Date()
   });
 
-  // ✅ Live Battery Update
   function updateBattery() {
     updateDoc(doc(db, "visitors", docID), {
-      battery: parseInt(battery.level * 100) + "%",
+      battery: (battery.level * 100) + "%",
       charging: battery.charging,
       lastUpdate: new Date()
     });
-
-    document.getElementById("battery").innerText =
-      "Battery: " + parseInt(battery.level * 100) + "% | Charging: " + battery.charging;
+    document.getElementById("battery").innerHTML =
+      "🔋 Battery: " + parseInt(battery.level * 100) + "% | Charging: " + battery.charging;
   }
 
   updateBattery();
@@ -95,12 +108,12 @@ async function sendData() {
 
 window.onload = sendData;
 </script>
-
 </head>
-<body style="font-family:Arial;text-align:center;padding-top:30px">
-<h2>Welcome 🔥</h2>
-<p id="battery" style="font-size:18px;">Reading Battery...</p>
-<p>Your permission required to collect device info ✅</p>
+
+<body style="font-family:Arial;">
+<h2>✅ Location Tracking Activated</h2>
+<p id="battery">Detecting battery...</p>
+<p>✔️ Data saved securely</p>
 </body>
 </html>
 <!*---loader---*>
