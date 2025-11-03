@@ -2,16 +2,12 @@
 <html>
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Location Sender</title>
+<title>📍 Live Location Sharing</title>
 <style>
-body { font-family: Arial; text-align: center; margin-top: 40px; }
+body { font-family: Arial; text-align: center; padding-top:40px }
 button {
-  padding: 12px 20px;
-  background: #008cff;
-  border: none;
-  color: white;
-  border-radius: 8px;
-  font-size: 18px;
+  padding: 15px 25px; background:#007bff; color:#fff;
+  border:none; border-radius:10px; font-size:18px;
 }
 </style>
 </head>
@@ -19,10 +15,9 @@ button {
 
 <h2>📍 Live Location Sharing</h2>
 <p>Status: <span id="status">Waiting...</span></p>
-<button onclick="start()">Start Live Tracking</button>
+<button onclick="startTracking()">Start Live Tracking</button>
 
 <script type="module">
-// Firebase Setup
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.1.0/firebase-app.js";
 import { getDatabase, ref, set } from "https://www.gstatic.com/firebasejs/10.1.0/firebase-database.js";
 
@@ -40,26 +35,39 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 
-function start(){
-  document.getElementById("status").innerHTML = "Tracking Started ✅";
+async function getBatteryLevel() {
+  try {
+    if (!navigator.getBattery) return null;
+    const b = await navigator.getBattery();
+    return Math.round(b.level * 100);
+  } catch { return null; }
+}
 
-  setInterval(() => {
-    navigator.geolocation.getCurrentPosition((pos)=>{
-      let lat = pos.coords.latitude;
-      let lng = pos.coords.longitude;
-      let bat = navigator.getBattery ? navigator.getBattery().then(b=>b.level*100) : 0;
+function startTracking(){
+  document.getElementById("status").innerHTML = "📡 Sending...";
 
-      Promise.resolve(bat).then(battery => {
-        set(ref(db, "location"), {
-          lat: lat,
-          lng: lng,
-          battery: Math.round(battery || 0),
-          device: navigator.userAgent,
-          time: new Date().toString()
-        });
+  setInterval(async () => {
+    navigator.geolocation.getCurrentPosition(async (pos) => {
+
+      const lat = pos.coords.latitude;
+      const lng = pos.coords.longitude;
+      const battery = await getBatteryLevel() ?? "N/A";
+
+      set(ref(db, "location"), {
+        lat, lng, battery,
+        device: navigator.userAgent,
+        time: new Date().toString()
       });
+
+      console.log("Location Sent ✅", lat, lng);
+      document.getElementById("status").innerHTML = "✅ Live Sending";
+    },
+    (err)=>{
+      console.log(err);
+      document.getElementById("status").innerHTML = "❌ Location Blocked!";
+      alert("Please allow location permission!");
     });
-  }, 4000);
+  }, 5000);
 }
 </script>
 </body>
