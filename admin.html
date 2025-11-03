@@ -1,49 +1,222 @@
 <!DOCTYPE html>
-<html>
+<html lang="bn">
 <head>
-<title>Admin Panel</title>
-
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-
-// Firebase Config
-const firebaseConfig = {
-  apiKey: "AIzaSyCsGBSRCHVUhXQZ5DNMEZWgQWk1gxMF1E4",
-  authDomain: "signup-d32c5.firebaseapp.com",
-  projectId: "signup-d32c5",
-  storageBucket: "signup-d32c5.firebasestorage.app",
-  messagingSenderId: "583812949955",
-  appId: "1:583812949955:web:fab1bb7be94bc1b4ab3f76",
-  measurementId: "G-VLC3QHK8CG"
-};
-
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
-
-async function loadData() {
-  const q = await getDocs(collection(db, "visitors"));
-  q.forEach(docSnap => {
-    let d = docSnap.data();
-    document.getElementById("log").innerHTML += `
-      <div style="margin:6px;padding:8px;border:1px solid #ccc;border-radius:6px">
-        🌍 <b>OS:</b> ${d.os}<br>
-        📱 UA: ${d.userAgent}<br>
-        🔋 <b>Battery:</b> ${d.battery} (Charging: ${d.charging})<br>
-        📍 <b>Location:</b> ${d.location}<br>
-        ⏱️ <b>Time:</b> ${d.time?.toDate ? d.time.toDate() : d.time}<br>
-        🕒 Last Update: ${d.lastUpdate || "N/A"}
-      </div>
-    `;
-  });
-}
-
-window.onload = loadData;
-</script>
-
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Admin Panel — Visitors</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/mini.css/3.0.1/mini-default.min.css" />
+  <style>
+    body{font-family:Arial,Helvetica,sans-serif;background:#f6f8fb;padding:18px}
+    header{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px}
+    #log {display:flex;flex-direction:column;gap:10px}
+    .card{background:#fff;padding:12px;border-radius:8px;border:1px solid #e6ecf2}
+    .muted{color:#666;font-size:13px}
+    table{width:100%;border-collapse:collapse;margin-top:14px}
+    th,td{border:1px solid #e3e8ef;padding:8px;text-align:left;font-size:13px}
+    th{background:#0b74de;color:#fff}
+    .small{font-size:12px;color:#666}
+  </style>
 </head>
-<body style="font-family:Arial;">
-<h2>Admin Dashboard 🔥</h2>
-<div id="log"></div>
+<body>
+  <header>
+    <h2>👑 Admin — Visitor Logs (Realtime)</h2>
+    <div class="small muted">Auto updates from Firestore</div>
+  </header>
+
+  <section id="log">
+    <div class="card">
+      <strong>Total visitors:</strong> <span id="count">0</span>
+      <div class="muted">Latest entries appear below (most recent first)</div>
+    </div>
+  </section>
+
+  <section style="margin-top:12px">
+    <table aria-label="visitor-table">
+      <thead>
+        <tr>
+          <th>Time</th>
+          <th>Device (Model)</th>
+          <th>OS</th>
+          <th>Battery</th>
+          <th>IP</th>
+          <th>Location</th>
+          <th>UserAgent (raw)</th>
+        </tr>
+      </thead>
+      <tbody id="tableBody"></tbody>
+    </table>
+  </section>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getFirestore, collection, onSnapshot, query, orderBy } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+    // ====== Firebase Config (your provided config) ======
+    const firebaseConfig = {
+      apiKey: "AIzaSyCsGBSRCHVUhXQZ5DNMEZWgQWk1gxMF1E4",
+      authDomain: "signup-d32c5.firebaseapp.com",
+      projectId: "signup-d32c5",
+      storageBucket: "signup-d32c5.firebasestorage.app",
+      messagingSenderId: "583812949955",
+      appId: "1:583812949955:web:fab1bb7be94bc1b4ab3f76",
+      measurementId: "G-VLC3QHK8CG"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    // ================= Device model map (Realme / Redmi / Vivo extended) =================
+    const deviceModels = {
+      // Realme
+      "RMX3491":"Realme 9",
+      "RMX3571":"Realme 9i",
+      "RMX3085":"Realme 8",
+      "RMX3241":"Realme 9 Pro",
+      "RMX3474":"Realme Narzo 50",
+      "RMX3630":"Realme C35",
+      "RMX2185":"Realme C11",
+      "RMX2195":"Realme C12",
+      "RMX2193":"Realme C15",
+      "RMX2001":"Realme 6",
+      "RMX2151":"Realme 7",
+
+      // Redmi / Xiaomi / Poco (examples)
+      "2201117TG":"Redmi Note 11",
+      "2201117TI":"Redmi Note 11",
+      "22111317PG":"Redmi Note 12",
+      "22041219":"Redmi 10A",
+      "220233L2":"Redmi 10C",
+      "21121119SC":"Redmi 10",
+      "M2004J19C":"Redmi 9 / Note 9",
+      "M2006C3LG":"Redmi 9A",
+      "M2101K6G":"Redmi 9T / Poco M3",
+      "M2102J20SG":"Redmi Note 10",
+      "M2103K19G":"Redmi Note 10S",
+      "M2012K11G":"Poco X3 NFC",
+      "M2010J19SI":"Poco F3 / Redmi K40",
+
+      // Vivo (examples)
+      "V2043":"Vivo Y20 / Y21",
+      "V2027":"Vivo Y12s",
+      "V2149":"Vivo Y15s",
+      "V2058":"Vivo Y12A",
+      "V2118":"Vivo Y21s",
+      "V2102":"Vivo Y33s",
+      "V2168":"Vivo Y16",
+      "V2031":"Vivo V20",
+      "V2145":"Vivo V21",
+      "V2158":"Vivo V23",
+      "V2130":"Vivo X70",
+
+      // Samsung examples
+      "SM-A125F":"Samsung Galaxy A12",
+      "SM-A315F":"Samsung Galaxy A31",
+      "SM-A515F":"Samsung Galaxy A51",
+      "SM-M326B":"Samsung Galaxy M32",
+      "SM-G991B":"Samsung Galaxy S21",
+      "SM-G998B":"Samsung Galaxy S21 Ultra",
+
+      // OnePlus / Google / Motorola / Nokia (examples)
+      "IN2020":"OnePlus 8T",
+      "ONEPLUS":"OnePlus (generic)",
+      "GD1YQ":"Google Pixel 6a",
+      "TA-1000":"Nokia (TA-1000)",
+      "moto":"Motorola (generic)"
+    };
+
+    // Try to extract token like RMX3235, SM-A125F, M2004J19C, V2043 etc.
+    function extractTokenFromUA(ua) {
+      if (!ua) return null;
+      // common pattern: (Linux; Android 11; RMX3235)  -> capture RMX3235
+      let m = ua.match(/\((?:[^;]+;){2}\s*([^\);]+)\)/);
+      if (m && m[1]) {
+        let token = m[1].split(';')[0].trim();
+        // remove "Build/..." tail
+        token = token.split('Build')[0].trim();
+        return token;
+      }
+      // fallback search for known prefixes
+      const prefixes = ["RMX","SM-","M20","M21","M30","CPH","V","IN","GD","TA-","POCO","ONEPLUS","moto"];
+      for (let p of prefixes) {
+        let idx = ua.indexOf(p);
+        if (idx !== -1) {
+          // get following word
+          let sub = ua.substr(idx, 12).split(/[; )/]/)[0].replace(/[;()]/g,'').trim();
+          if (sub) return sub;
+        }
+      }
+      return null;
+    }
+
+    function friendlyModelFromUA(ua) {
+      if (!ua) return "Unknown Device";
+      // try direct known codes first
+      for (const code in deviceModels) {
+        if (ua.includes(code) || ua.toUpperCase().includes(code)) {
+          return deviceModels[code] + ` (${code})`;
+        }
+      }
+      // try extract token and lookup
+      const token = extractTokenFromUA(ua) || "";
+      const tupper = token.toUpperCase();
+      if (deviceModels[tupper]) return deviceModels[tupper] + ` (${tupper})`;
+      if (token) return `Unknown (${token})`;
+      // fallback broad checks
+      if (ua.toLowerCase().includes("iphone")) return "iPhone";
+      if (ua.toLowerCase().includes("ipad")) return "iPad";
+      if (ua.toLowerCase().includes("android")) return "Android Device";
+      return "Unknown Device";
+    }
+
+    // ========== Listen real-time visitors collection ==========
+    const visitorsCol = collection(db, "visitors");
+    // order by time if you store timestamp field (optional)
+    const q = visitorsCol; // simple collection ref
+    onSnapshot(q, snapshot => {
+      const log = document.getElementById("log");
+      const tableBody = document.getElementById("tableBody");
+      log.innerHTML = `<div class="card"><strong>Total visitors:</strong> ${snapshot.size}</div>`;
+      // build table rows (most recent first)
+      const rows = [];
+      snapshot.forEach(docSnap => {
+        const d = docSnap.data();
+        const ua = (d.userAgent || "") + "";
+        const model = friendlyModelFromUA(ua);
+        const time = d.time || d.timestamp || d.timeString || (d.time && d.time.toDate ? d.time.toDate() : "—");
+        const battery = d.battery ?? "—";
+        const charging = (typeof d.charging !== 'undefined') ? (d.charging ? "Yes" : "No") : "—";
+        const ip = d.ip ?? "—";
+        const loc = d.location ?? `${d.city ?? '—'}, ${d.country ?? '—'}`;
+        rows.push({ time, model, os: d.os||"—", battery, charging, ip, loc, ua });
+      });
+
+      // Sort by time if time is ISO string
+      rows.sort((a,b)=>{
+        const ta = new Date(a.time).getTime() || 0;
+        const tb = new Date(b.time).getTime() || 0;
+        return tb - ta;
+      });
+
+      // render table
+      tableBody.innerHTML = "";
+      for (const r of rows) {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td class="small">${r.time}</td>
+          <td>${r.model}</td>
+          <td>${r.os}</td>
+          <td>${r.battery}</td>
+          <td>${r.ip}</td>
+          <td>${r.loc}</td>
+          <td class="small"><code style="font-size:12px;color:#333">${r.ua}</code></td>
+        `;
+        tableBody.appendChild(tr);
+      }
+    }, err=>{
+      console.error("Firestore onSnapshot error:", err);
+      document.getElementById("log").innerHTML = `<div class="card" style="color:#900">Error loading visitors: ${err.message}</div>`;
+    });
+
+  </script>
 </body>
 </html>
