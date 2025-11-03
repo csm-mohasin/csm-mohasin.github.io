@@ -8,6 +8,9 @@
 <!-- Leaflet CSS -->
 <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
 
+<!-- Leaflet Routing Machine -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.css" />
+
 <style>
 body {
   margin: 0;
@@ -53,9 +56,14 @@ firebase.initializeApp(firebaseConfig);
 <!-- Leaflet JS -->
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 
+<!-- Routing Machine JS -->
+<script src="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.js"></script>
+
 <script>
-var map = L.map('map').setView([23.8103, 90.4125], 10); // Initial Dhaka view
+var map = L.map('map').setView([23.8103, 90.4125], 10); 
 var marker;
+var routingControl;
+var userLat, userLon;
 
 // Map layers
 var normalMap = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png');
@@ -70,22 +78,47 @@ L.control.layers({
   "Satellite": satelliteMap
 }).addTo(map);
 
-// Firebase listener
+// ✅ Get User Current Position
+navigator.geolocation.getCurrentPosition(function(position) {
+  userLat = position.coords.latitude;
+  userLon = position.coords.longitude;
+}, function() {
+  alert("Location permission denied! Turn ON location 🛰️");
+});
+
+// ✅ Firebase Real-Time Location Listener
 firebase.database().ref("location").limitToLast(1).on("child_added", function(snapshot) {
   var data = snapshot.val();
   var lat = data.latitude;
   var lon = data.longitude;
 
-  // Update marker
   if (!marker) {
     marker = L.marker([lat, lon]).addTo(map);
   } else {
     marker.setLatLng([lat, lon]);
   }
 
-  // Move map center to live position
   map.setView([lat, lon], 15);
 
+  // ✅ Live Route From User → Delivery
+  if (userLat && userLon) {
+    if (routingControl) {
+      routingControl.setWaypoints([
+        L.latLng(userLat, userLon),
+        L.latLng(lat, lon)
+      ]);
+    } else {
+      routingControl = L.Routing.control({
+        waypoints: [
+          L.latLng(userLat, userLon),
+          L.latLng(lat, lon)
+        ],
+        routeWhileDragging: false,
+        showAlternatives: false,
+        addWaypoints: false
+      }).addTo(map);
+    }
+  }
 });
 </script>
 
