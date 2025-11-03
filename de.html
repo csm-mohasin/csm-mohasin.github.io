@@ -3,21 +3,21 @@
 <head>
 <meta charset="UTF-8">
 <title>Delivery Dashboard — Live</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width,initial-scale=1">
 
 <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 <script src="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.js"></script>
 
 <style>
-body{margin:0;font-family:Arial;background:#eef5ff}
-header{padding:12px;font-weight:bold;font-size:20px}
-.card{background:white;padding:12px;margin:12px;border-radius:10px}
+body{margin:0;font-family:Arial;background:#eef4ff}
+header{padding:12px;font-size:20px;font-weight:bold}
+.card{background:#fff;margin:10px;padding:12px;border-radius:10px}
 #map{height:60vh;margin:10px;border-radius:10px}
-.user-row{padding:6px;border-bottom:1px solid #ddd;display:flex;justify-content:space-between;align-items:center}
-.btn{padding:6px 12px;border-radius:6px;border:none;cursor:pointer}
-.btn-nav{background:#007bff;color:white}
-.btn-center{background:#f1f1f1}
+.user{padding:6px;border-bottom:1px solid #ddd;display:flex;justify-content:space-between}
+.btn{padding:7px 12px;border:none;border-radius:8px;cursor:pointer}
+.nav{background:#007bff;color:white}
+.center{background:#ddd}
 </style>
 
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
@@ -39,83 +39,63 @@ firebase.initializeApp(firebaseConfig);
 
 <body>
 
-<header>🚀 Pro Delivery Dashboard — Live</header>
+<header>🚚 Delivery Dashboard — Live</header>
 
 <div class="card">
-<b>Live users</b>
-<div id="userList">Loading…</div>
+<b>Live Users</b>
+<div id="users">Loading...</div>
 </div>
 
-<div class="card" id="infoBox">Distance: -- km | ETA: -- mins</div>
+<div class="card" id="status">Distance: -- km | ETA: -- mins</div>
 <div id="map"></div>
 
 <script>
 let map = L.map("map");
-let markers = {};
-let routing;
-
 L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png").addTo(map);
 
-// first load user loc
-firebase.database().ref("users").on("value", snap => {
- let data = snap.val();
- let html="";
- let first = true;
+let myLat,myLon,markers={},route;
 
- document.getElementById("userList").innerHTML = (data) ? "" : "No users online";
-
- for (let uid in data){
-   let u=data[uid];
-
-   if (!markers[uid]){
-     markers[uid]=L.marker([u.lat,u.lon]).addTo(map);
-   } else {
-     markers[uid].setLatLng([u.lat,u.lon]);
-   }
-
-   if(first){
-     map.setView([u.lat,u.lon],13);
-     first=false;
-   }
-
-   html += `
-     <div class="user-row">
-       <div>${uid}<br>${u.location} • Battery ${u.battery}%</div>
-       <div>
-         <button class="btn btn-nav" onclick="goRoute(${u.lat},${u.lon})">Nav</button>
-         <button class="btn btn-center" onclick="map.setView([${u.lat},${u.lon}],15)">Center</button>
-       </div>
-     </div>`;
- }
- document.getElementById("userList").innerHTML = html;
+navigator.geolocation.watchPosition(p=>{
+  myLat=p.coords.latitude; myLon=p.coords.longitude;
+  if(!map._loaded) map.setView([myLat,myLon],14);
 });
 
-// delivery person location
-let myLat,myLon;
-navigator.geolocation.watchPosition(pos=>{
- myLat=pos.coords.latitude;
- myLon=pos.coords.longitude;
- if(!map._loaded) map.setView([myLat,myLon],14);
-});
-
-function goRoute(uLat,uLon){
- if(routing) map.removeControl(routing);
- routing = L.Routing.control({
-   waypoints:[ L.latLng(myLat,myLon), L.latLng(uLat,uLon) ],
-   addWaypoints:false
- }).addTo(map);
-
- let dist = calc(myLat,myLon,uLat,uLon);
- let eta = Math.round((dist/30)*60); // 30km/h speed
- document.getElementById("infoBox").innerHTML = `Distance: ${dist.toFixed(2)} km | ETA: ${eta} mins`;
-}
-
-// km distance
 function calc(a,b,c,d){
  var R=6371,dLat=(c-a)*Math.PI/180,dLon=(d-b)*Math.PI/180;
  var x=Math.sin(dLat/2)**2 + Math.cos(a*Math.PI/180)*Math.cos(c*Math.PI/180)*Math.sin(dLon/2)**2;
  return R*(2*Math.atan2(Math.sqrt(x),Math.sqrt(1-x)));
 }
+
+function nav(lat,lon){
+ if(route) map.removeControl(route);
+ route=L.Routing.control({
+   waypoints:[L.latLng(myLat,myLon),L.latLng(lat,lon)],
+   addWaypoints:false
+ }).addTo(map);
+
+ let d=calc(myLat,myLon,lat,lon);
+ let t=Math.round((d/30)*60);
+ document.getElementById("status").innerHTML=`Distance: ${d.toFixed(2)} km | ETA: ${t} mins`;
+}
+
+firebase.database().ref("users").on("value",snap=>{
+ let d=snap.val(), html=""; if(!d){html="No users online";}
+ for(let id in d){
+   let u=d[id];
+   if(!markers[id]) markers[id]=L.marker([u.lat,u.lon]).addTo(map);
+   else markers[id].setLatLng([u.lat,u.lon]);
+
+   html+=`
+   <div class="user">
+    <div>${id}<br>${u.device}<br>🔋 ${u.battery}%</div>
+    <div>
+      <button class="btn nav" onclick="nav(${u.lat},${u.lon})">Nav</button>
+      <button class="btn center" onclick="map.setView([${u.lat},${u.lon}],15)">Center</button>
+    </div>
+   </div>`;
+ }
+ document.getElementById("users").innerHTML=html;
+});
 </script>
 
 </body>
