@@ -1,129 +1,57 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Delivery Dashboard — Live Tracking</title>
 
-<!-- Leaflet CSS -->
 <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
 <style>
-  body {
-    font-family: Arial, sans-serif;
-    background: #e9eef5;
-  }
-  #map {
-    height: 400px;
-    width: 100%;
-    border-radius: 10px;
-  }
-  .container {
-    width: 95%;
-    margin: auto;
-    margin-top: 15px;
-  }
-  .card {
-    background: #fff;
-    padding: 12px;
-    border-radius: 10px;
-    margin-bottom: 10px;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-  }
+body{background:#e9eef5;font-family:Arial}
+#map{height:400px;border-radius:12px}
+.container{width:95%;margin:auto;margin-top:10px}
+.card{background:white;padding:10px;border-radius:10px;margin-top:10px}
 </style>
 </head>
 <body>
 
 <div class="container">
-  <h3>🚚 Delivery Dashboard — Live Tracking</h3>
-
-  <div id="map"></div>
-
-  <div id="tracking-log"></div>
+<h2>🚚 Delivery Dashboard — Live Tracking</h2>
+<div id="map"></div>
+<div id="log"></div>
 </div>
 
-<!-- Leaflet JS -->
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
-
 <script>
-// ---------------- Map Setup ----------------
-
-// Default Map Layer (OpenStreetMap)
-var defaultLayer = L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-  maxZoom: 19
+// Map layers
+var normal = L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png");
+var sat = L.tileLayer('http://{s}.google.com/vt/lyrs=s&x={x}&y={y}&z={z}',{
+ maxZoom:20,subdomains:['mt0','mt1','mt2','mt3']
 });
 
-// Google Satellite Layer
-var googleSat = L.tileLayer('http://{s}.google.com/vt/lyrs=s&x={x}&y={y}&z={z}', {
-  maxZoom: 20,
-  subdomains: ['mt0','mt1','mt2','mt3']
-});
+var map = L.map("map",{center:[23.81,90.41],zoom:10,layers:[normal]});
+L.control.layers({"Default":normal,"Satellite":sat}).addTo(map);
+var marker = L.marker([23.81,90.41]).addTo(map);
 
-// Map Initialize
-var map = L.map("map", {
-  center: [23.8103, 90.4125], // Dhaka default
-  zoom: 10,
-  layers: [defaultLayer] // default view
-});
+// Fetch Firebase location
+async function fetchLocation(){
+ let res = await fetch("https://signup-d32c5-default-rtdb.firebaseio.com/location.json");
+ let d = await res.json(); if(!d) return;
 
-// Layer Control (Map Switch Button)
-var baseMaps = {
-  "Default Map": defaultLayer,
-  "Satellite View": googleSat
-};
-L.control.layers(baseMaps).addTo(map);
+ marker.setLatLng([d.lat,d.lng]);
+ map.setView([d.lat,d.lng],15);
 
-// Marker
-var marker = L.marker([23.8103, 90.4125]).addTo(map);
+ marker.bindPopup(`📍 ${d.lat},${d.lng}<br>🔋 ${d.battery}%`).openPopup();
 
-// ---------------- Real-time Firebase Fetch ----------------
-
-// Replace with your Realtime Database URL
-var firebaseURL = "https://your-database.firebaseio.com/location.json";
-
-async function getLocationData() {
-  try {
-    let res = await fetch(firebaseURL);
-    let data = await res.json();
-
-    if (!data) return;
-
-    let lat = data.lat;
-    let lng = data.lng;
-    let bat = data.battery;
-    let device = data.device;
-    let charging = data.charging;
-    let time = new Date().toString();
-
-    // Update marker position
-    marker.setLatLng([lat, lng]);
-    map.setView([lat, lng], 14);
-
-    // Marker Popup
-    marker.bindPopup(`${device}, Battery: ${bat}%`).openPopup();
-
-    // Show log
-    addLog(lat, lng, bat, device, time);
-
-  } catch (e) {
-    console.log("Error fetching data", e);
-  }
+ document.getElementById("log").innerHTML = `
+ <div class='card'>
+  <b>${d.device}</b><br>
+  Lat: ${d.lat}, Lng: ${d.lng}<br>
+  Battery: ${d.battery}%<br>
+  ${d.time}
+ </div>
+ ` + document.getElementById("log").innerHTML;
 }
-
-// Tracking log UI
-function addLog(lat, lng, bat, device, time) {
-  let box = document.getElementById("tracking-log");
-  box.innerHTML = `
-    <div class='card'>
-      <b>${device}</b> | 🔋 ${bat}% <br>
-      📍 ${lat}, ${lng} <br>
-      🕒 ${time}
-    </div>
-  ` + box.innerHTML;
-}
-
-// Auto refresh every 5 sec
-setInterval(getLocationData, 5000);
+setInterval(fetchLocation,3000);
 </script>
-
 </body>
 </html>
