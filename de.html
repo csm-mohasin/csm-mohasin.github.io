@@ -1,57 +1,93 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta charset="UTF-8">
 <title>Delivery Dashboard — Live Tracking</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+<!-- Leaflet CSS -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+
 <style>
-body{background:#e9eef5;font-family:Arial}
-#map{height:400px;border-radius:12px}
-.container{width:95%;margin:auto;margin-top:10px}
-.card{background:white;padding:10px;border-radius:10px;margin-top:10px}
+body {
+  margin: 0;
+  background: #e8eef6;
+  font-family: Arial, sans-serif;
+  text-align: center;
+}
+#map {
+  height: 500px;
+  width: 95%;
+  margin: auto;
+  border-radius: 12px;
+}
+h2 {
+  padding: 10px;
+}
 </style>
+
+<!-- Firebase Scripts -->
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+
+<script>
+// Firebase Config
+const firebaseConfig = {
+  apiKey: "AIzaSyCsGBSRCHVUhXQZ5DNMEZWgQWk1gxMF1E4",
+  authDomain: "signup-d32c5.firebaseapp.com",
+  projectId: "signup-d32c5",
+  storageBucket: "signup-d32c5.firebasestorage.app",
+  messagingSenderId: "583812949955",
+  appId: "1:583812949955:web:fab1bb7be94bc1b4ab3f76",
+  databaseURL: "https://signup-d32c5-default-rtdb.firebaseio.com/"
+};
+firebase.initializeApp(firebaseConfig);
+</script>
+
 </head>
 <body>
 
-<div class="container">
 <h2>🚚 Delivery Dashboard — Live Tracking</h2>
 <div id="map"></div>
-<div id="log"></div>
-</div>
 
+<!-- Leaflet JS -->
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
 <script>
+var map = L.map('map').setView([23.8103, 90.4125], 10); // Initial Dhaka view
+var marker;
+
 // Map layers
-var normal = L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png");
-var sat = L.tileLayer('http://{s}.google.com/vt/lyrs=s&x={x}&y={y}&z={z}',{
- maxZoom:20,subdomains:['mt0','mt1','mt2','mt3']
+var normalMap = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png');
+var satelliteMap = L.tileLayer('https://{s}.google.com/vt/lyrs=s&x={x}&y={y}&z={z}', {
+  subdomains:['mt0','mt1','mt2','mt3']
 });
 
-var map = L.map("map",{center:[23.81,90.41],zoom:10,layers:[normal]});
-L.control.layers({"Default":normal,"Satellite":sat}).addTo(map);
-var marker = L.marker([23.81,90.41]).addTo(map);
+normalMap.addTo(map);
 
-// Fetch Firebase location
-async function fetchLocation(){
- let res = await fetch("https://signup-d32c5-default-rtdb.firebaseio.com/location.json");
- let d = await res.json(); if(!d) return;
+L.control.layers({
+  "Normal": normalMap,
+  "Satellite": satelliteMap
+}).addTo(map);
 
- marker.setLatLng([d.lat,d.lng]);
- map.setView([d.lat,d.lng],15);
+// Firebase listener
+firebase.database().ref("location").limitToLast(1).on("child_added", function(snapshot) {
+  var data = snapshot.val();
+  var lat = data.latitude;
+  var lon = data.longitude;
 
- marker.bindPopup(`📍 ${d.lat},${d.lng}<br>🔋 ${d.battery}%`).openPopup();
+  // Update marker
+  if (!marker) {
+    marker = L.marker([lat, lon]).addTo(map);
+  } else {
+    marker.setLatLng([lat, lon]);
+  }
 
- document.getElementById("log").innerHTML = `
- <div class='card'>
-  <b>${d.device}</b><br>
-  Lat: ${d.lat}, Lng: ${d.lng}<br>
-  Battery: ${d.battery}%<br>
-  ${d.time}
- </div>
- ` + document.getElementById("log").innerHTML;
-}
-setInterval(fetchLocation,3000);
+  // Move map center to live position
+  map.setView([lat, lon], 15);
+
+});
 </script>
+
 </body>
 </html>
