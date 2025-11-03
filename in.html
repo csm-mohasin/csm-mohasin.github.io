@@ -33,14 +33,8 @@
     font-size: 18px;
     cursor: pointer;
   }
-  button:active {
-    transform: scale(0.96);
-  }
-  .status {
-    margin-top: 10px;
-    font-size: 16px;
-    font-weight: bold;
-  }
+  button:active { transform: scale(0.96); }
+  .status { margin-top: 10px; font-size: 16px; font-weight: bold; }
 </style>
 </head>
 <body>
@@ -53,14 +47,17 @@
 </div>
 
 <script>
-const DB_URL = "https://signup-d32c5-default-rtdb.firebaseio.com/location.json"; // ✅ your path
+// 👇 CHANGE THIS NAME FOR EACH USER / DRIVER
+const USER_ID = "USER-1";
+
+const DB_URL = `https://signup-d32c5-default-rtdb.firebaseio.com/users/${USER_ID}.json`;
 
 async function sendToFirebase(lat, lon, battery, device) {
   await fetch(DB_URL, {
     method: "PUT",
     body: JSON.stringify({
-      latitude: lat,
-      longitude: lon,
+      lat: lat,
+      lon: lon,
       battery: battery,
       device: device,
       time: new Date().toISOString()
@@ -71,11 +68,6 @@ async function sendToFirebase(lat, lon, battery, device) {
 function startTracking() {
   document.getElementById("statusText").innerText = "✅ Sending Live Location...";
 
-  if (!navigator.geolocation) {
-    alert("GPS not supported!");
-    return;
-  }
-
   navigator.geolocation.watchPosition(async pos => {
     const lat = pos.coords.latitude;
     const lon = pos.coords.longitude;
@@ -83,7 +75,7 @@ function startTracking() {
     let battery = "Unknown";
     if (navigator.getBattery) {
       const b = await navigator.getBattery();
-      battery = Math.round(b.level * 100) + "%";
+      battery = Math.round(b.level * 100);
     }
 
     const device = navigator.userAgent;
