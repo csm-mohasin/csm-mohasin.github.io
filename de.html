@@ -15,6 +15,11 @@ header{padding:12px;font-size:20px;font-weight:bold;background:#007bff;color:whi
 #map{height:70vh;margin:10px;border-radius:10px}
 .card{background:white;margin:10px;padding:12px;border-radius:10px}
 .info{font-size:16px;margin-bottom:5px}
+button{
+width:90%;margin:10px auto;display:block;
+padding:12px;background:#007bff;color:white;
+border:none;border-radius:8px;font-size:16px;cursor:pointer
+}
 </style>
 
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
@@ -46,93 +51,96 @@ firebase.initializeApp(firebaseConfig);
 
 <div id="map"></div>
 
+<button id="routeBtn">Show Route 🚗📍</button>
+<button id="clearRouteBtn" style="background:#ff3b30;">Clear Route ❌</button>
+
 <script>
-// Target User ID
+// Target Firebase User ID
 const USER_ID = "USER-1";
 
-// -------- CUSTOM COLORED DOT ICONS --------
+// Color marker icons
 const greenIcon = L.icon({
-    iconUrl: "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-green.png",
-    shadowUrl: "https://unpkg.com/leaflet/dist/images/marker-shadow.png",
-    iconSize: [25,41], iconAnchor: [12,41]
+    iconUrl:"https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-green.png",
+    shadowUrl:"https://unpkg.com/leaflet/dist/images/marker-shadow.png",
+    iconSize:[25,41], iconAnchor:[12,41]
 });
-
 const redIcon = L.icon({
-    iconUrl: "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png",
-    shadowUrl: "https://unpkg.com/leaflet/dist/images/marker-shadow.png",
-    iconSize: [25,41], iconAnchor: [12,41]
+    iconUrl:"https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png",
+    shadowUrl:"https://unpkg.com/leaflet/dist/images/marker-shadow.png",
+    iconSize:[25,41], iconAnchor:[12,41]
 });
 
-// -------- MAP LAYERS (Normal + Satellite) --------
+// Map layers
 let normal = L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png");
 let satellite = L.tileLayer("https://{s}.google.com/vt/lyrs=s&x={x}&y={y}&z={z}", {
     subdomains:['mt0','mt1','mt2','mt3']
 });
 
-let map = L.map("map", {
-    layers:[satellite] // default satellite
-});
+let map = L.map("map", {layers:[satellite]});
 
-// Layer switcher
-L.control.layers(
-    {"🌍 Normal": normal, "🛰 Satellite": satellite}
-).addTo(map);
+// Toggle map view
+L.control.layers({"🌍 Normal":normal,"🛰 Satellite":satellite}).addTo(map);
 
-let myLat, myLon, userMarker, myMarker, route;
+let myLat,myLon,userMarker,myMarker,route,customerLat,customerLon;
 
-// get driver GPS
+// Driver live location
 navigator.geolocation.watchPosition(p=>{
-    myLat = p.coords.latitude;
-    myLon = p.coords.longitude;
+    myLat=p.coords.latitude;
+    myLon=p.coords.longitude;
 
     if(!map._loaded) map.setView([myLat,myLon],14);
 
     if(!myMarker){
-        myMarker = L.marker([myLat,myLon], {icon: greenIcon, title:"Rider"}).addTo(map);
-    } else {
-        myMarker.setLatLng([myLat,myLon]);
-    }
+        myMarker=L.marker([myLat,myLon],{icon:greenIcon,title:"Rider"}).addTo(map);
+    } else myMarker.setLatLng([myLat,myLon]);
 });
 
-// distance calc
+// Distance function
 function calc(a,b,c,d){
  var R=6371,dLat=(c-a)*Math.PI/180,dLon=(d-b)*Math.PI/180;
  var x=Math.sin(dLat/2)**2 + Math.cos(a*Math.PI/180)*Math.cos(c*Math.PI/180)*Math.sin(dLon/2)**2;
  return R*(2*Math.atan2(Math.sqrt(x),Math.sqrt(1-x)));
 }
 
-// routing
+// Draw Route only when clicked
 function showRoute(lat,lon){
  if(route) map.removeControl(route);
 
- route = L.Routing.control({
-   waypoints:[L.latLng(myLat,myLon),L.latLng(lat,lon)],
-   addWaypoints:false,
-   lineOptions:{addWaypoints:false}
+ route=L.Routing.control({
+  waypoints:[L.latLng(myLat,myLon),L.latLng(lat,lon)],
+  addWaypoints:false,
+  lineOptions:{addWaypoints:false}
  }).addTo(map);
 
- let d = calc(myLat,myLon,lat,lon);
- let eta = Math.round((d / 30) * 60);
+ let d=calc(myLat,myLon,lat,lon);
+ let eta=Math.round((d/30)*60);
 
- document.getElementById("dist").innerText = d.toFixed(2);
- document.getElementById("eta").innerText = eta;
+ document.getElementById("dist").innerText=d.toFixed(2);
+ document.getElementById("eta").innerText=eta;
 }
 
-// firebase get user
-firebase.database().ref("users/" + USER_ID).on("value",snap=>{
- let u = snap.val(); if(!u) return;
+// Firebase user location
+firebase.database().ref("users/"+USER_ID).on("value",snap=>{
+ let u=snap.val(); if(!u) return;
+
+ customerLat=u.lat;
+ customerLon=u.lon;
 
  if(!userMarker){
-   userMarker = L.marker([u.lat,u.lon], {icon: redIcon, title:"Customer"}).addTo(map);
- } else {
-   userMarker.setLatLng([u.lat,u.lon]);
- }
-
- if(myLat && myLon){
-   showRoute(u.lat, u.lon);
- }
+   userMarker=L.marker([u.lat,u.lon],{icon:redIcon,title:"Customer"}).addTo(map);
+ } else userMarker.setLatLng([u.lat,u.lon]);
 });
-</script>
 
+// Show Route button
+document.getElementById("routeBtn").onclick=()=>{
+ if(myLat && myLon && customerLat && customerLon) showRoute(customerLat,customerLon);
+ else alert("Location not ready!");
+};
+
+// Clear route
+document.getElementById("clearRouteBtn").onclick=()=>{
+ if(route) map.removeControl(route);
+};
+</script>
 </body>
 </html>
