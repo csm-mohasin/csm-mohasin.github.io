@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>📍 Live Location Sender</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>📍 Live Location Auto Sender</title>
 
 <style>
   body {
@@ -13,84 +13,105 @@
     justify-content: center;
     align-items: center;
     height: 100vh;
-    margin: 0;
   }
-  .box {
-    background: white;
-    padding: 25px;
-    width: 90%;
-    max-width: 400px;
-    border-radius: 15px;
+  .card {
+    background: #fff;
+    padding: 20px;
+    width: 350px;
+    border-radius: 12px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
     text-align: center;
-    box-shadow: 0 0 10px rgba(0,0,0,0.1);
   }
-  button {
-    background: #007bff;
-    color: white;
-    padding: 12px 20px;
-    border: none;
-    border-radius: 8px;
-    font-size: 18px;
-    cursor: pointer;
-  }
-  button:active { transform: scale(0.96); }
-  .status { margin-top: 10px; font-size: 16px; font-weight: bold; }
+  #status { margin-top: 10px; font-size: 14px; font-weight: bold; color:#007bff; }
 </style>
 </head>
 <body>
 
-<div class="box">
-  <h2>📍 Live Location Sharing</h2>
-  <p id="info">Press Start to send your real-time location</p>
-  <button onclick="startTracking()">Start Tracking</button>
-  <p class="status" id="statusText">🛑 Not sending</p>
+<div class="card">
+  <h2>📍 Auto Live Location</h2>
+
+  <select id="userSelect" style="padding:10px;width:100%;border-radius:8px;margin-bottom:12px;">
+    <option value="User1">User 1</option>
+    <option value="User2">User 2</option>
+    <option value="Admin">Admin ✅</option>
+  </select>
+
+  <p id="status">Waiting for permission...</p>
 </div>
 
-<script>
-// 👇 CHANGE THIS NAME FOR EACH USER / DRIVER
-const USER_ID = "USER-1";
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getDatabase, ref, update } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
-const DB_URL = `https://signup-d32c5-default-rtdb.firebaseio.com/users/${USER_ID}.json`;
+// ✅ Firebase config
+const firebaseConfig = {
+  apiKey: "AIzaSyCsGBSRCHVUhXQZ5DNMEZWgQWk1gxMF1E4",
+  authDomain: "signup-d32c5.firebaseapp.com",
+  databaseURL: "https://signup-d32c5-default-rtdb.firebaseio.com",
+  projectId: "signup-d32c5",
+  storageBucket: "signup-d32c5.firebasestorage.app",
+  messagingSenderId: "583812949955",
+  appId: "1:583812949955:web:fab1bb7be94bc1b4ab3f76",
+  measurementId: "G-VLC3QHK8CG"
+};
 
-async function sendToFirebase(lat, lon, battery, device) {
-  await fetch(DB_URL, {
-    method: "PUT",
-    body: JSON.stringify({
-      lat: lat,
-      lon: lon,
-      battery: battery,
-      device: device,
-      time: new Date().toISOString()
-    })
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+
+const userSelect = document.getElementById("userSelect");
+const statusText = document.getElementById("status");
+
+// ✅ Save last location before exit
+function saveLast(lat, lon) {
+  let user = userSelect.value;
+  update(ref(db, "users/" + user), {
+    last_lat: lat,
+    last_lon: lon,
+    last_time: new Date().toISOString()
   });
 }
 
-function startTracking() {
-  document.getElementById("statusText").innerText = "✅ Sending Live Location...";
+// ✅ Live tracking function
+function startLiveTrack() {
+  navigator.geolocation.watchPosition(
+    pos => {
+      let lat = pos.coords.latitude;
+      let lon = pos.coords.longitude;
+      let user = userSelect.value;
 
-  navigator.geolocation.watchPosition(async pos => {
-    const lat = pos.coords.latitude;
-    const lon = pos.coords.longitude;
+      update(ref(db, "users/" + user), {
+        latitude: lat,
+        longitude: lon,
+        time: new Date().toISOString()
+      });
 
-    let battery = "Unknown";
-    if (navigator.getBattery) {
-      const b = await navigator.getBattery();
-      battery = Math.round(b.level * 100);
-    }
+      saveLast(lat, lon);
 
-    const device = navigator.userAgent;
-
-    sendToFirebase(lat, lon, battery, device);
-    document.getElementById("info").innerText = `📌 Lat: ${lat} | Lon: ${lon}`;
-
-  }, err => {
-    alert("Location permission denied!");
-  }, {
-    enableHighAccuracy: true,
-    maximumAge: 0,
-    timeout: 5000
-  });
+      statusText.textContent = "✅ Live location sending...";
+    },
+    err => {
+      statusText.textContent = "❌ Permission Denied! Reload & Allow.";
+    },
+    { enableHighAccuracy: true }
+  );
 }
+
+// ✅ Auto ask permission on page load
+window.onload = () => {
+  statusText.textContent = "⏳ Requesting location permission...";
+
+  navigator.geolocation.getCurrentPosition(
+    () => startLiveTrack(),
+    () => statusText.textContent = "❌ Allow location to continue"
+  );
+};
+
+// ✅ Save last location on exit/close
+window.addEventListener("beforeunload", () => {
+  navigator.geolocation.getCurrentPosition(pos => {
+    saveLast(pos.coords.latitude, pos.coords.longitude);
+  });
+});
 </script>
 
 </body>
