@@ -2,102 +2,26 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>🚚 Multi-User Delivery Tracking</title>
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>🚚 Delivery Live Tracking</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
 
 <!-- Leaflet -->
 <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 <script src="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.js"></script>
+<link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.css"/>
 
 <style>
-body {
-  margin:0;
-  font-family:Arial;
-  background:#eef5ff;
+body{margin:0;font-family:Arial;background:#eaf3ff}
+header{padding:12px;font-size:20px;font-weight:bold;background:#007bff;color:white}
+#map{height:75vh;margin:10px;border-radius:10px}
+.card{background:white;margin:10px;padding:12px;border-radius:10px}
+select,button{
+ width:100%;padding:10px;margin-top:8px;border-radius:8px;
+ border:1px solid #007bff;font-size:16px;
 }
-header {
-  padding:12px;
-  background:#0056d2;
-  color:#fff;
-  font-size:20px;
-  font-weight:bold;
-  text-align:center;
-}
-#map{
-  height:65vh;
-  margin:10px;
-  border-radius:10px;
-  overflow:hidden;
-}
-.info-box {
-  padding:10px 15px;
-  font-size:15px;
-}
-
-.btn {
-  width:90%;
-  margin:6px auto;
-  padding:14px;
-  display:block;
-  font-size:16px;
-  border-radius:8px;
-  border:none;
-  font-weight:bold;
-}
-.show-btn{background:#007bff;color:white;}
-.clear-btn{background:#d9534f;color:white;}
-
-/* Custom Dropdown */
-.dropdown {
-  width:90%;
-  margin:10px auto;
-  background:#ffffff;
-  border:2px solid #007bff;
-  border-radius:10px;
-  padding:12px;
-  font-size:17px;
-  font-weight:600;
-  position:relative;
-  cursor:pointer;
-}
-.dropdown-selected {color:#212529;}
-.dropdown-list {
-  display:none;
-  position:absolute;
-  top:55px;
-  left:0;
-  width:100%;
-  background:white;
-  border:1px solid #007bff;
-  border-radius:10px;
-  box-shadow:0 6px 20px rgba(0,0,0,0.1);
-  max-height:250px;
-  overflow-y:auto;
-  z-index:999;
-}
-.dropdown-item {
-  padding:12px;
-  font-size:16px;
-  border-bottom:1px solid #eee;
-}
-.dropdown-item:hover {
-  background:#eef5ff;
-  font-weight:600;
-}
-
-/* Map switch button */
-.toggle-map{
-  position:absolute;
-  top:80px;
-  right:10px;
-  padding:8px;
-  background:#fff;
-  border-radius:6px;
-  border:1px solid #ccc;
-  z-index:9999;
-  font-size:14px;
-}
+button{background:#007bff;color:white;border:none;cursor:pointer}
+button:hover{background:#005fcc}
 </style>
 
 <!-- Firebase -->
@@ -120,143 +44,123 @@ firebase.initializeApp(firebaseConfig);
 
 <body>
 
-<header>📍 Multi-User Delivery Tracking</header>
+<header>📦 Live Delivery Tracking</header>
 
-<div class="info-box">
-Distance: <b id="dist">--</b> km<br>
-ETA: <b id="eta">--</b> mins
+<div class="card">
+<select id="userSelect">
+<option value="">Select User</option>
+</select>
+
+<button onclick="drawRoute()">Draw Route</button>
+<button onclick="clearRoute()" style="background:#dc3545;margin-top:5px;">Clear Route</button>
+
+<div style="margin-top:10px;font-weight:bold">
+Distance: <span id="dist">--</span> km | ETA: <span id="eta">--</span> min
 </div>
-
-<!-- Custom Dropdown -->
-<div class="dropdown">
-  <div class="dropdown-selected" id="selectedUser">Select Customer</div>
-  <div class="dropdown-list" id="dropdownList"></div>
 </div>
 
 <div id="map"></div>
 
-<button class="btn show-btn" onclick="drawRoute()">Show Route 🚗📍</button>
-<button class="btn clear-btn" onclick="clearRoute()">Clear Route ❌</button>
-
-<button class="toggle-map" onclick="toggleMap()">🛰️ Satellite</button>
-
 <script>
+// map setup
+let map = L.map("map");
+let normal = L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png");
+let satellite = L.tileLayer("https://{s}.google.com/vt/lyrs=s&x={x}&y={y}&z={z}",{subdomains:['mt0','mt1','mt2','mt3']});
 
-// ----- Map Setup -----
-let map = L.map("map").setView([23.8103, 90.4125], 13);
+normal.addTo(map);
+L.control.layers({"Normal":normal,"Satellite":satellite}).addTo(map);
 
-let normalMap = L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png");
-let satelliteMap = L.tileLayer("https://{s}.google.com/vt/lyrs=s&x={x}&y={y}&z={z}", {
-  subdomains:['mt0','mt1','mt2','mt3']
+let adminLat, adminLon, adminMarker, route;
+let users={};
+let userMarkers={};
+
+// Admin icon with verified badge
+let adminIcon = L.divIcon({
+ html: `
+   <div style="position:relative;transform:translate(-50%, -50%); width:24px;height:24px;background:green;border-radius:50%;border:2px solid white;"></div>
+   <div style="position:absolute;top:-25px;left:-20px;background:white;padding:3px 8px;border-radius:6px;border:1px solid #ccc;font-size:12px;white-space:nowrap;">
+     Admin 
+     <img src="https://dl8.wapkizfile.info/download/c4275ed00b49e8d2f586ffbd4dc6c25f/csm-mohasin-alam+wapkizs+com/2-jpg-(csm-mohasin-alam.wapkizs.com).jpg" 
+          style="width:14px;height:14px;border-radius:50%;margin-left:3px;">
+   </div>
+ `
 });
-normalMap.addTo(map);
 
-let isSatellite=false;
-function toggleMap(){
-  if(isSatellite){
-    map.removeLayer(satelliteMap);
-    normalMap.addTo(map);
-  } else {
-    map.removeLayer(normalMap);
-    satelliteMap.addTo(map);
-  }
-  isSatellite=!isSatellite;
+// user icon
+let userIcon = L.divIcon({
+ html:`<div style="width:22px;height:22px;background:red;border-radius:50%;border:2px solid white;"></div>`
+});
+
+// distance
+function calc(a,b,c,d){
+ var R=6371,dLat=(c-a)*Math.PI/180,dLon=(d-b)*Math.PI/180;
+ var x=Math.sin(dLat/2)**2 + Math.cos(a*Math.PI/180)*Math.cos(c*Math.PI/180)*Math.sin(dLon/2)**2;
+ return R*(2*Math.atan2(Math.sqrt(x),Math.sqrt(1-x)));
 }
 
-// ----- Variables -----
-let myLat, myLon, myMarker, customerMarker, route;
-let activeUser = null;
-let allUsers=[];
-
-// ----- Admin GPS -----
+// get admin GPS
 navigator.geolocation.watchPosition(p=>{
-  myLat=p.coords.latitude;
-  myLon=p.coords.longitude;
+ adminLat=p.coords.latitude;
+ adminLon=p.coords.longitude;
 
-  if(!myMarker){
-    myMarker=L.marker([myLat,myLon],{
-      icon:L.icon({iconUrl:"https://www.gstatic.com/mapspro/images/stock/503-wht-circle.png", iconSize:[15,15]})
-    }).addTo(map);
-  }
-  myMarker.setLatLng([myLat,myLon]);
+ if(!map._loaded) map.setView([adminLat,adminLon],14);
+
+ if(!adminMarker){
+   adminMarker=L.marker([adminLat,adminLon],{icon:adminIcon}).addTo(map);
+ }else{
+   adminMarker.setLatLng([adminLat,adminLon]);
+ }
 });
 
-// ----- Dropdown Logic -----
-const dropdown = document.querySelector('.dropdown');
-const dropdownList = document.getElementById('dropdownList');
-const selectedUser = document.getElementById('selectedUser');
-
-dropdown.onclick = ()=> dropdownList.style.display =
- dropdownList.style.display==="block"?"none":"block";
-
-function renderUsers(){
- dropdownList.innerHTML="";
- allUsers.forEach(uid=>{
-   let div=document.createElement("div");
-   div.className="dropdown-item";
-   div.innerText=uid;
-   div.onclick=()=>{
-     activeUser=uid;
-     selectedUser.innerText=uid;
-     dropdownList.style.display="none";
-     loadUser(uid);
-   }
-   dropdownList.appendChild(div);
- });
-}
-
-// ----- Load Firebase users -----
+// load user list
 firebase.database().ref("users").on("value",snap=>{
- allUsers=Object.keys(snap.val()||{});
- renderUsers();
+ users=snap.val()||{};
+ let sel=document.getElementById("userSelect");
+ sel.innerHTML=`<option value="">Select User</option>`;
+ Object.keys(users).forEach(id=>{
+  sel.innerHTML+=`<option value="${id}">${id}</option>`;
+ });
 });
 
-// ----- Load Customer Location -----
-function loadUser(uid){
- firebase.database().ref("users/"+uid).on("value",snap=>{
-   let u=snap.val();
-   if(!u) return;
-   let lat=u.lat, lon=u.lon;
+// track each user
+firebase.database().ref("users").on("child_changed",(snap)=>{
+ let id=snap.key;
+ let u=snap.val();
 
-   if(!customerMarker){
-     customerMarker=L.marker([lat,lon],{
-       icon:L.icon({iconUrl:"https://www.google.com/mapfiles/ms/icons/red-dot.png"})
-     }).addTo(map);
-   }
-   customerMarker.setLatLng([lat,lon]);
+ if(!userMarkers[id]){
+   userMarkers[id]=L.marker([u.lat,u.lon],{icon:userIcon}).addTo(map);
+   userMarkers[id].bindTooltip(id,{permanent:false});
+ }else{
+   userMarkers[id].setLatLng([u.lat,u.lon]);
+ }
+});
 
-   if(myLat && myLon) calcDistance(lat,lon);
- });
-}
-
-// ----- Distance -----
-function calcDistance(a,b){
- let R=6371;
- let dLat=(a-myLat)*Math.PI/180;
- let dLon=(b-myLon)*Math.PI/180;
- let x=Math.sin(dLat/2)**2 + Math.cos(myLat*Math.PI/180)*Math.cos(a*Math.PI/180)*Math.sin(dLon/2)**2;
- let d=R*(2*Math.atan2(Math.sqrt(x),Math.sqrt(1-x)));
- document.getElementById("dist").innerText=d.toFixed(2);
- document.getElementById("eta").innerText=Math.round((d/30)*60);
-}
-
-// ----- Route -----
+// draw route
 function drawRoute(){
- if(!activeUser || !myLat) return alert("Select Customer");
- firebase.database().ref("users/"+activeUser).once("value",snap=>{
-  let u=snap.val();
-  if(route) map.removeControl(route);
-  route=L.Routing.control({
-    waypoints:[L.latLng(myLat,myLon),L.latLng(u.lat,u.lon)],
-    addWaypoints:false
-  }).addTo(map);
- });
+ let id=document.getElementById("userSelect").value;
+ if(!id){alert("Select a user first");return;}
+
+ let u=users[id];
+ if(route) map.removeControl(route);
+
+ route=L.Routing.control({
+   waypoints:[L.latLng(adminLat,adminLon),L.latLng(u.lat,u.lon)],
+   addWaypoints:false
+ }).addTo(map);
+
+ let d=calc(adminLat,adminLon,u.lat,u.lon);
+ let eta=Math.round((d/30)*60);
+
+ document.getElementById("dist").innerText=d.toFixed(2);
+ document.getElementById("eta").innerText=eta;
 }
 
+// clear route
 function clearRoute(){
  if(route) map.removeControl(route);
+ document.getElementById("dist").innerText="--";
+ document.getElementById("eta").innerText="--";
 }
-
 </script>
 
 </body>
