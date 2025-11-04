@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>📍 Live Location Auto Sender</title>
+<title>📍 Auto Live Location Sender</title>
 
 <style>
   body {
@@ -13,6 +13,7 @@
     justify-content: center;
     align-items: center;
     height: 100vh;
+    margin:0;
   }
   .card {
     background: #fff;
@@ -36,10 +37,12 @@
     <option value="Admin">Admin ✅</option>
   </select>
 
-  <p id="status">Waiting for permission...</p>
+  <p id="status">Waiting for location permission...</p>
 </div>
 
 <script type="module">
+
+// ✅ Firebase imports
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getDatabase, ref, update } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
@@ -55,58 +58,86 @@ const firebaseConfig = {
   measurementId: "G-VLC3QHK8CG"
 };
 
+// ✅ Init Firebase & vars
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
-
 const userSelect = document.getElementById("userSelect");
 const statusText = document.getElementById("status");
 
-// ✅ Save last location before exit
-function saveLast(lat, lon) {
-  let user = userSelect.value;
+// 📡 Get Network Type (WiFi/4G/5G)
+function getNetworkType() {
+  if (navigator.connection) {
+    return navigator.connection.effectiveType.toUpperCase(); 
+  }
+  return "UNKNOWN";
+}
+
+// 🔋 Get Battery %
+async function getBatteryLevel() {
+  if (navigator.getBattery) {
+    const b = await navigator.getBattery();
+    return Math.round(b.level * 100);
+  }
+  return "Unknown";
+}
+
+// 💾 Save last location before closing
+async function saveLast(lat, lon) {
+  const user = userSelect.value;
+  const battery = await getBatteryLevel();
+  const device = navigator.userAgent;
+  const network = getNetworkType();
+
   update(ref(db, "users/" + user), {
     last_lat: lat,
     last_lon: lon,
-    last_time: new Date().toISOString()
+    last_time: new Date().toISOString(),
+    last_battery: battery,
+    last_device: device,
+    last_network: network
   });
 }
 
-// ✅ Live tracking function
+// 🚀 Start live tracking
 function startLiveTrack() {
-  navigator.geolocation.watchPosition(
-    pos => {
-      let lat = pos.coords.latitude;
-      let lon = pos.coords.longitude;
-      let user = userSelect.value;
+  navigator.geolocation.watchPosition(async pos => {
 
-      update(ref(db, "users/" + user), {
-        latitude: lat,
-        longitude: lon,
-        time: new Date().toISOString()
-      });
+    let lat = pos.coords.latitude;
+    let lon = pos.coords.longitude;
+    const user = userSelect.value;
+    const battery = await getBatteryLevel();
+    const device = navigator.userAgent;
+    const network = getNetworkType();
 
-      saveLast(lat, lon);
+    update(ref(db, "users/" + user), {
+      latitude: lat,
+      longitude: lon,
+      battery: battery,
+      device: device,
+      network: network,
+      time: new Date().toISOString()
+    });
 
-      statusText.textContent = "✅ Live location sending...";
-    },
-    err => {
-      statusText.textContent = "❌ Permission Denied! Reload & Allow.";
-    },
-    { enableHighAccuracy: true }
-  );
+    saveLast(lat, lon);
+
+    statusText.textContent = "✅ Sending Live Location...";
+  }, 
+  err => {
+    statusText.textContent = "❌ Please allow location!";
+  }, 
+  { enableHighAccuracy: true });
 }
 
-// ✅ Auto ask permission on page load
+// 📍 Auto ask permission on load
 window.onload = () => {
-  statusText.textContent = "⏳ Requesting location permission...";
-
+  statusText.textContent = "⏳ Asking location permission...";
   navigator.geolocation.getCurrentPosition(
     () => startLiveTrack(),
     () => statusText.textContent = "❌ Allow location to continue"
   );
 };
 
-// ✅ Save last location on exit/close
+// 🔚 Save last location when user exits
 window.addEventListener("beforeunload", () => {
   navigator.geolocation.getCurrentPosition(pos => {
     saveLast(pos.coords.latitude, pos.coords.longitude);
