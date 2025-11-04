@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>🚚 Delivery Live View</title>
+<title>🚚 Multi User Delivery Tracking</title>
 <meta name="viewport" content="width=device-width,initial-scale=1">
 
 <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
@@ -12,14 +12,16 @@
 <style>
 body{margin:0;font-family:Arial;background:#eaf3ff}
 header{padding:12px;font-size:20px;font-weight:bold;background:#007bff;color:white}
-#map{height:70vh;margin:10px;border-radius:10px}
+#map{height:65vh;margin:10px;border-radius:10px}
 .card{background:white;margin:10px;padding:12px;border-radius:10px}
-.info{font-size:16px;margin-bottom:5px}
-button{
-width:90%;margin:10px auto;display:block;
-padding:12px;background:#007bff;color:white;
-border:none;border-radius:8px;font-size:16px;cursor:pointer
+.info{font-size:16px;margin-bottom:6px}
+button,select{
+width:90%;margin:8px auto;display:block;
+padding:12px;font-size:16px;border:none;border-radius:8px;cursor:pointer
 }
+button{background:#007bff;color:white}
+#clearRouteBtn{background:#ff3b30}
+select{background:white;border:1px solid #aaa}
 </style>
 
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
@@ -41,106 +43,119 @@ firebase.initializeApp(firebaseConfig);
 
 <body>
 
-<header>📍 Live Delivery Tracking</header>
+<header>📍 Multi-User Delivery Tracking</header>
 
 <div class="card">
-<b>User:</b> <span id="uid">USER-1</span><br>
 <div class="info">Distance: <span id="dist">--</span> km</div>
 <div class="info">ETA: <span id="eta">--</span> mins</div>
 </div>
 
+<select id="userSelect">
+<option value="">Select Customer</option>
+</select>
+
 <div id="map"></div>
 
 <button id="routeBtn">Show Route 🚗📍</button>
-<button id="clearRouteBtn" style="background:#ff3b30;">Clear Route ❌</button>
+<button id="clearRouteBtn">Clear Route ❌</button>
 
 <script>
-// Target Firebase User ID
-const USER_ID = "USER-1";
-
-// Color marker icons
+// Marker icons
 const greenIcon = L.icon({
     iconUrl:"https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-green.png",
     shadowUrl:"https://unpkg.com/leaflet/dist/images/marker-shadow.png",
-    iconSize:[25,41], iconAnchor:[12,41]
+    iconSize:[25,41],iconAnchor:[12,41]
 });
 const redIcon = L.icon({
     iconUrl:"https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png",
     shadowUrl:"https://unpkg.com/leaflet/dist/images/marker-shadow.png",
-    iconSize:[25,41], iconAnchor:[12,41]
+    iconSize:[25,41],iconAnchor:[12,41]
 });
 
 // Map layers
 let normal = L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png");
 let satellite = L.tileLayer("https://{s}.google.com/vt/lyrs=s&x={x}&y={y}&z={z}", {
-    subdomains:['mt0','mt1','mt2','mt3']
+        subdomains:['mt0','mt1','mt2','mt3']
 });
 
-let map = L.map("map", {layers:[satellite]});
-
-// Toggle map view
+let map = L.map("map",{layers:[satellite]});
 L.control.layers({"🌍 Normal":normal,"🛰 Satellite":satellite}).addTo(map);
 
-let myLat,myLon,userMarker,myMarker,route,customerLat,customerLon;
+let myLat,myLon,myMarker,route;
+let customerMarkers = {};
+let selectedUser = "";
 
-// Driver live location
-navigator.geolocation.watchPosition(p=>{
-    myLat=p.coords.latitude;
-    myLon=p.coords.longitude;
+// Driver location
+navigator.geolocation.watchPosition(pos=>{
+    myLat = pos.coords.latitude;
+    myLon = pos.coords.longitude;
 
     if(!map._loaded) map.setView([myLat,myLon],14);
 
     if(!myMarker){
-        myMarker=L.marker([myLat,myLon],{icon:greenIcon,title:"Rider"}).addTo(map);
+        myMarker = L.marker([myLat,myLon],{icon:greenIcon,title:"Rider"}).addTo(map);
     } else myMarker.setLatLng([myLat,myLon]);
 });
 
 // Distance function
 function calc(a,b,c,d){
- var R=6371,dLat=(c-a)*Math.PI/180,dLon=(d-b)*Math.PI/180;
- var x=Math.sin(dLat/2)**2 + Math.cos(a*Math.PI/180)*Math.cos(c*Math.PI/180)*Math.sin(dLon/2)**2;
+ let R=6371,dLat=(c-a)*Math.PI/180,dLon=(d-b)*Math.PI/180;
+ let x=Math.sin(dLat/2)**2 + Math.cos(a*Math.PI/180)*Math.cos(c*Math.PI/180)*Math.sin(dLon/2)**2;
  return R*(2*Math.atan2(Math.sqrt(x),Math.sqrt(1-x)));
 }
 
-// Draw Route only when clicked
-function showRoute(lat,lon){
+// Draw Route
+function drawRoute(lat,lon){
  if(route) map.removeControl(route);
-
  route=L.Routing.control({
-  waypoints:[L.latLng(myLat,myLon),L.latLng(lat,lon)],
-  addWaypoints:false,
-  lineOptions:{addWaypoints:false}
+     waypoints:[L.latLng(myLat,myLon),L.latLng(lat,lon)],
+     addWaypoints:false
  }).addTo(map);
 
  let d=calc(myLat,myLon,lat,lon);
- let eta=Math.round((d/30)*60);
-
  document.getElementById("dist").innerText=d.toFixed(2);
- document.getElementById("eta").innerText=eta;
+ document.getElementById("eta").innerText=Math.round((d/30)*60);
 }
 
-// Firebase user location
-firebase.database().ref("users/"+USER_ID).on("value",snap=>{
- let u=snap.val(); if(!u) return;
+// Load all customers on map
+firebase.database().ref("users").on("value", snap=>{
+ let list = snap.val();
+ let dropdown = document.getElementById("userSelect");
+ dropdown.innerHTML="<option value=''>Select Customer</option>";
 
- customerLat=u.lat;
- customerLon=u.lon;
+ for(let id in list){
+     let lat=list[id].lat, lon=list[id].lon;
 
- if(!userMarker){
-   userMarker=L.marker([u.lat,u.lon],{icon:redIcon,title:"Customer"}).addTo(map);
- } else userMarker.setLatLng([u.lat,u.lon]);
+     dropdown.innerHTML+=`<option value="${id}">${id}</option>`;
+
+     if(!customerMarkers[id])
+         customerMarkers[id]=L.marker([lat,lon],{icon:redIcon,title:id}).addTo(map);
+     else
+         customerMarkers[id].setLatLng([lat,lon]);
+ }
 });
 
-// Show Route button
-document.getElementById("routeBtn").onclick=()=>{
- if(myLat && myLon && customerLat && customerLon) showRoute(customerLat,customerLon);
- else alert("Location not ready!");
+// Dropdown selection
+document.getElementById("userSelect").onchange = function(){
+ selectedUser=this.value;
 };
 
-// Clear route
+// Button: Show Route
+document.getElementById("routeBtn").onclick = ()=>{
+ if(!selectedUser) return alert("Select customer first!");
+
+ firebase.database().ref("users/"+selectedUser).once("value",snap=>{
+   let u=snap.val();
+   if(!u) return;
+   drawRoute(u.lat, u.lon);
+ });
+};
+
+// Button: Clear route
 document.getElementById("clearRouteBtn").onclick=()=>{
  if(route) map.removeControl(route);
 };
+
 </script>
 </body>
 </html>
