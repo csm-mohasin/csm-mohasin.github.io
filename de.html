@@ -47,15 +47,40 @@ firebase.initializeApp(firebaseConfig);
 <div id="map"></div>
 
 <script>
-// change target user id here:
+// Target User ID
 const USER_ID = "USER-1";
 
-let map = L.map("map");
-L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png").addTo(map);
+// -------- CUSTOM COLORED DOT ICONS --------
+const greenIcon = L.icon({
+    iconUrl: "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-green.png",
+    shadowUrl: "https://unpkg.com/leaflet/dist/images/marker-shadow.png",
+    iconSize: [25,41], iconAnchor: [12,41]
+});
+
+const redIcon = L.icon({
+    iconUrl: "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png",
+    shadowUrl: "https://unpkg.com/leaflet/dist/images/marker-shadow.png",
+    iconSize: [25,41], iconAnchor: [12,41]
+});
+
+// -------- MAP LAYERS (Normal + Satellite) --------
+let normal = L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png");
+let satellite = L.tileLayer("https://{s}.google.com/vt/lyrs=s&x={x}&y={y}&z={z}", {
+    subdomains:['mt0','mt1','mt2','mt3']
+});
+
+let map = L.map("map", {
+    layers:[satellite] // default satellite
+});
+
+// Layer switcher
+L.control.layers(
+    {"🌍 Normal": normal, "🛰 Satellite": satellite}
+).addTo(map);
 
 let myLat, myLon, userMarker, myMarker, route;
 
-// get driver's own GPS
+// get driver GPS
 navigator.geolocation.watchPosition(p=>{
     myLat = p.coords.latitude;
     myLon = p.coords.longitude;
@@ -63,20 +88,20 @@ navigator.geolocation.watchPosition(p=>{
     if(!map._loaded) map.setView([myLat,myLon],14);
 
     if(!myMarker){
-        myMarker = L.marker([myLat,myLon], {title:"You"}).addTo(map);
+        myMarker = L.marker([myLat,myLon], {icon: greenIcon, title:"Rider"}).addTo(map);
     } else {
         myMarker.setLatLng([myLat,myLon]);
     }
 });
 
-// distance function
+// distance calc
 function calc(a,b,c,d){
  var R=6371,dLat=(c-a)*Math.PI/180,dLon=(d-b)*Math.PI/180;
  var x=Math.sin(dLat/2)**2 + Math.cos(a*Math.PI/180)*Math.cos(c*Math.PI/180)*Math.sin(dLon/2)**2;
  return R*(2*Math.atan2(Math.sqrt(x),Math.sqrt(1-x)));
 }
 
-// show route & ETA
+// routing
 function showRoute(lat,lon){
  if(route) map.removeControl(route);
 
@@ -87,27 +112,24 @@ function showRoute(lat,lon){
  }).addTo(map);
 
  let d = calc(myLat,myLon,lat,lon);
- let eta = Math.round((d / 30) * 60); // 30km/h
+ let eta = Math.round((d / 30) * 60);
 
  document.getElementById("dist").innerText = d.toFixed(2);
  document.getElementById("eta").innerText = eta;
 }
 
-// get user location from firebase
+// firebase get user
 firebase.database().ref("users/" + USER_ID).on("value",snap=>{
- let u = snap.val();
- if(!u) return;
-
- let lat = u.lat, lon = u.lon;
+ let u = snap.val(); if(!u) return;
 
  if(!userMarker){
-   userMarker = L.marker([lat,lon],{title:"Customer"}).addTo(map);
+   userMarker = L.marker([u.lat,u.lon], {icon: redIcon, title:"Customer"}).addTo(map);
  } else {
-   userMarker.setLatLng([lat,lon]);
+   userMarker.setLatLng([u.lat,u.lon]);
  }
 
  if(myLat && myLon){
-   showRoute(lat,lon);
+   showRoute(u.lat, u.lon);
  }
 });
 </script>
