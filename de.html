@@ -61,9 +61,9 @@ header{padding:12px;font-size:20px;font-weight:bold;background:#007bff;color:whi
     font-size: 14px;
 }
 
-/* --- App Content Styles --- */
+/* --- App Content Styles (Hidden until login) --- */
 #app-content {
-    display: none; /* লগইন না হওয়া পর্যন্ত লুকিয়ে থাকবে */
+    display: none; 
 }
 #map{height:75vh;margin:10px;border-radius:10px}
 .card{background:white;margin:10px;padding:12px;border-radius:10px;box-shadow: 0 4px 8px rgba(0,0,0,0.1);}
@@ -95,10 +95,9 @@ const firebaseConfig = {
 };
 firebase.initializeApp(firebaseConfig);
 
-// 🔒 অ্যাডমিন ক্রেডেনশিয়ালস (ONLY CHANGE THESE)
-const ADMIN_USERNAME = "csm-login";
-const ADMIN_PASSWORD = "hack me";
-// এই ইউজারনেম ও পাসওয়ার্ড পরিবর্তন করতে ভুলবেন না!
+// 🔒 অ্যাডমিন ক্রেডেনশিয়ালস - এই দুটি পরিবর্তন করতে হবে!
+const ADMIN_USERNAME = "mohasin_admin";
+const ADMIN_PASSWORD = "super_secret_password";
 </script>
 </head>
 
@@ -147,9 +146,7 @@ function attemptLogin() {
         // সফল লগইন
         document.getElementById('login-screen').style.display = 'none';
         document.getElementById('app-content').style.display = 'block';
-        // Map কে রিলোড/রিফ্রেশ করার জন্য invalidatesize কল করা
-        map.invalidateSize(); 
-        // ম্যাপের ইনিশিয়ালাইজেশন শুরু করা (যা লগইন ছাড়া চলছিলো না)
+        // ম্যাপের ইনিশিয়ালাইজেশন শুরু
         initMapAndData(); 
     } else {
         // ব্যর্থ লগইন
@@ -160,7 +157,7 @@ function attemptLogin() {
 // ------------------------------------
 // 🗺️ ম্যাপ এবং ডেটা লজিক (লগইনের পরে শুরু হবে)
 // ------------------------------------
-let map; // map variable global রাখা হয়েছে
+let map; 
 let adminLat, adminLon, adminMarker, route;
 let users={};
 let userMarkers={};
@@ -173,24 +170,22 @@ function initMapAndData() {
         let satellite = L.tileLayer("https://{s}.google.com/vt/lyrs=s&x={x}&y={y}&z={z}",{subdomains:['mt0','mt1','mt2','mt3'], maxZoom: 20});
         normal.addTo(map);
         L.control.layers({"Normal":normal,"Satellite":satellite}).addTo(map);
+        map.invalidateSize(); // ম্যাপের আকার ঠিক করা
     }
 
-    // বাকি ফাংশনগুলি কল করা হয়েছে
     setupAdminTracking();
     loadUserList();
     setupUserTracking();
 }
 
 // --- Map Marker Icons ---
-// Admin icon with verified badge 
-let adminIcon = L.divIcon({/* ... (আগের adminIcon কোড) ... */
+let adminIcon = L.divIcon({
     html: `<div style="position:relative;transform:translate(-50%, -50%); width:24px;height:24px;background:green;border-radius:50%;border:2px solid white;"></div><div style="position:absolute;top:-25px;left:-20px;background:white;padding:3px 8px;border-radius:6px;border:1px solid #ccc;font-size:12px;white-space:nowrap;">Csm Mohasin Alam <img src="https://dl8.wapkizfile.info/download/c4275ed00b49e8d2f586ffbd4dc6c25f/csm-mohasin-alam+wapkizs+com/2-jpg-(csm-mohasin-alam.wapkizs.com).jpg" style="width:14px;height:14px;border-radius:50%;margin-left:3px;"></div>`
 });
-
-// user icon 
 let userIcon = L.divIcon({
  html:`<div style="width:22px;height:22px;background:red;border-radius:50%;border:2px solid white;"></div>`
 });
+
 
 // Function to format time
 function formatTime(isoTime) {
@@ -206,9 +201,7 @@ function setupAdminTracking() {
     navigator.geolocation.watchPosition(p=>{
         adminLat=p.coords.latitude;
         adminLon=p.coords.longitude;
-
         if(!map._loaded) map.setView([adminLat,adminLon],14);
-
         if(!adminMarker){
             adminMarker=L.marker([adminLat,adminLon],{icon:adminIcon}).addTo(map);
         }else{
@@ -218,7 +211,6 @@ function setupAdminTracking() {
         console.error("Admin Location Error:", err);
     }, { enableHighAccuracy: true });
 }
-
 
 // --- ইউজার লিস্ট লোড করা ---
 function loadUserList() {
@@ -242,10 +234,8 @@ function setupUserTracking() {
 function updateMarker(snap){
  let id=snap.key;
  let u=snap.val();
- 
  const lat = u.latitude || u.last_lat;
  const lon = u.longitude || u.last_lon;
- 
  if (!lat || !lon) return;
 
  if(!userMarkers[id]){
@@ -275,12 +265,9 @@ function updateMarker(snap){
 function centerMapToUser() {
  let id = document.getElementById("userSelect").value;
  if (!id) return;
-
  let u = users[id];
- 
  const lat = u.latitude || u.last_lat;
  const lon = u.longitude || u.last_lon;
- 
  if (lat && lon) {
    map.setView([lat, lon], 16);
    userMarkers[id].openPopup(); 
@@ -291,7 +278,6 @@ function centerMapToUser() {
 function drawRoute(){
  let id=document.getElementById("userSelect").value;
  if(!id){alert("Select a user ID first");return;}
-
  let u=users[id];
  const lat = u.latitude || u.last_lat;
  const lon = u.longitude || u.last_lon;
@@ -300,14 +286,12 @@ function drawRoute(){
    alert("Your (Admin) location is not yet available. Please wait for GPS lock.");
    return;
  }
-
  if(!lat || !lon) {
    alert("Location data not available for this user.");
    return;
  }
 
  if(route) map.removeControl(route);
-
  document.getElementById("dist").innerText="Calculating...";
  document.getElementById("eta").innerText="...";
 
