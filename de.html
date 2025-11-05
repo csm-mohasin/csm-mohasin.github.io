@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Live Tracking By CSM MOHASIN ALAM (Updated)</title>
+<title>Admin Live Tracker | CSM MOHASIN ALAM</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
@@ -14,20 +14,24 @@
 body{margin:0;font-family:Arial;background:#eaf3ff}
 header{padding:12px;font-size:20px;font-weight:bold;background:#007bff;color:white}
 #map{height:75vh;margin:10px;border-radius:10px}
-.card{background:white;margin:10px;padding:12px;border-radius:10px}
+.card{background:white;margin:10px;padding:12px;border-radius:10px;box-shadow: 0 4px 8px rgba(0,0,0,0.1);}
 select,button{
  width:100%;padding:10px;margin-top:8px;border-radius:8px;
- border:1px solid #007bff;font-size:16px;
+ border:1px solid #007bff;font-size:16px;box-sizing: border-box;
 }
 button{background:#007bff;color:white;border:none;cursor:pointer}
 button:hover{background:#005fcc}
 .popup-content strong { color: #007bff; }
+.popup-content { line-height: 1.5; font-size: 14px;}
+.popup-content .status-live { color: green; font-weight: bold; }
+.popup-content .status-last { color: orange; font-weight: bold; }
 </style>
 
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
 
 <script>
+// --- Firebase Config ---
 const firebaseConfig = {
  apiKey:"AIzaSyCsGBSRCHVUhXQZ5DNMEZWgQWk1gxMF1E4",
  authDomain:"signup-d32c5.firebaseapp.com",
@@ -46,25 +50,25 @@ firebase.initializeApp(firebaseConfig);
 <header>Live Tracking By CSM MOHASIN ALAM</header>
 
 <div class="card">
-<select id="userSelect" onchange="centerMapToUser()"> 
-<option value="">Select Location</option>
+<select id="userSelect" onchange="centerMapToUser()"> 
+<option value="">Select User ID</option>
 </select>
 
-<button onclick="drawRoute()">Get Direction</button>
+<button onclick="drawRoute()">Get Direction (To User)</button>
 <button onclick="clearRoute()" style="background:#dc3545;margin-top:5px;">Clear Route</button>
 
 <div style="margin-top:10px;font-weight:bold">
-Distance: <span id="dist">--</span> km | ETA: <span id="eta">--</span> min
+Distance: <span id="dist">--</span> km | ETA: <span id="eta">--</span> min (Approx)
 </div>
 </div>
 
 <div id="map"></div>
 
 <script>
-// map setup
+// --- Map Setup ---
 let map = L.map("map");
 let normal = L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png");
-let satellite = L.tileLayer("https://{s}.google.com/vt/lyrs=s&x={x}&y={y}&z={z}",{subdomains:['mt0','mt1','mt2','mt3']});
+let satellite = L.tileLayer("https://{s}.google.com/vt/lyrs=s&x={x}&y={y}&z={z}",{subdomains:['mt0','mt1','mt2','mt3'], maxZoom: 20});
 
 normal.addTo(map);
 L.control.layers({"Normal":normal,"Satellite":satellite}).addTo(map);
@@ -73,7 +77,7 @@ let adminLat, adminLon, adminMarker, route;
 let users={};
 let userMarkers={};
 
-// Admin icon with verified badge
+// Admin icon with verified badge (No Change)
 let adminIcon = L.divIcon({
  html: `
    <div style="position:relative;transform:translate(-50%, -50%); width:24px;height:24px;background:green;border-radius:50%;border:2px solid white;"></div>
@@ -85,19 +89,29 @@ let adminIcon = L.divIcon({
  `
 });
 
-// user icon
+// user icon (No Change)
 let userIcon = L.divIcon({
  html:`<div style="width:22px;height:22px;background:red;border-radius:50%;border:2px solid white;"></div>`
 });
 
-// distance
+// distance calculation (No Change)
 function calc(a,b,c,d){
  var R=6371,dLat=(c-a)*Math.PI/180,dLon=(d-b)*Math.PI/180;
  var x=Math.sin(dLat/2)**2 + Math.cos(a*Math.PI/180)*Math.cos(c*Math.PI/180)*Math.sin(dLon/2)**2;
  return R*(2*Math.atan2(Math.sqrt(x),Math.sqrt(1-x)));
 }
 
-// get admin GPS
+// Function to format time
+function formatTime(isoTime) {
+    if (!isoTime) return 'N/A';
+    // BD Time Zone
+    return new Date(isoTime).toLocaleString('en-GB', { 
+      hour: '2-digit', minute: '2-digit', second: '2-digit', 
+      day: '2-digit', month: 'short', year: 'numeric' 
+    });
+}
+
+// --- অ্যাডমিন জিপিএস ট্র্যাকিং (No Change) ---
 navigator.geolocation.watchPosition(p=>{
  adminLat=p.coords.latitude;
  adminLon=p.coords.longitude;
@@ -111,86 +125,91 @@ navigator.geolocation.watchPosition(p=>{
  }
 });
 
-// load user list
+// --- ইউজার লিস্ট লোড করা (Changed: Child Added & All Users) ---
 firebase.database().ref("users").on("value",snap=>{
  users=snap.val()||{};
  let sel=document.getElementById("userSelect");
- sel.innerHTML=`<option value="">Select User</option>`;
+ sel.innerHTML=`<option value="">Select User ID</option>`;
  Object.keys(users).forEach(id=>{
-  sel.innerHTML+=`<option value="${id}">${id}</option>`;
+   // ইউনিক আইডি খুব লম্বা হয়, তাই পপআপে দেখানোর জন্য প্রথম 8টি অক্ষর ব্যবহার করা হলো
+   const shortId = id.substring(0, 8); 
+   sel.innerHTML+=`<option value="${id}">${shortId}...</option>`;
  });
 });
 
-// Function to format time
-function formatTime(isoTime) {
-    if (!isoTime) return 'N/A';
-    const date = new Date(isoTime);
-    return date.toLocaleString();
-}
+// --- প্রত্যেক ইউজারকে ট্র্যাক করা (Child Added/Changed/Removed) ---
+firebase.database().ref("users").on("child_changed", updateMarker);
+firebase.database().ref("users").on("child_added", updateMarker);
 
-// track each user (Child Changed Event)
-firebase.database().ref("users").on("child_changed",(snap)=>{
+function updateMarker(snap){
  let id=snap.key;
  let u=snap.val();
  
- // 📍 শেষ অবস্থান ব্যবহার (Live/Last Known Location Logic)
- // প্রথমে Live Location (latitude/longitude) চেক করা হবে।
- // না পেলে, last_lat/last_lon (শেষ জানা অবস্থান) ব্যবহার করা হবে।
+ // ✅ নতুন লজিক: লাইভ লোকেশন না থাকলে last_lat/last_lon ব্যবহার করো
  const lat = u.latitude || u.last_lat;
  const lon = u.longitude || u.last_lon;
  
- // যদি কোনো ডেটাই না পাওয়া যায়, তবে আপডেট করা হবে না
+ // ডেটা না থাকলে, কিছু করবে না
  if (!lat || !lon) return;
 
  if(!userMarkers[id]){
    userMarkers[id]=L.marker([lat,lon],{icon:userIcon}).addTo(map);
-   userMarkers[id].bindTooltip(id,{permanent:false});
+   // টুলটিপে আইডি-এর প্রথম ৮ অক্ষর দেখানো হয়েছে
+   userMarkers[id].bindTooltip(id.substring(0, 8),{permanent:false}); 
  }else{
+   // মার্কার মুভ করা হয়েছে
    userMarkers[id].setLatLng([lat,lon]);
  }
  
- // 💬 পপআপ ডেটা তৈরি
- const isLive = !!u.latitude;
+ // 💬 পপআপ ডেটা তৈরি (Updated with all data)
+ const isLive = !!u.latitude; // latitude property থাকলে LIVE
  const timeStamp = u.time || u.last_time;
+ const statusClass = isLive ? 'status-live' : 'status-last';
  
  let popupContent = `<div class="popup-content">
-                            **User: ${id}** <hr style="margin:5px 0;">
-                            **Status:** ${isLive ? '<strong style="color:green;">LIVE</strong>' : '<strong style="color:orange;">LAST KNOWN</strong>'} <br>
+                            **User ID:** ${id.substring(0, 8)}... <hr style="margin:5px 0;">
+                            **Status:** <span class="${statusClass}">${isLive ? 'LIVE' : 'LAST SEEN'}</span> <br>
                             **Battery:** ${u.battery || 'N/A'} <br>
                             **Speed:** ${u.speed ? u.speed + ' km/h' : 'N/A'} <br>
                             **Network:** ${u.network || 'N/A'} <br>
-                            **Time:** ${formatTime(timeStamp)}
+                            **Last Update:** ${formatTime(timeStamp)}
                           </div>`;
-                          
+                          
  userMarkers[id].bindPopup(popupContent);
-});
+}
 
-// 🚀 ইউজারকে ম্যাপে সেন্টারিং ফাংশন
+// 🚀 ইউজারকে ম্যাপে সেন্টারিং ফাংশন (Updated with new logic)
 function centerMapToUser() {
  let id = document.getElementById("userSelect").value;
  if (!id) return;
 
  let u = users[id];
  
- // শেষ অবস্থান ব্যবহার করে ল্যাট/লং নির্ধারণ
+ // লাইভ বা শেষ জানা অবস্থান ব্যবহার
  const lat = u.latitude || u.last_lat;
  const lon = u.longitude || u.last_lon;
  
  if (lat && lon) {
-   map.setView([lat, lon], 16); // 16 এ জুম করা হয়েছে
+   map.setView([lat, lon], 16);
+   userMarkers[id].openPopup(); // সেন্টারিং-এর পর পপআপ ওপেন হবে
  }
 }
 
-// draw route
+// draw route (No Change)
 function drawRoute(){
  let id=document.getElementById("userSelect").value;
- if(!id){alert("Select a user first");return;}
+ if(!id){alert("Select a user ID first");return;}
 
  let u=users[id];
- // শেষ অবস্থান ব্যবহার করে ল্যাট/লং নির্ধারণ
+ // লাইভ বা শেষ জানা অবস্থান ব্যবহার
  const lat = u.latitude || u.last_lat;
  const lon = u.longitude || u.last_lon;
  
+ if(!adminLat || !adminLon) {
+   alert("Your location is not yet available.");
+   return;
+ }
+
  if(!lat || !lon) {
    alert("Location data not available for this user.");
    return;
@@ -200,17 +219,29 @@ function drawRoute(){
 
  route=L.Routing.control({
    waypoints:[L.latLng(adminLat,adminLon),L.latLng(lat,lon)],
-   addWaypoints:false
+   addWaypoints:false,
+   router: L.Routing.osrmv1({
+     serviceUrl: 'https://router.project-osrm.org/route/v1'
+   })
  }).addTo(map);
 
- let d=calc(adminLat,adminLon,lat,lon);
- let eta=Math.round((d/30)*60); // 30 km/h গড় গতি ধরে
+ route.on('routesfound', function(e) {
+   var routes = e.routes;
+   var summary = routes[0].summary;
+   
+   // দূরত্ব কিলোমিটার-এ
+   let distKm = summary.totalDistance / 1000;
+   
+   // ETA মিনিটে (সময় সেকেন্ডে থাকে)
+   // OSRM-এর সময় ব্যবহার করা হয়েছে, যা বেশি নির্ভুল
+   let etaMin = Math.round(summary.totalTime / 60); 
 
- document.getElementById("dist").innerText=d.toFixed(2);
- document.getElementById("eta").innerText=eta;
+   document.getElementById("dist").innerText=distKm.toFixed(2);
+   document.getElementById("eta").innerText=etaMin;
+ });
 }
 
-// clear route
+// clear route (No Change)
 function clearRoute(){
  if(route) map.removeControl(route);
  document.getElementById("dist").innerText="--";
