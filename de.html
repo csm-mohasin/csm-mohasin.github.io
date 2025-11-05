@@ -2,10 +2,9 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Live Tracking By CSM MOHASIN ALAM</title>
+<title>Live Tracking By CSM MOHASIN ALAM (Updated)</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
-<!-- Leaflet -->
 <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 <script src="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.js"></script>
@@ -17,26 +16,26 @@ header{padding:12px;font-size:20px;font-weight:bold;background:#007bff;color:whi
 #map{height:75vh;margin:10px;border-radius:10px}
 .card{background:white;margin:10px;padding:12px;border-radius:10px}
 select,button{
- width:100%;padding:10px;margin-top:8px;border-radius:8px;
- border:1px solid #007bff;font-size:16px;
+ width:100%;padding:10px;margin-top:8px;border-radius:8px;
+ border:1px solid #007bff;font-size:16px;
 }
 button{background:#007bff;color:white;border:none;cursor:pointer}
 button:hover{background:#005fcc}
+.popup-content strong { color: #007bff; }
 </style>
 
-<!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
 
 <script>
 const firebaseConfig = {
- apiKey:"AIzaSyCsGBSRCHVUhXQZ5DNMEZWgQWk1gxMF1E4",
- authDomain:"signup-d32c5.firebaseapp.com",
- projectId:"signup-d32c5",
- storageBucket:"signup-d32c5.firebasestorage.app",
- messagingSenderId:"583812949955",
- appId:"1:583812949955:web:fab1bb7be94bc1b4ab3f76",
- databaseURL:"https://signup-d32c5-default-rtdb.firebaseio.com/"
+ apiKey:"AIzaSyCsGBSRCHVUhXQZ5DNMEZWgQWk1gxMF1E4",
+ authDomain:"signup-d32c5.firebaseapp.com",
+ projectId:"signup-d32c5",
+ storageBucket:"signup-d32c5.firebasestorage.app",
+ messagingSenderId:"583812949955",
+ appId:"1:583812949955:web:fab1bb7be94bc1b4ab3f76",
+ databaseURL:"https://signup-d32c5-default-rtdb.firebaseio.com/"
 };
 firebase.initializeApp(firebaseConfig);
 </script>
@@ -47,7 +46,7 @@ firebase.initializeApp(firebaseConfig);
 <header>Live Tracking By CSM MOHASIN ALAM</header>
 
 <div class="card">
-<select id="userSelect">
+<select id="userSelect" onchange="centerMapToUser()"> 
 <option value="">Select Location</option>
 </select>
 
@@ -76,90 +75,146 @@ let userMarkers={};
 
 // Admin icon with verified badge
 let adminIcon = L.divIcon({
- html: `
-   <div style="position:relative;transform:translate(-50%, -50%); width:24px;height:24px;background:green;border-radius:50%;border:2px solid white;"></div>
-   <div style="position:absolute;top:-25px;left:-20px;background:white;padding:3px 8px;border-radius:6px;border:1px solid #ccc;font-size:12px;white-space:nowrap;">
-     Csm Mohasin Alam 
-     <img src="https://dl8.wapkizfile.info/download/c4275ed00b49e8d2f586ffbd4dc6c25f/csm-mohasin-alam+wapkizs+com/2-jpg-(csm-mohasin-alam.wapkizs.com).jpg" 
-          style="width:14px;height:14px;border-radius:50%;margin-left:3px;">
-   </div>
- `
+ html: `
+   <div style="position:relative;transform:translate(-50%, -50%); width:24px;height:24px;background:green;border-radius:50%;border:2px solid white;"></div>
+   <div style="position:absolute;top:-25px;left:-20px;background:white;padding:3px 8px;border-radius:6px;border:1px solid #ccc;font-size:12px;white-space:nowrap;">
+     Csm Mohasin Alam 
+     <img src="https://dl8.wapkizfile.info/download/c4275ed00b49e8d2f586ffbd4dc6c25f/csm-mohasin-alam+wapkizs+com/2-jpg-(csm-mohasin-alam.wapkizs.com).jpg" 
+          style="width:14px;height:14px;border-radius:50%;margin-left:3px;">
+   </div>
+ `
 });
 
 // user icon
 let userIcon = L.divIcon({
- html:`<div style="width:22px;height:22px;background:red;border-radius:50%;border:2px solid white;"></div>`
+ html:`<div style="width:22px;height:22px;background:red;border-radius:50%;border:2px solid white;"></div>`
 });
 
 // distance
 function calc(a,b,c,d){
- var R=6371,dLat=(c-a)*Math.PI/180,dLon=(d-b)*Math.PI/180;
- var x=Math.sin(dLat/2)**2 + Math.cos(a*Math.PI/180)*Math.cos(c*Math.PI/180)*Math.sin(dLon/2)**2;
- return R*(2*Math.atan2(Math.sqrt(x),Math.sqrt(1-x)));
+ var R=6371,dLat=(c-a)*Math.PI/180,dLon=(d-b)*Math.PI/180;
+ var x=Math.sin(dLat/2)**2 + Math.cos(a*Math.PI/180)*Math.cos(c*Math.PI/180)*Math.sin(dLon/2)**2;
+ return R*(2*Math.atan2(Math.sqrt(x),Math.sqrt(1-x)));
 }
 
 // get admin GPS
 navigator.geolocation.watchPosition(p=>{
- adminLat=p.coords.latitude;
- adminLon=p.coords.longitude;
+ adminLat=p.coords.latitude;
+ adminLon=p.coords.longitude;
 
- if(!map._loaded) map.setView([adminLat,adminLon],14);
+ if(!map._loaded) map.setView([adminLat,adminLon],14);
 
- if(!adminMarker){
-   adminMarker=L.marker([adminLat,adminLon],{icon:adminIcon}).addTo(map);
- }else{
-   adminMarker.setLatLng([adminLat,adminLon]);
- }
+ if(!adminMarker){
+   adminMarker=L.marker([adminLat,adminLon],{icon:adminIcon}).addTo(map);
+ }else{
+   adminMarker.setLatLng([adminLat,adminLon]);
+ }
 });
 
 // load user list
 firebase.database().ref("users").on("value",snap=>{
- users=snap.val()||{};
- let sel=document.getElementById("userSelect");
- sel.innerHTML=`<option value="">Select User</option>`;
- Object.keys(users).forEach(id=>{
-  sel.innerHTML+=`<option value="${id}">${id}</option>`;
- });
+ users=snap.val()||{};
+ let sel=document.getElementById("userSelect");
+ sel.innerHTML=`<option value="">Select User</option>`;
+ Object.keys(users).forEach(id=>{
+  sel.innerHTML+=`<option value="${id}">${id}</option>`;
+ });
 });
 
-// track each user
+// Function to format time
+function formatTime(isoTime) {
+    if (!isoTime) return 'N/A';
+    const date = new Date(isoTime);
+    return date.toLocaleString();
+}
+
+// track each user (Child Changed Event)
 firebase.database().ref("users").on("child_changed",(snap)=>{
- let id=snap.key;
- let u=snap.val();
+ let id=snap.key;
+ let u=snap.val();
+ 
+ // 📍 শেষ অবস্থান ব্যবহার (Live/Last Known Location Logic)
+ // প্রথমে Live Location (latitude/longitude) চেক করা হবে।
+ // না পেলে, last_lat/last_lon (শেষ জানা অবস্থান) ব্যবহার করা হবে।
+ const lat = u.latitude || u.last_lat;
+ const lon = u.longitude || u.last_lon;
+ 
+ // যদি কোনো ডেটাই না পাওয়া যায়, তবে আপডেট করা হবে না
+ if (!lat || !lon) return;
 
- if(!userMarkers[id]){
-   userMarkers[id]=L.marker([u.lat,u.lon],{icon:userIcon}).addTo(map);
-   userMarkers[id].bindTooltip(id,{permanent:false});
- }else{
-   userMarkers[id].setLatLng([u.lat,u.lon]);
- }
+ if(!userMarkers[id]){
+   userMarkers[id]=L.marker([lat,lon],{icon:userIcon}).addTo(map);
+   userMarkers[id].bindTooltip(id,{permanent:false});
+ }else{
+   userMarkers[id].setLatLng([lat,lon]);
+ }
+ 
+ // 💬 পপআপ ডেটা তৈরি
+ const isLive = !!u.latitude;
+ const timeStamp = u.time || u.last_time;
+ 
+ let popupContent = `<div class="popup-content">
+                            **User: ${id}** <hr style="margin:5px 0;">
+                            **Status:** ${isLive ? '<strong style="color:green;">LIVE</strong>' : '<strong style="color:orange;">LAST KNOWN</strong>'} <br>
+                            **Battery:** ${u.battery || 'N/A'} <br>
+                            **Speed:** ${u.speed ? u.speed + ' km/h' : 'N/A'} <br>
+                            **Network:** ${u.network || 'N/A'} <br>
+                            **Time:** ${formatTime(timeStamp)}
+                          </div>`;
+                          
+ userMarkers[id].bindPopup(popupContent);
 });
+
+// 🚀 ইউজারকে ম্যাপে সেন্টারিং ফাংশন
+function centerMapToUser() {
+ let id = document.getElementById("userSelect").value;
+ if (!id) return;
+
+ let u = users[id];
+ 
+ // শেষ অবস্থান ব্যবহার করে ল্যাট/লং নির্ধারণ
+ const lat = u.latitude || u.last_lat;
+ const lon = u.longitude || u.last_lon;
+ 
+ if (lat && lon) {
+   map.setView([lat, lon], 16); // 16 এ জুম করা হয়েছে
+ }
+}
 
 // draw route
 function drawRoute(){
- let id=document.getElementById("userSelect").value;
- if(!id){alert("Select a user first");return;}
+ let id=document.getElementById("userSelect").value;
+ if(!id){alert("Select a user first");return;}
 
- let u=users[id];
- if(route) map.removeControl(route);
+ let u=users[id];
+ // শেষ অবস্থান ব্যবহার করে ল্যাট/লং নির্ধারণ
+ const lat = u.latitude || u.last_lat;
+ const lon = u.longitude || u.last_lon;
+ 
+ if(!lat || !lon) {
+   alert("Location data not available for this user.");
+   return;
+ }
 
- route=L.Routing.control({
-   waypoints:[L.latLng(adminLat,adminLon),L.latLng(u.lat,u.lon)],
-   addWaypoints:false
- }).addTo(map);
+ if(route) map.removeControl(route);
 
- let d=calc(adminLat,adminLon,u.lat,u.lon);
- let eta=Math.round((d/30)*60);
+ route=L.Routing.control({
+   waypoints:[L.latLng(adminLat,adminLon),L.latLng(lat,lon)],
+   addWaypoints:false
+ }).addTo(map);
 
- document.getElementById("dist").innerText=d.toFixed(2);
- document.getElementById("eta").innerText=eta;
+ let d=calc(adminLat,adminLon,lat,lon);
+ let eta=Math.round((d/30)*60); // 30 km/h গড় গতি ধরে
+
+ document.getElementById("dist").innerText=d.toFixed(2);
+ document.getElementById("eta").innerText=eta;
 }
 
 // clear route
 function clearRoute(){
- if(route) map.removeControl(route);
- document.getElementById("dist").innerText="--";
- document.getElementById("eta").innerText="--";
+ if(route) map.removeControl(route);
+ document.getElementById("dist").innerText="--";
+ document.getElementById("eta").innerText="--";
 }
 </script>
 
