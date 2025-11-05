@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Admin Live Tracker | CSM MOHASIN ALAM</title>
+<title>Admin Live Tracker | Login Required</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
@@ -11,16 +11,68 @@
 <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine/dist/leaflet-routing-machine.css"/>
 
 <style>
+/* --- Global Styles --- */
 body{margin:0;font-family:Arial;background:#eaf3ff}
 header{padding:12px;font-size:20px;font-weight:bold;background:#007bff;color:white}
+
+/* --- Login Screen Styles --- */
+#login-screen {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    width: 100%;
+    position: absolute;
+    top: 0;
+    left: 0;
+    background: rgba(234, 243, 255, 0.95); /* Light background for focus */
+    z-index: 1000;
+}
+.login-box {
+    background: white;
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+    width: 300px;
+    text-align: center;
+}
+.login-box input {
+    width: 100%;
+    padding: 10px;
+    margin: 10px 0;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    box-sizing: border-box;
+}
+.login-box button {
+    width: 100%;
+    padding: 12px;
+    background: #007bff;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 16px;
+    margin-top: 15px;
+}
+#login-message {
+    color: #dc3545;
+    margin-top: 10px;
+    font-size: 14px;
+}
+
+/* --- App Content Styles --- */
+#app-content {
+    display: none; /* লগইন না হওয়া পর্যন্ত লুকিয়ে থাকবে */
+}
 #map{height:75vh;margin:10px;border-radius:10px}
 .card{background:white;margin:10px;padding:12px;border-radius:10px;box-shadow: 0 4px 8px rgba(0,0,0,0.1);}
-select,button{
+select, .card button{
  width:100%;padding:10px;margin-top:8px;border-radius:8px;
  border:1px solid #007bff;font-size:16px;box-sizing: border-box;
 }
-button{background:#007bff;color:white;border:none;cursor:pointer}
-button:hover{background:#005fcc}
+.card button{background:#007bff;color:white;border:none;cursor:pointer}
+.card button:hover{background:#005fcc}
 .popup-content strong { color: #007bff; }
 .popup-content { line-height: 1.5; font-size: 14px;}
 .popup-content .status-live { color: green; font-weight: bold; }
@@ -42,6 +94,11 @@ const firebaseConfig = {
  databaseURL:"https://signup-d32c5-default-rtdb.firebaseio.com/"
 };
 firebase.initializeApp(firebaseConfig);
+
+// 🔒 অ্যাডমিন ক্রেডেনশিয়ালস (ONLY CHANGE THESE)
+const ADMIN_USERNAME = "csm-login";
+const ADMIN_PASSWORD = "hack me";
+// এই ইউজারনেম ও পাসওয়ার্ড পরিবর্তন করতে ভুলবেন না!
 </script>
 </head>
 
@@ -49,44 +106,85 @@ firebase.initializeApp(firebaseConfig);
 
 <header>Live Tracking By CSM MOHASIN ALAM</header>
 
-<div class="card">
-<select id="userSelect" onchange="centerMapToUser()"> 
-<option value="">Select User ID</option>
-</select>
-
-<button onclick="drawRoute()">Get Direction (To User)</button>
-<button onclick="clearRoute()" style="background:#dc3545;margin-top:5px;">Clear Route</button>
-
-<div style="margin-top:10px;font-weight:bold">
-Distance: <span id="dist">--</span> km | ETA: <span id="eta">--</span> min (Approx)
-</div>
+<div id="login-screen">
+    <div class="login-box">
+        <h2>Admin Login</h2>
+        <input type="text" id="username" placeholder="Username">
+        <input type="password" id="password" placeholder="Password">
+        <button onclick="attemptLogin()">Login</button>
+        <p id="login-message"></p>
+    </div>
 </div>
 
-<div id="map"></div>
+<div id="app-content">
+    <div class="card">
+        <select id="userSelect" onchange="centerMapToUser()"> 
+            <option value="">Select User ID</option>
+        </select>
+
+        <button onclick="drawRoute()">Get Direction (To User)</button>
+        <button onclick="clearRoute()" style="background:#dc3545;margin-top:5px;">Clear Route</button>
+
+        <div style="margin-top:10px;font-weight:bold">
+            Distance: <span id="dist">--</span> km | ETA: <span id="eta">--</span> min (Approx)
+        </div>
+    </div>
+
+    <div id="map"></div>
+</div>
+
 
 <script>
-// --- Map Setup ---
-let map = L.map("map");
-let normal = L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png");
-let satellite = L.tileLayer("https://{s}.google.com/vt/lyrs=s&x={x}&y={y}&z={z}",{subdomains:['mt0','mt1','mt2','mt3'], maxZoom: 20});
+// ------------------------------------
+// 🔒 লগইন লজিক
+// ------------------------------------
+function attemptLogin() {
+    const user = document.getElementById('username').value;
+    const pass = document.getElementById('password').value;
+    const msg = document.getElementById('login-message');
 
-normal.addTo(map);
-L.control.layers({"Normal":normal,"Satellite":satellite}).addTo(map);
+    if (user === ADMIN_USERNAME && pass === ADMIN_PASSWORD) {
+        // সফল লগইন
+        document.getElementById('login-screen').style.display = 'none';
+        document.getElementById('app-content').style.display = 'block';
+        // Map কে রিলোড/রিফ্রেশ করার জন্য invalidatesize কল করা
+        map.invalidateSize(); 
+        // ম্যাপের ইনিশিয়ালাইজেশন শুরু করা (যা লগইন ছাড়া চলছিলো না)
+        initMapAndData(); 
+    } else {
+        // ব্যর্থ লগইন
+        msg.textContent = 'Invalid Username or Password!';
+    }
+}
 
+// ------------------------------------
+// 🗺️ ম্যাপ এবং ডেটা লজিক (লগইনের পরে শুরু হবে)
+// ------------------------------------
+let map; // map variable global রাখা হয়েছে
 let adminLat, adminLon, adminMarker, route;
 let users={};
 let userMarkers={};
 
+function initMapAndData() {
+    // শুধুমাত্র একবার ম্যাপ ইনিশিয়ালাইজ করা
+    if (!map) {
+        map = L.map("map");
+        let normal = L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png");
+        let satellite = L.tileLayer("https://{s}.google.com/vt/lyrs=s&x={x}&y={y}&z={z}",{subdomains:['mt0','mt1','mt2','mt3'], maxZoom: 20});
+        normal.addTo(map);
+        L.control.layers({"Normal":normal,"Satellite":satellite}).addTo(map);
+    }
+
+    // বাকি ফাংশনগুলি কল করা হয়েছে
+    setupAdminTracking();
+    loadUserList();
+    setupUserTracking();
+}
+
+// --- Map Marker Icons ---
 // Admin icon with verified badge 
-let adminIcon = L.divIcon({
- html: `
-   <div style="position:relative;transform:translate(-50%, -50%); width:24px;height:24px;background:green;border-radius:50%;border:2px solid white;"></div>
-   <div style="position:absolute;top:-25px;left:-20px;background:white;padding:3px 8px;border-radius:6px;border:1px solid #ccc;font-size:12px;white-space:nowrap;">
-     Csm Mohasin Alam 
-     <img src="https://dl8.wapkizfile.info/download/c4275ed00b49e8d2f586ffbd4dc6c25f/csm-mohasin-alam+wapkizs+com/2-jpg-(csm-mohasin-alam.wapkizs.com).jpg" 
-          style="width:14px;height:14px;border-radius:50%;margin-left:3px;">
-   </div>
- `
+let adminIcon = L.divIcon({/* ... (আগের adminIcon কোড) ... */
+    html: `<div style="position:relative;transform:translate(-50%, -50%); width:24px;height:24px;background:green;border-radius:50%;border:2px solid white;"></div><div style="position:absolute;top:-25px;left:-20px;background:white;padding:3px 8px;border-radius:6px;border:1px solid #ccc;font-size:12px;white-space:nowrap;">Csm Mohasin Alam <img src="https://dl8.wapkizfile.info/download/c4275ed00b49e8d2f586ffbd4dc6c25f/csm-mohasin-alam+wapkizs+com/2-jpg-(csm-mohasin-alam.wapkizs.com).jpg" style="width:14px;height:14px;border-radius:50%;margin-left:3px;"></div>`
 });
 
 // user icon 
@@ -97,7 +195,6 @@ let userIcon = L.divIcon({
 // Function to format time
 function formatTime(isoTime) {
     if (!isoTime) return 'N/A';
-    // BD Time Zone
     return new Date(isoTime).toLocaleString('en-GB', { 
       hour: '2-digit', minute: '2-digit', second: '2-digit', 
       day: '2-digit', month: 'short', year: 'numeric' 
@@ -105,44 +202,47 @@ function formatTime(isoTime) {
 }
 
 // --- অ্যাডমিন জিপিএস ট্র্যাকিং ---
-navigator.geolocation.watchPosition(p=>{
- adminLat=p.coords.latitude;
- adminLon=p.coords.longitude;
+function setupAdminTracking() {
+    navigator.geolocation.watchPosition(p=>{
+        adminLat=p.coords.latitude;
+        adminLon=p.coords.longitude;
 
- // ম্যাপ লোড না হলে, অ্যাডমিনের লোকেশনে সেট করা
- if(!map._loaded) map.setView([adminLat,adminLon],14);
+        if(!map._loaded) map.setView([adminLat,adminLon],14);
 
- if(!adminMarker){
-   adminMarker=L.marker([adminLat,adminLon],{icon:adminIcon}).addTo(map);
- }else{
-   adminMarker.setLatLng([adminLat,adminLon]);
- }
-}, err => {
-    console.error("Admin Location Error:", err);
-}, { enableHighAccuracy: true });
+        if(!adminMarker){
+            adminMarker=L.marker([adminLat,adminLon],{icon:adminIcon}).addTo(map);
+        }else{
+            adminMarker.setLatLng([adminLat,adminLon]);
+        }
+    }, err => {
+        console.error("Admin Location Error:", err);
+    }, { enableHighAccuracy: true });
+}
 
 
-// --- ইউজার লিস্ট লোড করা (Firebase Value Event) ---
-firebase.database().ref("users").on("value",snap=>{
- users=snap.val()||{};
- let sel=document.getElementById("userSelect");
- sel.innerHTML=`<option value="">Select User ID</option>`;
- Object.keys(users).forEach(id=>{
-   // ইউনিক আইডি খুব লম্বা হয়, তাই পপআপে দেখানোর জন্য প্রথম 8টি অক্ষর ব্যবহার করা হলো
-   const shortId = id.substring(0, 8); 
-   sel.innerHTML+=`<option value="${id}">${shortId}...</option>`;
- });
-});
+// --- ইউজার লিস্ট লোড করা ---
+function loadUserList() {
+    firebase.database().ref("users").on("value",snap=>{
+        users=snap.val()||{};
+        let sel=document.getElementById("userSelect");
+        sel.innerHTML=`<option value="">Select User ID</option>`;
+        Object.keys(users).forEach(id=>{
+            const shortId = id.substring(0, 8); 
+            sel.innerHTML+=`<option value="${id}">${shortId}...</option>`;
+        });
+    });
+}
 
-// --- প্রত্যেক ইউজারকে ট্র্যাক করা (Child Added/Changed Events) ---
-firebase.database().ref("users").on("child_changed", updateMarker);
-firebase.database().ref("users").on("child_added", updateMarker);
+// --- প্রত্যেক ইউজারকে ট্র্যাক করা ---
+function setupUserTracking() {
+    firebase.database().ref("users").on("child_changed", updateMarker);
+    firebase.database().ref("users").on("child_added", updateMarker);
+}
 
 function updateMarker(snap){
  let id=snap.key;
  let u=snap.val();
  
- // ✅ লাইভ লোকেশন না থাকলে last_lat/last_lon ব্যবহার করো
  const lat = u.latitude || u.last_lat;
  const lon = u.longitude || u.last_lon;
  
@@ -150,14 +250,11 @@ function updateMarker(snap){
 
  if(!userMarkers[id]){
    userMarkers[id]=L.marker([lat,lon],{icon:userIcon}).addTo(map);
-   // টুলটিপে আইডি-এর প্রথম ৮ অক্ষর দেখানো হয়েছে
    userMarkers[id].bindTooltip(id.substring(0, 8),{permanent:false}); 
  }else{
-   // মার্কার মুভ করা হয়েছে
    userMarkers[id].setLatLng([lat,lon]);
  }
  
- // 💬 পপআপ ডেটা তৈরি (Updated with Battery, Speed, Network)
  const isLive = !!u.latitude; 
  const timeStamp = u.time || u.last_time;
  const statusClass = isLive ? 'status-live' : 'status-last';
@@ -181,23 +278,21 @@ function centerMapToUser() {
 
  let u = users[id];
  
- // লাইভ বা শেষ জানা অবস্থান ব্যবহার
  const lat = u.latitude || u.last_lat;
  const lon = u.longitude || u.last_lon;
  
  if (lat && lon) {
    map.setView([lat, lon], 16);
-   userMarkers[id].openPopup(); // সেন্টারিং-এর পর পপআপ ওপেন হবে
+   userMarkers[id].openPopup(); 
  }
 }
 
-// --- রাউটিং ফাংশন (Routing Fix Included) ---
+// --- রাউটিং ফাংশন ---
 function drawRoute(){
  let id=document.getElementById("userSelect").value;
  if(!id){alert("Select a user ID first");return;}
 
  let u=users[id];
- // লাইভ বা শেষ জানা অবস্থান ব্যবহার
  const lat = u.latitude || u.last_lat;
  const lon = u.longitude || u.last_lon;
  
@@ -211,50 +306,40 @@ function drawRoute(){
    return;
  }
 
- // যদি আগের কোনো Route থাকে, তবে তা সরিয়ে দাও
  if(route) map.removeControl(route);
 
- // দূরত্ব ও ETA রিসেট ও লোডিং স্টেটাস সেট করা
  document.getElementById("dist").innerText="Calculating...";
  document.getElementById("eta").innerText="...";
 
  route = L.Routing.control({
    waypoints:[L.latLng(adminLat,adminLon),L.latLng(lat,lon)],
    addWaypoints:false,
-   // রাউটিং সার্ভিস হিসেবে OSRM ব্যবহার করা হয়েছে
    router: L.Routing.osrmv1({
      serviceUrl: 'https://router.project-osrm.org/route/v1'
    })
  }).addTo(map);
 
- // 🛑 সফলভাবে রুট পাওয়া গেলে দূরত্ব ও ETA আপডেট করা
  route.on('routesfound', function(e) {
    var routes = e.routes;
    if (routes.length === 0) {
      document.getElementById("dist").innerText="--";
      document.getElementById("eta").innerText="--";
-     alert("Error: No route found between the two points.");
      return;
    }
    
    var summary = routes[0].summary;
-   
-   // দূরত্ব কিলোমিটার-এ
    let distKm = summary.totalDistance / 1000;
-   
-   // ETA মিনিটে 
    let etaMin = Math.round(summary.totalTime / 60); 
 
    document.getElementById("dist").innerText=distKm.toFixed(2);
    document.getElementById("eta").innerText=etaMin;
  });
 
- // 🛑 রাউটিং-এ ত্রুটি দেখা দিলে ইউজারকে বার্তা দেওয়া
  route.on('routingerror', function(e) {
    console.error("Routing Error:", e.error);
    document.getElementById("dist").innerText="Error!";
    document.getElementById("eta").innerText="Error!";
-   alert("Routing failed! Check your connection or the location coordinates.");
+   alert("Routing failed! Check your connection.");
  });
 }
 
