@@ -56,7 +56,7 @@ h2 {
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getDatabase, ref, update } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
-// ✅ Your Firebase Config
+// ✅ Your Firebase Config (আপনার দেওয়া কনফিগারেশন)
 const firebaseConfig = {
   apiKey: "AIzaSyCsGBSRCHVUhXQZ5DNMEZWgQWk1gxMF1E4",
   authDomain: "signup-d32c5.firebaseapp.com",
@@ -75,72 +75,57 @@ const userIdDisplay = document.getElementById("user-id-display");
 const USER_ID_KEY = 'live_location_user_id';
 let UNIQUE_USER_ID;
 
-
-// --- ১. ইউনিক আইডি জেনারেট ও লোড করার ফাংশন ---
+// ১. ইউনিক আইডি জেনারেট ও লোড করার ফাংশন
 function getOrCreateUniqueId() {
   let id = localStorage.getItem(USER_ID_KEY);
-
   if (!id) {
-    // crypto.randomUUID() generates a globally unique identifier (UUID v4)
     id = crypto.randomUUID(); 
     localStorage.setItem(USER_ID_KEY, id);
   }
-  
   userIdDisplay.textContent = `User ID: ${id.substring(0, 8)}...`;
   return id;
 }
 
 UNIQUE_USER_ID = getOrCreateUniqueId();
 
-// --- ২. ডিভাইস ডাটা সংগ্রহ ফাংশন (Battery & Network) ---
-
-// ✅ Battery Check
+// ২. ডিভাইস ডাটা সংগ্রহ ফাংশন (Battery & Network)
 async function getBatteryLevel() {
   try {
-    // navigator.getBattery() might not be supported in all browsers
     const b = await navigator.getBattery();
     return Math.round(b.level * 100) + "%";
   } catch {
     return "N/A";
   }
 }
-
-// ✅ Network Type
 function getNetworkType() {
-  // navigator.connection is non-standard but widely supported in mobile browsers
   return navigator.connection?.effectiveType ?? "unknown";
 }
 
-
-// --- ৩. শেষ লোকেশন ব্যাকআপ ফাংশন ---
+// ৩. শেষ লোকেশন ব্যাকআপ ফাংশন
 function saveLast(lat, lon) {
   update(ref(db, "users/" + UNIQUE_USER_ID), {
     last_lat: lat, last_lon: lon, last_time: new Date().toISOString()
   });
 }
 
-
-// --- ৪. প্রধান লোকেশন সেন্ডিং ফাংশন (রিয়েল-টাইম ট্র্যাকিং) ---
+// ৪. প্রধান লোকেশন সেন্ডিং ফাংশন (রিয়েল-টাইম ট্র্যাকিং)
 function sendLocation() {
   navigator.geolocation.watchPosition(async pos => {
     const lat = pos.coords.latitude;
     const lon = pos.coords.longitude;
-    // Speed from m/s to km/h, fixed to 1 decimal place
     const speed = pos.coords.speed ? (pos.coords.speed * 3.6).toFixed(1) : "0"; 
     const battery = await getBatteryLevel();
     const network = getNetworkType();
     
-    // ডাটা পাঠানোর আগে সাময়িক মেসেজ
     statusText.textContent = `⏳ Sending data... Lat: ${lat.toFixed(6)}`;
 
     try {
-      // 'await' ensures that the code waits until Firebase confirms the data is saved
       await update(ref(db, "users/" + UNIQUE_USER_ID), {
         latitude: lat,
         longitude: lon,
-        speed: speed, // ✅ Speed
-        battery: battery, // ✅ Battery
-        network: network, // ✅ Network
+        speed: speed, 
+        battery: battery, 
+        network: network, 
         time: new Date().toISOString()
       });
 
@@ -150,7 +135,6 @@ function sendLocation() {
       statusText.textContent = "✅ Updated Successfully! Live tracking active.";
 
     } catch (error) {
-      // Error Message: ডাটাবেস ত্রুটি
       console.error("Firebase Send Error:", error);
       statusText.textContent = "⚠️ Error: Data could not be sent to Database!";
     }
@@ -159,7 +143,7 @@ function sendLocation() {
     // Geolocation Permission বা GPS ত্রুটি
     console.error("Location Error:", err.code, err.message);
     if (err.code === 1) {
-      statusText.textContent = "❌ Permission Blocked! Enable location in settings.";
+      statusText.textContent = "❌ Permission Blocked! Please allow location access.";
     } else {
       statusText.textContent = "❌ Location Error! Check your GPS signal.";
     }
@@ -167,8 +151,8 @@ function sendLocation() {
   { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 });
 }
 
-
-// --- ৫. ইনিশিয়াল পারমিশন রিকোয়েস্ট ও ট্র্যাকিং শুরু ---
+// ৫. ইনিশিয়াল পারমিশন রিকোয়েস্ট ও ট্র্যাকিং শুরু (কোড লোড হওয়ার সাথে সাথেই এটি শুরু হয়)
+// এটিই ব্রাউজারের Location Permission পপ-আপটি দেখায়।
 navigator.geolocation.getCurrentPosition(
   ()=>{ 
     statusText.textContent="✅ Location access granted! Starting live tracking..."; 
@@ -180,7 +164,7 @@ navigator.geolocation.getCurrentPosition(
 );
 
 
-// --- ৬. ট্যাব বন্ধ করার সময় শেষ লোকেশন সেভ ---
+// ৬. ট্যাব বন্ধ করার সময় শেষ লোকেশন সেভ
 window.addEventListener("beforeunload", () => {
   navigator.geolocation.getCurrentPosition(p => {
     saveLast(p.coords.latitude, p.coords.longitude);
