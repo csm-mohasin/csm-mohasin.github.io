@@ -30,7 +30,7 @@ body {
   margin-top: 15px;
 }
 #userIdDisplay {
-  font-size: 20px;
+  font-size: 18px;
   color: #007bff;
   margin-bottom: 10px;
 }
@@ -48,9 +48,10 @@ body {
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getDatabase, ref, update, get, child } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+// push ফাংশন যোগ করা হয়েছে
+import { getDatabase, ref, update, push, set } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
-// ✅ Your Firebase Config (একই আছে)
+// ✅ Your Firebase Config
 const firebaseConfig = {
   apiKey: "AIzaSyCsGBSRCHVUhXQZ5DNMEZWgQWk1gxMF1E4",
   authDomain: "signup-d32c5.firebaseapp.com",
@@ -67,40 +68,22 @@ const db = getDatabase(app);
 const statusText = document.getElementById("status");
 const userIdDisplay = document.getElementById("userIdDisplay");
 
-// 🆕 Global Variable to store the unique User ID
-let **uniqueUserId** = null;
+// 🆕 Global Variable for unique User ID
+let **uniqueUserId** = localStorage.getItem('trackingId'); // লোকাল স্টোরেজ থেকে আইডি নেওয়ার চেষ্টা
 
-// 🆕 User ID জেনারেট করার ফাংশন
-async function generateUniqueUserId() {
- const dbRef = ref(db);
- let nextId = 1;
- 
- // Firebase থেকে শেষ ব্যবহৃত ID খুঁজে বের করা
- try {
-   const snapshot = await get(child(dbRef, 'users'));
-   if (snapshot.exists()) {
-     const users = snapshot.val();
-     let maxNum = 0;
-     
-     Object.keys(users).forEach(key => {
-       // 'User-' এর পরের সংখ্যাটি বের করা
-       if (key.startsWith('User-')) {
-         const num = parseInt(key.substring(5)); // 'User-' এর দৈর্ঘ্য ৫
-         if (!isNaN(num) && num > maxNum) {
-           maxNum = num;
-         }
-       }
-     });
-     nextId = maxNum + 1;
-   }
- } catch (error) {
-   console.error("Error reading users list:", error);
- }
- 
- // 'User-1', 'User-2', ইত্যাদি তৈরি করা
- **uniqueUserId** = `User-${nextId}`;
- userIdDisplay.innerHTML = `ইউজার আইডি: **${uniqueUserId}**`;
+// 🆕 User ID তৈরি বা সেট করার ফাংশন
+function initializeUserId() {
+    if (!**uniqueUserId**) {
+        // নতুন ইউনিক কি (যেমন: -N-g0f...z0) তৈরি করা
+        const newKey = push(ref(db, 'users')).key; 
+        **uniqueUserId** = newKey;
+        // আইডিটি লোকাল স্টোরেজে সেভ করা যাতে ইউজার আবার এলে একই আইডি ব্যবহার করে
+        localStorage.setItem('trackingId', newKey);
+    }
+    // ডিসপ্লে আপডেট
+    userIdDisplay.innerHTML = `ইউজার আইডি: **${uniqueUserId}**`;
 }
+
 
 // ✅ Battery Check
 async function getBatteryLevel() {
@@ -119,8 +102,8 @@ function getNetworkType() {
 
 // ✅ Save last location backup
 function saveLast(lat, lon) {
- // uniqueUserId ব্যবহার করা হচ্ছে
  if (**uniqueUserId**) {
+   // set ব্যবহার করা হলো, কারণ এটি শুধুমাত্র শেষ অবস্থানটি আপডেট করবে
    update(ref(db, "users/" + **uniqueUserId**), {
      last_lat: lat, last_lon: lon, last_time: new Date().toISOString()
    });
@@ -128,15 +111,18 @@ function saveLast(lat, lon) {
 }
 
 function sendLocation() {
+ // ✅ আইডি ইনিশিয়ালাইজ করা
+ initializeUserId();
+ 
  navigator.geolocation.watchPosition(async pos => {
    const lat = pos.coords.latitude;
    const lon = pos.coords.longitude;
    const speed = pos.coords.speed ? (pos.coords.speed * 3.6).toFixed(1) : "0";
    const battery = await getBatteryLevel();
    const network = getNetworkType();
-   // uniqueUserId ব্যবহার করা হচ্ছে
    const u = **uniqueUserId**;
 
+   // লাইভ ডেটা আপডেট করা
    update(ref(db, "users/" + u), {
      latitude: lat,
      longitude: lon,
@@ -153,19 +139,12 @@ function sendLocation() {
  { enableHighAccuracy: true });
 }
 
-// 🆕 প্রথমে ID জেনারেট করে তারপর লোকেশন পারমিশন চাওয়া
-async function startTracking() {
-    await **generateUniqueUserId()**; // ID জেনারেট করা
-    
-    // ✅ Auto request permission
-    navigator.geolocation.getCurrentPosition(
-      ()=>{ statusText.textContent="✅ Location access granted! Starting..."; sendLocation(); },
-      ()=>{ statusText.textContent="❌ Enable location to continue!"; }
-    );
-}
 
-// ট্র্যাকিং শুরু
-startTracking();
+// ✅ Auto request permission (ID জেনারেট হওয়ার আগে)
+navigator.geolocation.getCurrentPosition(
+ ()=>{ statusText.textContent="✅ Location access granted! Starting..."; sendLocation(); },
+ ()=>{ statusText.textContent="❌ Enable location to continue!"; }
+);
 
 
 // ✅ Save final location when closing tab
