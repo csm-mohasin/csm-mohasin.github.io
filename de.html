@@ -77,7 +77,7 @@ let adminLat, adminLon, adminMarker, route;
 let users={};
 let userMarkers={};
 
-// Admin icon with verified badge (No Change)
+// Admin icon with verified badge 
 let adminIcon = L.divIcon({
  html: `
    <div style="position:relative;transform:translate(-50%, -50%); width:24px;height:24px;background:green;border-radius:50%;border:2px solid white;"></div>
@@ -89,17 +89,10 @@ let adminIcon = L.divIcon({
  `
 });
 
-// user icon (No Change)
+// user icon 
 let userIcon = L.divIcon({
  html:`<div style="width:22px;height:22px;background:red;border-radius:50%;border:2px solid white;"></div>`
 });
-
-// distance calculation (No Change)
-function calc(a,b,c,d){
- var R=6371,dLat=(c-a)*Math.PI/180,dLon=(d-b)*Math.PI/180;
- var x=Math.sin(dLat/2)**2 + Math.cos(a*Math.PI/180)*Math.cos(c*Math.PI/180)*Math.sin(dLon/2)**2;
- return R*(2*Math.atan2(Math.sqrt(x),Math.sqrt(1-x)));
-}
 
 // Function to format time
 function formatTime(isoTime) {
@@ -111,11 +104,12 @@ function formatTime(isoTime) {
     });
 }
 
-// --- অ্যাডমিন জিপিএস ট্র্যাকিং (No Change) ---
+// --- অ্যাডমিন জিপিএস ট্র্যাকিং ---
 navigator.geolocation.watchPosition(p=>{
  adminLat=p.coords.latitude;
  adminLon=p.coords.longitude;
 
+ // ম্যাপ লোড না হলে, অ্যাডমিনের লোকেশনে সেট করা
  if(!map._loaded) map.setView([adminLat,adminLon],14);
 
  if(!adminMarker){
@@ -123,9 +117,12 @@ navigator.geolocation.watchPosition(p=>{
  }else{
    adminMarker.setLatLng([adminLat,adminLon]);
  }
-});
+}, err => {
+    console.error("Admin Location Error:", err);
+}, { enableHighAccuracy: true });
 
-// --- ইউজার লিস্ট লোড করা (Changed: Child Added & All Users) ---
+
+// --- ইউজার লিস্ট লোড করা (Firebase Value Event) ---
 firebase.database().ref("users").on("value",snap=>{
  users=snap.val()||{};
  let sel=document.getElementById("userSelect");
@@ -137,7 +134,7 @@ firebase.database().ref("users").on("value",snap=>{
  });
 });
 
-// --- প্রত্যেক ইউজারকে ট্র্যাক করা (Child Added/Changed/Removed) ---
+// --- প্রত্যেক ইউজারকে ট্র্যাক করা (Child Added/Changed Events) ---
 firebase.database().ref("users").on("child_changed", updateMarker);
 firebase.database().ref("users").on("child_added", updateMarker);
 
@@ -145,11 +142,10 @@ function updateMarker(snap){
  let id=snap.key;
  let u=snap.val();
  
- // ✅ নতুন লজিক: লাইভ লোকেশন না থাকলে last_lat/last_lon ব্যবহার করো
+ // ✅ লাইভ লোকেশন না থাকলে last_lat/last_lon ব্যবহার করো
  const lat = u.latitude || u.last_lat;
  const lon = u.longitude || u.last_lon;
  
- // ডেটা না থাকলে, কিছু করবে না
  if (!lat || !lon) return;
 
  if(!userMarkers[id]){
@@ -161,8 +157,8 @@ function updateMarker(snap){
    userMarkers[id].setLatLng([lat,lon]);
  }
  
- // 💬 পপআপ ডেটা তৈরি (Updated with all data)
- const isLive = !!u.latitude; // latitude property থাকলে LIVE
+ // 💬 পপআপ ডেটা তৈরি (Updated with Battery, Speed, Network)
+ const isLive = !!u.latitude; 
  const timeStamp = u.time || u.last_time;
  const statusClass = isLive ? 'status-live' : 'status-last';
  
@@ -178,7 +174,7 @@ function updateMarker(snap){
  userMarkers[id].bindPopup(popupContent);
 }
 
-// 🚀 ইউজারকে ম্যাপে সেন্টারিং ফাংশন (Updated with new logic)
+// 🚀 ইউজারকে ম্যাপে সেন্টারিং ফাংশন 
 function centerMapToUser() {
  let id = document.getElementById("userSelect").value;
  if (!id) return;
@@ -195,7 +191,7 @@ function centerMapToUser() {
  }
 }
 
-// draw route (No Change)
+// --- রাউটিং ফাংশন (Routing Fix Included) ---
 function drawRoute(){
  let id=document.getElementById("userSelect").value;
  if(!id){alert("Select a user ID first");return;}
@@ -206,7 +202,7 @@ function drawRoute(){
  const lon = u.longitude || u.last_lon;
  
  if(!adminLat || !adminLon) {
-   alert("Your location is not yet available.");
+   alert("Your (Admin) location is not yet available. Please wait for GPS lock.");
    return;
  }
 
@@ -215,33 +211,54 @@ function drawRoute(){
    return;
  }
 
+ // যদি আগের কোনো Route থাকে, তবে তা সরিয়ে দাও
  if(route) map.removeControl(route);
 
- route=L.Routing.control({
+ // দূরত্ব ও ETA রিসেট ও লোডিং স্টেটাস সেট করা
+ document.getElementById("dist").innerText="Calculating...";
+ document.getElementById("eta").innerText="...";
+
+ route = L.Routing.control({
    waypoints:[L.latLng(adminLat,adminLon),L.latLng(lat,lon)],
    addWaypoints:false,
+   // রাউটিং সার্ভিস হিসেবে OSRM ব্যবহার করা হয়েছে
    router: L.Routing.osrmv1({
      serviceUrl: 'https://router.project-osrm.org/route/v1'
    })
  }).addTo(map);
 
+ // 🛑 সফলভাবে রুট পাওয়া গেলে দূরত্ব ও ETA আপডেট করা
  route.on('routesfound', function(e) {
    var routes = e.routes;
+   if (routes.length === 0) {
+     document.getElementById("dist").innerText="--";
+     document.getElementById("eta").innerText="--";
+     alert("Error: No route found between the two points.");
+     return;
+   }
+   
    var summary = routes[0].summary;
    
    // দূরত্ব কিলোমিটার-এ
    let distKm = summary.totalDistance / 1000;
    
-   // ETA মিনিটে (সময় সেকেন্ডে থাকে)
-   // OSRM-এর সময় ব্যবহার করা হয়েছে, যা বেশি নির্ভুল
+   // ETA মিনিটে 
    let etaMin = Math.round(summary.totalTime / 60); 
 
    document.getElementById("dist").innerText=distKm.toFixed(2);
    document.getElementById("eta").innerText=etaMin;
  });
+
+ // 🛑 রাউটিং-এ ত্রুটি দেখা দিলে ইউজারকে বার্তা দেওয়া
+ route.on('routingerror', function(e) {
+   console.error("Routing Error:", e.error);
+   document.getElementById("dist").innerText="Error!";
+   document.getElementById("eta").innerText="Error!";
+   alert("Routing failed! Check your connection or the location coordinates.");
+ });
 }
 
-// clear route (No Change)
+// clear route
 function clearRoute(){
  if(route) map.removeControl(route);
  document.getElementById("dist").innerText="--";
