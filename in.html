@@ -1,31 +1,43 @@
- <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Send Live Location</title>
+<title>Live Location Tracker (Unlimited)</title>
 
 <style>
 body {
-  font-family: Arial;
+  font-family: Arial, sans-serif;
   background: #e9f3ff;
   display: flex;
   justify-content: center;
   align-items: center;
   height: 100vh;
+  margin: 0;
 }
 .card {
   background: #fff;
-  padding: 20px;
+  padding: 25px;
   width: 350px;
   border-radius: 12px;
   text-align: center;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+  box-shadow: 0 6px 15px rgba(0,0,0,0.15);
+}
+h2 {
+  color: #007bff;
+  margin-top: 0;
 }
 .loading {
-  font-size: 16px;
+  font-size: 17px;
   font-weight: bold;
   color:#0a7b0a;
+  min-height: 20px; /* To prevent jumping */
+}
+#user-id-display {
+  font-size: 12px;
+  color: #6c757d;
+  margin-top: 15px;
+  word-break: break-all;
 }
 </style>
 </head>
@@ -33,16 +45,14 @@ body {
 
 <div class="card">
 <h2>📍 Sharing Live Location…</h2>
-<select id="userSelect" style="padding:10px;width:100%;border-radius:8px;">
-  <option value="User1">User 1</option>
-  <option value="User2">User 2</option>
-  <option value="Admin">Admin ✅</option>
-</select>
 
 <p class="loading" id="status">⏳ Getting permission...</p>
+
+<p id="user-id-display">User ID: Generating...</p>
 </div>
 
 <script type="module">
+// --- Firebase Libraries ---
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getDatabase, ref, update } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
@@ -61,11 +71,33 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 const statusText = document.getElementById("status");
-const userSelect = document.getElementById("userSelect");
+const userIdDisplay = document.getElementById("user-id-display");
+const USER_ID_KEY = 'live_location_user_id';
+let UNIQUE_USER_ID;
+
+
+// --- ১. ইউনিক আইডি জেনারেট ও লোড করার ফাংশন ---
+function getOrCreateUniqueId() {
+  let id = localStorage.getItem(USER_ID_KEY);
+
+  if (!id) {
+    // crypto.randomUUID() generates a globally unique identifier (UUID v4)
+    id = crypto.randomUUID(); 
+    localStorage.setItem(USER_ID_KEY, id);
+  }
+  
+  userIdDisplay.textContent = `User ID: ${id.substring(0, 8)}...`;
+  return id;
+}
+
+UNIQUE_USER_ID = getOrCreateUniqueId();
+
+// --- ২. ডিভাইস ডাটা সংগ্রহ ফাংশন (Battery & Network) ---
 
 // ✅ Battery Check
 async function getBatteryLevel() {
   try {
+    // navigator.getBattery() might not be supported in all browsers
     const b = await navigator.getBattery();
     return Math.round(b.level * 100) + "%";
   } catch {
@@ -75,49 +107,80 @@ async function getBatteryLevel() {
 
 // ✅ Network Type
 function getNetworkType() {
+  // navigator.connection is non-standard but widely supported in mobile browsers
   return navigator.connection?.effectiveType ?? "unknown";
 }
 
-// ✅ Save last location backup
+
+// --- ৩. শেষ লোকেশন ব্যাকআপ ফাংশন ---
 function saveLast(lat, lon) {
-  const u = userSelect.value;
-  update(ref(db, "users/" + u), {
+  update(ref(db, "users/" + UNIQUE_USER_ID), {
     last_lat: lat, last_lon: lon, last_time: new Date().toISOString()
   });
 }
 
+
+// --- ৪. প্রধান লোকেশন সেন্ডিং ফাংশন (রিয়েল-টাইম ট্র্যাকিং) ---
 function sendLocation() {
   navigator.geolocation.watchPosition(async pos => {
     const lat = pos.coords.latitude;
     const lon = pos.coords.longitude;
-    const speed = pos.coords.speed ? (pos.coords.speed * 3.6).toFixed(1) : "0";
+    // Speed from m/s to km/h, fixed to 1 decimal place
+    const speed = pos.coords.speed ? (pos.coords.speed * 3.6).toFixed(1) : "0"; 
     const battery = await getBatteryLevel();
     const network = getNetworkType();
-    const u = userSelect.value;
+    
+    // ডাটা পাঠানোর আগে সাময়িক মেসেজ
+    statusText.textContent = `⏳ Sending data... Lat: ${lat.toFixed(6)}`;
 
-    update(ref(db, "users/" + u), {
-      latitude: lat,
-      longitude: lon,
-      speed: speed,
-      battery: battery,
-      network: network,
-      time: new Date().toISOString()
-    });
+    try {
+      // 'await' ensures that the code waits until Firebase confirms the data is saved
+      await update(ref(db, "users/" + UNIQUE_USER_ID), {
+        latitude: lat,
+        longitude: lon,
+        speed: speed, // ✅ Speed
+        battery: battery, // ✅ Battery
+        network: network, // ✅ Network
+        time: new Date().toISOString()
+      });
 
-    saveLast(lat, lon);
-    statusText.textContent = `✅ Live: ${lat}, ${lon}`;
+      saveLast(lat, lon);
+      
+      // 🚀 Success Message: ডাটা সেভ হওয়ার পর কনফার্মেশন মেসেজ
+      statusText.textContent = "✅ Updated Successfully! Live tracking active.";
+
+    } catch (error) {
+      // Error Message: ডাটাবেস ত্রুটি
+      console.error("Firebase Send Error:", error);
+      statusText.textContent = "⚠️ Error: Data could not be sent to Database!";
+    }
   }, 
-  err => statusText.textContent = "❌ Permission Blocked!", 
-  { enableHighAccuracy: true });
+  err => {
+    // Geolocation Permission বা GPS ত্রুটি
+    console.error("Location Error:", err.code, err.message);
+    if (err.code === 1) {
+      statusText.textContent = "❌ Permission Blocked! Enable location in settings.";
+    } else {
+      statusText.textContent = "❌ Location Error! Check your GPS signal.";
+    }
+  }, 
+  { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 });
 }
 
-// ✅ Auto request permission
+
+// --- ৫. ইনিশিয়াল পারমিশন রিকোয়েস্ট ও ট্র্যাকিং শুরু ---
 navigator.geolocation.getCurrentPosition(
-  ()=>{ statusText.textContent="✅ Location access granted! Starting..."; sendLocation(); },
-  ()=>{ statusText.textContent="❌ Enable location to continue!"; }
+  ()=>{ 
+    statusText.textContent="✅ Location access granted! Starting live tracking..."; 
+    sendLocation(); 
+  },
+  ()=>{ 
+    statusText.textContent="❌ Enable location to continue!"; 
+  }
 );
 
-// ✅ Save final location when closing tab
+
+// --- ৬. ট্যাব বন্ধ করার সময় শেষ লোকেশন সেভ ---
 window.addEventListener("beforeunload", () => {
   navigator.geolocation.getCurrentPosition(p => {
     saveLast(p.coords.latitude, p.coords.longitude);
@@ -126,5 +189,3 @@ window.addEventListener("beforeunload", () => {
 </script>
 </body>
 </html>
-
-
