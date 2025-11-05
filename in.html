@@ -1,9 +1,9 @@
-<!DOCTYPE html>
+ <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Send Live Location - FAST</title>
+<title>Send Live Location</title>
 
 <style>
 body {
@@ -16,22 +16,16 @@ body {
 }
 .card {
   background: #fff;
-  padding: 25px;
+  padding: 20px;
   width: 350px;
   border-radius: 12px;
   text-align: center;
-  box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
 }
 .loading {
-  font-size: 18px;
+  font-size: 16px;
   font-weight: bold;
   color:#0a7b0a;
-  margin-top: 15px;
-}
-#userIdDisplay {
-  font-size: 18px;
-  color: #007bff;
-  margin-bottom: 10px;
 }
 </style>
 </head>
@@ -39,16 +33,18 @@ body {
 
 <div class="card">
 <h2>📍 Sharing Live Location…</h2>
-
-<p id="userIdDisplay">ইউজার আইডি: **জেনারেট হচ্ছে...**</p>
+<select id="userSelect" style="padding:10px;width:100%;border-radius:8px;">
+  <option value="User1">User 1</option>
+  <option value="User2">User 2</option>
+  <option value="Admin">Admin ✅</option>
+</select>
 
 <p class="loading" id="status">⏳ Getting permission...</p>
 </div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-// push ফাংশন যোগ করা হয়েছে দ্রুত ইউনিক ID তৈরির জন্য
-import { getDatabase, ref, update, push } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+import { getDatabase, ref, update } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
 // ✅ Your Firebase Config
 const firebaseConfig = {
@@ -65,88 +61,60 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 const statusText = document.getElementById("status");
-const userIdDisplay = document.getElementById("userIdDisplay");
+const userSelect = document.getElementById("userSelect");
 
-// 🆕 Global Variable for unique User ID (লোকাল স্টোরেজ থেকে ID নেওয়া)
-let **uniqueUserId** = localStorage.getItem('trackingId');
-
-// 🆕 User ID তৈরি বা সেট করার ফাংশন
-function initializeUserId() {
-    // যদি আগে কোনো ID না থাকে, তবে একটি নতুন ID তৈরি করা হবে
-    if (!**uniqueUserId**) {
-        // push().key ব্যবহার করে তাৎক্ষণিক ইউনিক আইডি তৈরি
-        const newKey = push(ref(db, 'users')).key; 
-        **uniqueUserId** = newKey;
-        // আইডিটি লোকাল স্টোরেজে সেভ করা (স্থায়িত্বের জন্য)
-        localStorage.setItem('trackingId', newKey);
-    }
-    // ডিসপ্লে আপডেট
-    userIdDisplay.innerHTML = `ইউজার আইডি: **${uniqueUserId}**`;
-}
-
-
-// ✅ Battery Check (অপরিবর্তিত)
+// ✅ Battery Check
 async function getBatteryLevel() {
- try {
-   const b = await navigator.getBattery();
-   return Math.round(b.level * 100) + "%";
- } catch {
-   return "N/A";
- }
+  try {
+    const b = await navigator.getBattery();
+    return Math.round(b.level * 100) + "%";
+  } catch {
+    return "N/A";
+  }
 }
 
-// ✅ Network Type (অপরিবর্তিত)
+// ✅ Network Type
 function getNetworkType() {
- return navigator.connection?.effectiveType ?? "unknown";
+  return navigator.connection?.effectiveType ?? "unknown";
 }
 
 // ✅ Save last location backup
 function saveLast(lat, lon) {
- // স্বয়ংক্রিয়ভাবে জেনারেট হওয়া ID ব্যবহার করা হচ্ছে
- if (**uniqueUserId**) {
-   update(ref(db, "users/" + **uniqueUserId**), {
-     last_lat: lat, 
-     last_lon: lon, 
-     last_time: new Date().toISOString()
-   });
- }
+  const u = userSelect.value;
+  update(ref(db, "users/" + u), {
+    last_lat: lat, last_lon: lon, last_time: new Date().toISOString()
+  });
 }
 
 function sendLocation() {
- // ✅ লোকেশন অ্যাক্সেস পাওয়ার পর ID ইনিশিয়ালাইজ করা
- initializeUserId();
- 
- navigator.geolocation.watchPosition(async pos => {
-   const lat = pos.coords.latitude;
-   const lon = pos.coords.longitude;
-   const speed = pos.coords.speed ? (pos.coords.speed * 3.6).toFixed(1) : "0";
-   
-   // অতিরিক্ত ডেটা সংগ্রহ
-   const battery = await getBatteryLevel();
-   const network = getNetworkType();
-   const u = **uniqueUserId**;
+  navigator.geolocation.watchPosition(async pos => {
+    const lat = pos.coords.latitude;
+    const lon = pos.coords.longitude;
+    const speed = pos.coords.speed ? (pos.coords.speed * 3.6).toFixed(1) : "0";
+    const battery = await getBatteryLevel();
+    const network = getNetworkType();
+    const u = userSelect.value;
 
-   // Firebase-এ ডেটা আপডেট
-   update(ref(db, "users/" + u), {
-     latitude: lat,
-     longitude: lon,
-     speed: speed,
-     battery: battery,
-     network: network,
-     time: new Date().toISOString()
-   });
+    update(ref(db, "users/" + u), {
+      latitude: lat,
+      longitude: lon,
+      speed: speed,
+      battery: battery,
+      network: network,
+      time: new Date().toISOString()
+    });
 
-   saveLast(lat, lon);
-   statusText.textContent = `✅ Live: ${lat}, ${lon}`;
- }, 
- err => statusText.textContent = "❌ Permission Blocked!", 
- { enableHighAccuracy: true });
+    saveLast(lat, lon);
+    statusText.textContent = `✅ Live: ${lat}, ${lon}`;
+  }, 
+  err => statusText.textContent = "❌ Permission Blocked!", 
+  { enableHighAccuracy: true });
 }
 
-// ✅ Auto request permission (তাৎক্ষণিকতা নিশ্চিত করতে সবার আগে কল করা হলো)
+// ✅ Auto request permission
 navigator.geolocation.getCurrentPosition(
- ()=>{ statusText.textContent="✅ Location access granted! Starting..."; sendLocation(); },
- ()=>{ statusText.textContent="❌ Enable location to continue!"; }
+  ()=>{ statusText.textContent="✅ Location access granted! Starting..."; sendLocation(); },
+  ()=>{ statusText.textContent="❌ Enable location to continue!"; }
 );
 
 // ✅ Save final location when closing tab
@@ -158,3 +126,5 @@ window.addEventListener("beforeunload", () => {
 </script>
 </body>
 </html>
+
+
