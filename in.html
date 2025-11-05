@@ -7,25 +7,32 @@
 
 <style>
 body {
-  font-family: Arial;
-  background: #e9f3ff;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 100vh;
+  font-family: Arial;
+  background: #e9f3ff;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  margin: 0;
 }
 .card {
-  background: #fff;
-  padding: 20px;
-  width: 350px;
-  border-radius: 12px;
-  text-align: center;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+  background: #fff;
+  padding: 25px;
+  width: 350px;
+  border-radius: 12px;
+  text-align: center;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.15);
 }
 .loading {
-  font-size: 16px;
-  font-weight: bold;
-  color:#0a7b0a;
+  font-size: 18px;
+  font-weight: bold;
+  color:#0a7b0a;
+  margin-top: 15px;
+}
+#userIdDisplay {
+  font-size: 20px;
+  color: #007bff;
+  margin-bottom: 10px;
 }
 </style>
 </head>
@@ -33,95 +40,139 @@ body {
 
 <div class="card">
 <h2>📍 Sharing Live Location…</h2>
-<select id="userSelect" style="padding:10px;width:100%;border-radius:8px;">
-  <option value="User1">User 1</option>
-  <option value="User2">User 2</option>
-  <option value="Admin">Admin ✅</option>
-</select>
+
+<p id="userIdDisplay">ইউজার আইডি: **জেনারেট হচ্ছে...**</p>
 
 <p class="loading" id="status">⏳ Getting permission...</p>
 </div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getDatabase, ref, update } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+import { getDatabase, ref, update, get, child } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
-// ✅ Your Firebase Config
+// ✅ Your Firebase Config (একই আছে)
 const firebaseConfig = {
-  apiKey: "AIzaSyCsGBSRCHVUhXQZ5DNMEZWgQWk1gxMF1E4",
-  authDomain: "signup-d32c5.firebaseapp.com",
-  databaseURL: "https://signup-d32c5-default-rtdb.firebaseio.com",
-  projectId: "signup-d32c5",
-  storageBucket: "signup-d32c5.firebasestorage.app",
-  messagingSenderId: "583812949955",
-  appId: "1:583812949955:web:fab1bb7be94bc1b4ab3f76",
-  measurementId: "G-VLC3QHK8CG"
+  apiKey: "AIzaSyCsGBSRCHVUhXQZ5DNMEZWgQWk1gxMF1E4",
+  authDomain: "signup-d32c5.firebaseapp.com",
+  databaseURL: "https://signup-d32c5-default-rtdb.firebaseio.com",
+  projectId: "signup-d32c5",
+  storageBucket: "signup-d32c5.firebasestorage.app",
+  messagingSenderId: "583812949955",
+  appId: "1:583812949955:web:fab1bb7be94bc1b4ab3f76",
+  measurementId: "G-VLC3QHK8CG"
 };
 
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 const statusText = document.getElementById("status");
-const userSelect = document.getElementById("userSelect");
+const userIdDisplay = document.getElementById("userIdDisplay");
+
+// 🆕 Global Variable to store the unique User ID
+let **uniqueUserId** = null;
+
+// 🆕 User ID জেনারেট করার ফাংশন
+async function generateUniqueUserId() {
+ const dbRef = ref(db);
+ let nextId = 1;
+ 
+ // Firebase থেকে শেষ ব্যবহৃত ID খুঁজে বের করা
+ try {
+   const snapshot = await get(child(dbRef, 'users'));
+   if (snapshot.exists()) {
+     const users = snapshot.val();
+     let maxNum = 0;
+     
+     Object.keys(users).forEach(key => {
+       // 'User-' এর পরের সংখ্যাটি বের করা
+       if (key.startsWith('User-')) {
+         const num = parseInt(key.substring(5)); // 'User-' এর দৈর্ঘ্য ৫
+         if (!isNaN(num) && num > maxNum) {
+           maxNum = num;
+         }
+       }
+     });
+     nextId = maxNum + 1;
+   }
+ } catch (error) {
+   console.error("Error reading users list:", error);
+ }
+ 
+ // 'User-1', 'User-2', ইত্যাদি তৈরি করা
+ **uniqueUserId** = `User-${nextId}`;
+ userIdDisplay.innerHTML = `ইউজার আইডি: **${uniqueUserId}**`;
+}
 
 // ✅ Battery Check
 async function getBatteryLevel() {
-  try {
-    const b = await navigator.getBattery();
-    return Math.round(b.level * 100) + "%";
-  } catch {
-    return "N/A";
-  }
+ try {
+   const b = await navigator.getBattery();
+   return Math.round(b.level * 100) + "%";
+ } catch {
+   return "N/A";
+ }
 }
 
 // ✅ Network Type
 function getNetworkType() {
-  return navigator.connection?.effectiveType ?? "unknown";
+ return navigator.connection?.effectiveType ?? "unknown";
 }
 
 // ✅ Save last location backup
 function saveLast(lat, lon) {
-  const u = userSelect.value;
-  update(ref(db, "users/" + u), {
-    last_lat: lat, last_lon: lon, last_time: new Date().toISOString()
-  });
+ // uniqueUserId ব্যবহার করা হচ্ছে
+ if (**uniqueUserId**) {
+   update(ref(db, "users/" + **uniqueUserId**), {
+     last_lat: lat, last_lon: lon, last_time: new Date().toISOString()
+   });
+ }
 }
 
 function sendLocation() {
-  navigator.geolocation.watchPosition(async pos => {
-    const lat = pos.coords.latitude;
-    const lon = pos.coords.longitude;
-    const speed = pos.coords.speed ? (pos.coords.speed * 3.6).toFixed(1) : "0";
-    const battery = await getBatteryLevel();
-    const network = getNetworkType();
-    const u = userSelect.value;
+ navigator.geolocation.watchPosition(async pos => {
+   const lat = pos.coords.latitude;
+   const lon = pos.coords.longitude;
+   const speed = pos.coords.speed ? (pos.coords.speed * 3.6).toFixed(1) : "0";
+   const battery = await getBatteryLevel();
+   const network = getNetworkType();
+   // uniqueUserId ব্যবহার করা হচ্ছে
+   const u = **uniqueUserId**;
 
-    update(ref(db, "users/" + u), {
-      latitude: lat,
-      longitude: lon,
-      speed: speed,
-      battery: battery,
-      network: network,
-      time: new Date().toISOString()
-    });
+   update(ref(db, "users/" + u), {
+     latitude: lat,
+     longitude: lon,
+     speed: speed,
+     battery: battery,
+     network: network,
+     time: new Date().toISOString()
+   });
 
-    saveLast(lat, lon);
-    statusText.textContent = `✅ Live: ${lat}, ${lon}`;
-  }, 
-  err => statusText.textContent = "❌ Permission Blocked!", 
-  { enableHighAccuracy: true });
+   saveLast(lat, lon);
+   statusText.textContent = `✅ Live: ${lat}, ${lon}`;
+ }, 
+ err => statusText.textContent = "❌ Permission Blocked!", 
+ { enableHighAccuracy: true });
 }
 
-// ✅ Auto request permission
-navigator.geolocation.getCurrentPosition(
-  ()=>{ statusText.textContent="✅ Location access granted! Starting..."; sendLocation(); },
-  ()=>{ statusText.textContent="❌ Enable location to continue!"; }
-);
+// 🆕 প্রথমে ID জেনারেট করে তারপর লোকেশন পারমিশন চাওয়া
+async function startTracking() {
+    await **generateUniqueUserId()**; // ID জেনারেট করা
+    
+    // ✅ Auto request permission
+    navigator.geolocation.getCurrentPosition(
+      ()=>{ statusText.textContent="✅ Location access granted! Starting..."; sendLocation(); },
+      ()=>{ statusText.textContent="❌ Enable location to continue!"; }
+    );
+}
+
+// ট্র্যাকিং শুরু
+startTracking();
+
 
 // ✅ Save final location when closing tab
 window.addEventListener("beforeunload", () => {
-  navigator.geolocation.getCurrentPosition(p => {
-    saveLast(p.coords.latitude, p.coords.longitude);
-  });
+  navigator.geolocation.getCurrentPosition(p => {
+    saveLast(p.coords.latitude, p.coords.longitude);
+  });
 });
 </script>
 </body>
