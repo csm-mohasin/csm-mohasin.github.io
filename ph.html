@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Camera Upload | Supabase</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #eef6ff;
+      text-align: center;
+      padding: 40px;
+    }
+    video {
+      width: 320px;
+      border-radius: 10px;
+      margin-bottom: 15px;
+    }
+    button {
+      background: #007bff;
+      border: none;
+      color: white;
+      padding: 10px 20px;
+      border-radius: 8px;
+      font-size: 16px;
+    }
+    #status {
+      margin-top: 10px;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <h2>📸 Camera Upload to Supabase</h2>
+  <video id="camera" autoplay playsinline></video><br>
+  <button id="capture">📷 Capture & Upload</button>
+  <p id="status"></p>
+
+  <script type="module">
+    import { createClient } from "https://esm.sh/@supabase/supabase-js";
+
+    // 🔗 তোমার Supabase config
+    const SUPABASE_URL = "https://htjhodnmgaozujwrluqm.supabase.co";
+    const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh0amhvZG5tZ2FvenVqd3JsdXFtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjIzOTUzMDQsImV4cCI6MjA3Nzk3MTMwNH0.YW1YUz-OtZVjF7A8KW9lOrx3sH7w-Xw_ZEVIQ6QQywQ";
+    const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    const video = document.getElementById("camera");
+    const status = document.getElementById("status");
+
+    // 🎥 Camera start
+    navigator.mediaDevices.getUserMedia({ video: true })
+      .then(stream => { video.srcObject = stream; })
+      .catch(err => { status.textContent = "❌ Camera access failed: " + err.message; });
+
+    // 📸 Capture & Upload
+    document.getElementById("capture").onclick = async () => {
+      const canvas = document.createElement("canvas");
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      canvas.getContext("2d").drawImage(video, 0, 0);
+
+      const blob = await new Promise(resolve => canvas.toBlob(resolve, "image/jpeg"));
+      const fileName = `photo_${Date.now()}.jpg`;
+
+      status.textContent = "⏳ Uploading...";
+
+      const { data, error } = await supabase.storage
+        .from("photos") // তোমার bucket নাম
+        .upload(fileName, blob, { contentType: "image/jpeg" });
+
+      if (error) {
+        status.textContent = "❌ Upload failed: " + error.message;
+      } else {
+        const url = `${SUPABASE_URL}/storage/v1/object/public/photos/${fileName}`;
+        status.innerHTML = `✅ Uploaded successfully!<br><a href="${url}" target="_blank">View Photo</a>`;
+      }
+    };
+  </script>
+</body>
+</html>
