@@ -1,0 +1,1694 @@
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">  
+<title>Csm Mohasin Alam </title>  
+
+    <link href="https://raw.githubusercontent.com/csm-mohasin/magic-portfolio/refs/heads/main/styluue.css" rel="stylesheet">    
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">    <link href='https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css' rel='stylesheet'/>  
+<link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">  
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">  
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>  
+<style>  
+
+
+h1 {
+  text-align: center;
+}
+.social-menu ul {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    padding: 0;
+    margin: 0;
+    display: flex;
+}
+.social-menu ul li {
+    list-style: none;
+    margin: 0 10px;
+}
+.social-menu ul li .fa {
+    color: #000000;
+    font-size: 25px;
+    line-height: 50px;
+    transition: .5s;
+}
+.social-menu ul li .fa:hover {
+    color: #ffffff;
+}
+.social-menu ul li a {
+    position: relative;
+    display: block;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background-color: white;
+    text-align: center;
+    transition: 0.5s;
+    transform: translate(0,0px);
+    box-shadow: 0px 7px 5px rgba(0, 0, 0, 0.5);
+}
+.social-menu ul li a:hover {
+    transform: rotate(0deg) skew(0deg) translate(0, -10px);
+}
+.social-menu ul li:nth-child(1) a:hover {
+    background-color: #3b5999;
+}
+.social-menu ul li:nth-child(2) a:hover {
+    background-color: #55acee;
+}
+.social-menu ul li:nth-child(3) a:hover {
+    background-color: #e4405f;
+}
+.social-menu ul li:nth-child(4) a:hover {
+    background-color: #cd201f;
+}
+.social-menu ul li:nth-child(5) a:hover {
+    background-color: #0077B5;
+    }
+
+
+
+    
+/* --- PRELOADER STYLES (NO CHANGE) --- */
+#preloader {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #fff; /* à¦²à§à¦¡à¦¾à¦°à§à¦° à¦ªà§à¦à¦¨à§à¦° à¦°à¦ */
+    z-index: 9999999;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.loader {
+    position: absolute;
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    margin-bottom: 25px;
+    display: inline-block;
+    vertical-align: middle;
+}
+
+.loader span {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    display: block;
+    /* à¦à§à¦¯à¦¾à¦¨à¦¿à¦®à§à¦¶à¦¨ à¦¨à¦¾à¦®, à¦¸à¦®à¦¯à¦¼, à¦à¦¬à¦ à¦à¦¤à¦¿ à¦¨à¦¿à¦°à§à¦§à¦¾à¦°à¦£ */
+    -webkit-animation: preloader-spin 1.2s cubic-bezier(0.68, -0.55, 0.265, 1.55) infinite;
+    animation: preloader-spin 1.2s cubic-bezier(0.68, -0.55, 0.265, 1.55) infinite;
+}
+
+/* à¦ªà§à¦°à¦¤à¦¿à¦à¦¿ à¦à§à¦²à¦à§à¦° à¦à¦¨à§à¦¯ à¦à¦²à¦¾à¦¦à¦¾ à¦°à¦ à¦à¦¬à¦ à¦à§à¦¯à¦¾à¦¨à¦¿à¦®à§à¦¶à¦¨ à¦¡à¦¿à¦²à§ */
+.loader span:first-child {
+    background-color: #262626; /* à¦ªà§à¦°à¦¥à¦® à¦à§à¦²à¦à§à¦° à¦°à¦ */
+    -webkit-animation-delay: 0s;
+    animation-delay: 0s;
+}
+.loader span:nth-child(2) {
+    background-color: #fc0517; /* à¦¦à§à¦¬à¦¿à¦¤à§à¦¯à¦¼ à¦à§à¦²à¦à§à¦° à¦°à¦ */
+    -webkit-animation-delay: 0.1s;
+    animation-delay: 0.1s;
+}
+.loader span:nth-child(3) {
+    background-color: #0588fc; /* à¦¤à§à¦¤à§à¦¯à¦¼ à¦à§à¦²à¦à§à¦° à¦°à¦ */
+    -webkit-animation-delay: 0.2s;
+    animation-delay: 0.2s;
+}
+
+/* à¦à§à¦°à§à¦£à¦¨ (Spin) à¦à§à¦¯à¦¾à¦¨à¦¿à¦®à§à¦¶à¦¨ à¦à§à¦«à§à¦°à§à¦® */
+@keyframes preloader-spin {
+    0% {
+        transform: perspective(100px) rotateX(0deg) rotateY(0deg);
+        opacity: 0.8;
+    }
+    100% {
+        transform: perspective(100px) rotateX(360deg) rotateY(360deg);
+        opacity: 1;
+    }
+}
+/* -webkit-keyframes (à¦ªà§à¦°à§à¦¨à§ à¦¬à§à¦°à¦¾à¦à¦à¦¾à¦°à¦à§à¦²à§à¦° à¦à¦¨à§à¦¯) */
+@-webkit-keyframes preloader-spin {
+    0% {
+        -webkit-transform: perspective(100px) rotateX(0deg) rotateY(0deg);
+        opacity: 0.8;
+    }
+    100% {
+        -webkit-transform: perspective(100px) rotateX(360deg) rotateY(360deg);
+        opacity: 1;
+    }
+}
+
+
+/* --- PROFILE/INFO LIST STYLES (NO CHANGE) --- */
+.profile {  
+  max-width: 450px;  
+  margin: auto;  
+}  
+.hello {  
+  position: relative;  
+  display: inline-block;  
+  background: #e60000;  
+  color: #fff;  
+  font-size: 14px;  
+  padding: 6px 14px;  
+  border-radius: 4px;  
+  font-weight: 600;  
+  margin-bottom: 15px;  
+  letter-spacing: 0.5px;  
+}  
+.hello::after {  
+  content: "";  
+  position: absolute;  
+  left: 10px;  
+  bottom: -6px;  
+  width: 0;  
+  height: 0;  
+  border-width: 6px 6px 0 6px;  
+  border-style: solid;  
+  border-color: #e60000 transparent transparent transparent;  
+}  
+.profile h2 {  
+  font-size: 30px;  
+  font-weight: 700;  
+  margin:10 10 10;  
+  color: var(--title-color); 
+}  
+.profile p {  
+  color: var(--text-color); 
+  font-size: 15px;  
+  margin-bottom: 25px;  
+  line-height: 1.6;  
+}  
+.info-list {  
+  list-style: none;  
+  padding: 0;  
+  margin: 0;  
+}  
+.info-list li {  
+  position: relative;  
+  margin: 14px 0 14px 40px;  
+  font-size: 15px;  
+  color: var(--text-color); 
+}  
+.info-list li::before {  
+  content: "";  
+  position: absolute;  
+  left: -35px;  
+  top: 50%;  
+  transform: translateY(-50%);  
+  width: 20px;  
+  height: 20px;  
+  border: 2px solid var(--title-color); 
+  border-radius: 50%;  
+  box-sizing: border-box;  
+}  
+.info-list li::after {  
+  content: "";  
+  position: absolute;  
+  left: -25px;  
+  top: 50%;  
+  transform: translate(-50%, -50%);  
+  width: 6px;  
+  height: 6px;  
+  background: var(--title-color); 
+  border-radius: 50%;  
+}  
+.info-list b {  
+  font-weight: 600;  
+  color: var(--title-color); 
+}
+
+/* --- TOP BAR STYLES (NO CHANGE) --- */
+.top-bar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 50px; 
+    background-color: var(--menu-bg-color); 
+    color: var(--menu-color); 
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 15px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    z-index: 1000; 
+    box-sizing: border-box;
+}
+
+.top-bar-left, .top-bar-right {
+    display: flex;
+    align-items: center;
+}
+
+.top-bar-logo {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--menu-hover); 
+    text-decoration: none;
+    margin-left: 10px; 
+}
+
+.menu-icon-btn {
+    background: none;
+    border: none;
+    color: var(--menu-color);
+    font-size: 24px;
+    cursor: pointer;
+    padding: 5px;
+    transition: color 0.3s ease;
+}
+
+.menu-icon-btn:hover {
+    color: var(--menu-hover);
+}
+
+/* --- Content Padding (FIXED) --- */
+/* Mobile-à¦ Content-à¦à§ Top Bar, Mobile Foot Menu à¦à¦¬à¦ Credit Footer-à¦à¦° à¦à¦ªà¦°à§ à¦°à¦¾à¦à¦¾à¦° à¦à¦¨à§à¦¯ Padding à¦¬à¦¾à¦¡à¦¼à¦¾à¦¨à§ à¦¹à¦²à§ */
+.demo-content { 
+    padding: 65px 20px 180px; /* FIX: 120px à¦¥à§à¦à§ à¦¬à¦¾à¦¡à¦¼à¦¿à¦¯à¦¼à§ 180px à¦à¦°à¦¾ à¦¹à¦²à§ */
+    min-height: 600px; 
+} 
+
+/* --- RESPONSIVENESS (NO CHANGE) --- */
+@media screen and (min-width: 1321px) { 
+    .top-bar { display: flex; }
+    .demo-content { padding: 65px 20px 120px; } /* Desktop-à¦ 120px à¦ à¦¿à¦ à¦°à¦¾à¦à¦¾ à¦¹à¦²à§ */
+}
+@media screen and (max-width: 1320px) { 
+    .top-bar { display: flex; } 
+    .demo-content { padding: 65px 20px 180px; } /* FIX: Mobile-à¦ 180px à¦¨à¦¿à¦¶à§à¦à¦¿à¦¤ à¦à¦°à¦¾ à¦¹à¦²à§ */
+}
+
+
+/* ... [à¦à¦ªà¦¨à¦¾à¦° à¦¸à¦®à¦¸à§à¦¤ à¦à¦à§à¦° CSS à¦à§à¦¡ à¦à¦à¦¾à¦¨à§ à¦¥à¦¾à¦à¦¬à§: Custom Cursor, Theme Variables, Side Menu, Footer Menu, etc.] ... */
+
+
+.profile h1 {  
+  font-size: 36px;  
+  font-weight: 700;  
+  margin: 10px;  
+  color: var(--title-color);  
+}  
+.profile p {  
+  color: var(--text-color);  
+  font-size: 15px;  
+  margin-bottom: 25px;  
+  line-height: 1.6;  
+}  
+.info-list li {  
+  position: relative;  
+  margin: 14px 0 14px 40px;  
+  font-size: 15px;  
+  color: var(--text-color);  
+}  
+.info-list li::before {  
+  content: "";  
+  position: absolute;  
+  left: -35px;  
+  top: 50%;  
+  transform: translateY(-50%);  
+  width: 20px;  
+  height: 20px;  
+  border: 2px solid var(--title-color); 
+  border-radius: 50%;  
+  box-sizing: border-box;  
+}  
+.info-list li::after {  
+  content: "";  
+  position: absolute;  
+  left: -25px;  
+  top: 50%;  
+  transform: translate(-50%, -50%);  
+  width: 6px;  
+  height: 6px;  
+  background: var(--title-color); 
+  border-radius: 50%;  
+}  
+.info-list b {  
+  font-weight: 600;  
+  color: var(--title-color); 
+}  
+#ignielSubscribe .medsos a i {  
+  position: relative;  
+  top: 1px; 
+  vertical-align: top;  
+}   
+  #ignielSubscribe .medsos__ {  
+  padding: 15px 0px;   
+  line-height: 0px;   
+  border-top: 1px solid #ccc;  
+  text-align: center; 
+}  
+#ignielSubscribe .medsos a{  
+  display: inline-block;  
+  width: 30px;  
+  height: 30px;  
+  color: #FF1493;  
+  font-size: 16px;  
+  text-align: center;  
+  line-height: 30px;  
+  border-radius: 100px; 
+  margin: 0px 2px;  
+  box-shadow: 0 2px 5px 0 rgba(0,0,0,.16), 0 2px 10px 0 rgba(0,0,0,.12);  
+  transition: all .3s ease;  
+}  
+#ignielSubscribe .medsos a:hover{  
+  box-shadow: 0 5px 11px 0 rgba(0,0,0,.18), 0 4px 15px 0 rgba(0,0,0,.15);  
+  transform: scale(1.1); 
+}  
+#ignielSubscribe .medsos a.facebook{background-color:#3b5998}  
+#ignielSubscribe .medsos a.twitter{background-color:#55acee}  
+#ignielSubscribe .medsos a.youtube{background-color:#cd201f}  
+#ignielSubscribe .medsos a.telegram{background-color:#0088cc}  
+#ignielSubscribe .medsos a.linkedin{background-color:#0077b6}  
+  
+    
+  .cursor {  
+    position: fixed;  
+    top: 0;  
+    left: 0;  
+    width: 30px;  
+    height: 30px;  
+    border: 2px solid #FF1493;  
+    border-radius: 50%;  
+    pointer-events: none;  
+    transition: transform 0.2s ease, border-color 0.1s ease, box-shadow 0.1s ease;  
+    z-index: 9999;  
+    display: flex;  
+    justify-content: center;  
+    align-items: center;  
+    background: transparent;  
+  }  
+  .cursor .dot {  
+    width: 8px;  
+    height: 8px;  
+    background: #FF1493;  
+    border-radius: 50%;  
+    animation: pulse 1.2s infinite ease-in-out;  
+  }  
+  
+  @keyframes pulse {  
+    0%, 100% { transform: scale(1); opacity: 1; }  
+    50% { transform: scale(1.4); opacity: 0.6; }  
+  }  
+  
+  .cursor.hovered {  
+    transform: scale(1.5);   
+  }  
+  
+ /* ✅ নতুন যোগ করা হয়েছে: ফিক্সড এলিমেন্টগুলোর স্ট্যাবিলিটির জন্য */
+.top-bar, .mobile-foot-menu {
+    position: fixed; 
+    /* হার্ডওয়্যার অ্যাক্সিলারেশন যোগ করা হলো */
+    transform: translateZ(0); 
+    -webkit-transform: translateZ(0);
+}
+ body{
+  margin:30px 0 30px 0;
+  font-family:Arial,Helvetica,sans-serif;
+  background:var(--body-bg-color);
+  color:var(--text-color);
+  /* ✅ নতুন যোগ করা হয়েছে: iOS স্ক্রলিং স্মুথ করতে */
+  
+}   
+  
+  .mobile-search .search-form {  
+    width: 100%;  
+    height: 40px;  
+    background: rgba(255, 20, 147);  
+    backdrop-filter: blur(6px);  
+    -webkit-backdrop-filter: blur(6px);  
+    display: flex;  
+    align-items: bottom;  
+    justify-content: space-between;  
+    border: 1px solid rgba(255, 20, 147);  
+    border-radius: 50px;  
+    padding: 0 10px;  
+    box-shadow: 0 0 5px rgba(255, 20, 147), inset 0 0 5px rgba(255, 20, 147);  
+    transition: all 0.3s ease;  
+  }  
+  .mobile-search .search-form:focus-within {  
+    box-shadow: 0 0 20px RGB(255, 20, 147), 0 0 30px rgba(0, 255, 255, 0.4), inset 0 0 10px rgba(255, 20, 147);  
+    border-color: RGB(255, 20, 147);  
+  }  
+  .mobile-search .search-input {  
+    flex: 1;  
+    width: 100%;  
+    background-color: transparent;  
+    font-family: 'Poppins', sans-serif;  
+    font-size: 15px;  
+    color: var(--title-color);  
+    padding: 0 10px;  
+    border: none;  
+    outline: none;  
+  }  
+  .mobile-search .search-input::placeholder {  
+    color: #aaa;  
+    letter-spacing: 0.5px;  
+  }  
+  .mobile-search .search-action {  
+    background-color: transparent;  
+    border: none;  
+    font-size: 16px;  
+    color:RGB(255, 20, 147);  
+    cursor: pointer;  
+    transition: color 0.3s ease;  
+  }  
+  .mobile-search .search-action:hover {  
+    color: rgba(0, 255, 255, 1);  
+    text-shadow: 0 0 5px rgba(0, 255, 255, 0.5);  
+  }  
+  .is-dark .mobile-search .search-form {  
+    background: RGB(255, 20, 147);  
+    border: 1px solid RGB(255, 20, 147);  
+    box-shadow: 0 0 5px RGB(255, 20, 147), inset 0 0 5px rgba(0, 255, 255, 0.2);  
+  }  
+  .is-dark .mobile-search .search-form:focus-within {  
+    box-shadow: 0 0 20px rgba(0, 255, 255, 0.9), 0 0 30px rgba(0, 255, 255, 0.4), inset 0 0 10px rgba(0, 255, 255, 0.7);  
+  }  
+  .is-dark .mobile-search .search-input {  
+    color: #fff;  
+  }  
+  .is-dark .mobile-search .search-input::placeholder {  
+    color: #ffffff;  
+  }  
+  
+  
+  :root{  
+    --admin:Csm;
+    --body-bg-color:#f8f8f8;  
+    --main-blog-color:#fc0517;  
+    --main-dark-color:#000000;  
+    --text-color:#767676;  
+    --title-color:#000000;  
+    --title-hover:#fc0517;  
+    --menu-bg-color:#ffffff;  
+    --menu-color:#000000;  
+    --menu-hover:#fc0517;  
+    --top-menu-color:#000000;  
+    --widget-bg-color:rgb(255 255 255 / 1);  
+    --footer-bg:#ffffff;  
+    --footer-color:#000000;  
+    --footer-hover:#fc0517; 
+    --admin-csm:https://pix1.wapkizfile.info/download/24802665c75caa825a4e6758ec3011d8/mohasin+wapzim+com/Gemini-Generated-Image-wac1v7wac1v7wac1-2-(mohasin.wapzim.com).jpg;     
+  }  
+  html.is-dark{  
+    --body-bg-color:#2b2b2b;  
+    --main-dark-color:#f6f7f8;  
+    --text-color:#b4b6ba;  
+    --title-color:#f6f7f8;  
+    --menu-bg-color:#202020;  
+    --menu-color:#f6f7f8;  
+    --top-menu-color:#f6f7f8;  
+    --footer-bg:#202020;  
+    --footer-color:#f6f7f8;  
+    --widget-bg-color:#3a3a3a;  
+  }  
+  
+  
+  .mobile-side-menu{  
+    background-color:var(--menu-bg-color);  
+    position:fixed;  
+    width:300px;  
+    height:100%;  
+    top:0; left:0; bottom:0;  
+    overflow:hidden;  
+    z-index:151515;  
+    left:0;  
+    visibility:visible;  
+    opacity:1;  
+    border-right:1px solid rgb(235 235 235 / 1);  
+    transition:all .25s ease;  
+  }  
+  @media screen and (max-width:1500px){ .mobile-side-menu{width:250px} }  
+  .slide-menu-header{  
+    position:relative; float:left; width:100%; height:65px;  
+    background-color:var(--menu-bg-color); overflow:hidden;  
+    display:flex; align-items:center; justify-content:space-between;  
+    border-bottom:1px solid rgba(155,155,155,0.15);  
+  }  
+  .slide-menu-header .flex-center{width:100%}  
+  .home .slide-menu-header{border:0}  
+  .mobile-logo{display:none}  
+  .mobile-logo .logo-content{position:relative;float:left;display:block;width:100%;height:60px;text-align:center;z-index:2}  
+  .tgl-wrap{display:flex;height:65px;align-items:center;z-index:20;margin:0}  
+  .tgl-wrap .darkmode-toggle{  
+    width:auto;background-color:transparent;padding:0;color:var(--top-menu-color);  
+    font-size:16px;display:flex;align-items:center;justify-content:center;cursor:pointer;  
+  }  
+  .tgl-wrap .darkmode-toggle:after{  
+    content:'Dak';opacity:0;transition:.4s;white-space:nowrap;position:absolute;bottom:0;font-size:7px;text-transform:uppercase;letter-spacing:.8px  
+  }  
+  .is-dark .tgl-wrap .darkmode-toggle:after{content:'Light'}  
+  .tgl-wrap .darkmode-toggle:hover:after{opacity:.7;bottom:10px}  
+  .tgl-wrap .darkmode-toggle i{display:flex;align-items:center;width:50px;height:25px;border-radius:20px;border:1px solid var(--top-menu-color);opacity:.8}  
+  .tgl-wrap .darkmode-toggle i:before{content:"\EF75";font-weight:900;font-family:remixicon;display:block;position:relative;left:3px;transition:.4s}  
+  .is-dark .tgl-wrap .darkmode-toggle i:before{transform:translateX(28px);content:"\F1BF"}  
+  .slide-menu-flex{position:relative;float:left;width:100%;height:calc(100% - 59px);display:flex;flex-direction:column;justify-content:space-between;overflow:hidden;overflow-y:auto;-webkit-overflow-scrolling:touch;margin:0}  
+  .mobile-menu-wrap{position:relative;float:left;width:100%;background-color:var(--menu-bg-color)}  
+  .nav-active .mobile-menu-wrap{visibility:visible;opacity:1}  
+  .mobile-menu{position:relative;overflow:hidden;padding:20px;border-top:1px solid rgba(255,255,255,0.0)}  
+  .mobile-menu ul li{  
+    position:relative;  
+    display:block;  
+    overflow:hidden;  
+    float:left;  
+    width:100%;  
+    font-size: 16px;  
+    font-weight: 500;  
+    line-height: 45px;  
+  }  
+  .mobile-menu ul li a{  
+    color: var(--menu-color);  
+    padding: 0 5px;  
+    display: block;  
+    transition: all .25s ease;  
+    font-family: 'Poppins', sans-serif;  
+    letter-spacing: 0.8px;  
+    text-transform: uppercase;  
+  }  
+  .mobile-menu ul li a:hover{  
+    color: var(--menu-hover);  
+    padding-left: 15px;  
+    letter-spacing: 1.5px;  
+  }  
+  .mobile-menu ul li.has-sub .submenu-toggle:after{  
+    content:'\f105';  
+    font-family:FontAwesome;  
+    font-weight:900;  
+    float:right;  
+    width:34px;  
+    font-size:16px;  
+    text-align:center;  
+    transition:all .17s ease;  
+    color: var(--text-color);  
+  }  
+  .mobile-menu ul li.has-sub.show > .submenu-toggle:after{  
+    transform:rotate(90deg);  
+    color: var(--menu-hover);  
+  }  
+  .mobile-menu .m-sub{display:none;padding:0; padding-left: 15px;}  
+  .overlay, .searchlay { display:none; visibility:hidden; opacity:0; position:fixed; top:0; left:0; right:0; bottom:0; background-color:rgba(27,27,37,0.6); z-index:151514; -webkit-backdrop-filter:saturate(100%) blur(3px); backdrop-filter:saturate(100%) blur(3px); margin:0; transition:all .25s ease; }  
+  .full-screen-search{display:none;position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);width:100%;text-align:center;margin:0;z-index:15151515}  
+  .search-active .full-screen-search{display:block}  
+  .mobile-search{flex:1;padding:0 15px 0 0}  
+  .mobile-search .search-action:before{display:block;content:'\f002';font-family:FontAwesome;font-weight:900}  
+  .mobile-search .search-form {  
+    width: 100%;  
+    height: 40px;  
+    background: rgba(255, 255, 255, 0.15);  
+    backdrop-filter: blur(6px);  
+    -webkit-backdrop-filter: blur(6px);  
+    display: flex;  
+    align-items: center;  
+    justify-content: space-between;  
+    border: 1px solid rgba(0, 255, 255, 0.5);  
+    border-radius: 50px;  
+    padding: 0 10px;  
+    box-shadow: 0 0 5px rgba(0, 255, 255, 0.5), inset 0 0 5px rgba(0, 255, 255, 0.2);  
+    transition: all 0.3s ease;  
+  }  
+  .mobile-search .search-form:focus-within {  
+    box-shadow: 0 0 20px rgba(0, 255, 255, 0.9), 0 0 30px rgba(0, 255, 255, 0.4), inset 0 0 10px rgba(0, 255, 255, 0.7);  
+    border-color: rgba(0, 255, 255, 1);  
+  }  
+  .mobile-search .search-input {  
+    flex: 1;  
+    width: 100%;  
+    background-color: transparent;  
+    font-family: 'Poppins', sans-serif;  
+    font-size: 15px;  
+    color: var(--title-color);  
+    padding: 0 10px;  
+    border: none;  
+    outline: none;  
+  }  
+  .mobile-search .search-input::placeholder {  
+    color: #aaa;  
+    letter-spacing: 0.5px;  
+  }  
+  .mobile-search .search-action {  
+    background-color: transparent;  
+    border: none;  
+    font-size: 16px;  
+    color: rgba(0, 255, 255, 0.9);  
+    cursor: pointer;  
+    transition: color 0.3s ease;  
+  }  
+  .mobile-search .search-action:hover {  
+    color: rgba(0, 255, 255, 1);  
+    text-shadow: 0 0 5px rgba(0, 255, 255, 0.5);  
+  }  
+  .is-dark .mobile-search .search-form {  
+    background: rgba(58, 58, 58, 0.4);  
+    border: 1px solid rgba(0, 255, 255, 0.5);  
+    box-shadow: 0 0 5px rgba(0, 255, 255, 0.5), inset 0 0 5px rgba(0, 255, 255, 0.2);  
+  }  
+  .is-dark .mobile-search .search-form:focus-within {  
+    box-shadow: 0 0 20px rgba(0, 255, 255, 0.9), 0 0 30px rgba(0, 255, 255, 0.4), inset 0 0 10px rgba(0, 255, 255, 0.7);  
+  }  
+  .is-dark .mobile-search .search-input {  
+    color: #e0f7fa;  
+  }  
+  .is-dark .mobile-search .search-input::placeholder {  
+    color: #9fd3d3;  
+  }  
+  .mobile-foot-menu{display:none;position:fixed;left:0;right:0;bottom:0;background-color:var(--footer-bg);border-top:1px solid rgba(158,158,158,0.23);border-radius:0;box-shadow:0 5px 15px 0 #000;z-index:3}  
+  .mobile-foot-menu .mobile-foot-menu-wrapper{margin:0;height:50px;display:grid;grid-template-columns:repeat(5,1fr);grid-gap:0}  
+  .mobile-foot-menu .mobile-foot-menu-wrapper span{display:flex;flex-direction:column;text-align:center;justify-content:center;cursor:pointer;border-right:1px solid rgba(158,158,158,0.23);transition:all .17s ease}  
+  .mobile-foot-menu .mobile-foot-menu-wrapper span:last-child{border:0}  
+  .mobile-foot-menu .mobile-foot-menu-wrapper span:before{content:'';font-size:22px;font-weight:400;font-family:remixicon}  
+  .mobile-foot-menu .mobile-foot-menu-wrapper .mobile-foot-menu-home:before{display:none}  
+  .mobile-foot-menu .mobile-foot-menu-wrapper .mobile-foot-menu-home a:before{content:"\EE2A";font-size:22px;font-weight:400;font-family:remixicon;color:var(--text-color)}  
+  .mobile-foot-menu .mobile-foot-menu-wrapper .mobile-foot-menu-search:before{content:"\F3D1"}  
+  .mobile-foot-menu .mobile-foot-menu-wrapper .mobile-foot-menu-menu:before{content:"\EDDF"}  
+  .mobile-foot-menu .mobile-foot-menu-wrapper .mobile-foot-menu-dark:before{content:"\EBD4"}  
+  .mobile-foot-menu .mobile-foot-menu-wrapper .mobile-foot-menu-top:before{content:"\F367"}  
+  .mobile-foot-menu .mobile-foot-menu-wrapper .mobile-foot-menu-home a:hover:before{content:"\EE29"}  
+  .mobile-foot-menu .mobile-foot-menu-wrapper .mobile-foot-menu-search:hover:before{content:"\F3D0"}  
+  .mobile-foot-menu .mobile-foot-menu-wrapper .mobile-foot-menu-menu:hover:before{content:"\EDDE"}  
+  .mobile-foot-menu .mobile-foot-menu-wrapper .mobile-foot-menu-dark:hover:before{content:"\F1BC"}  
+  .mobile-foot-menu .mobile-foot-menu-wrapper .mobile-foot-menu-top:hover:before{content:"\F366"}  
+  @media screen and (max-width: 1320px) { .mobile-foot-menu{display:block} }  
+  @media screen and (min-width: 1321px) { .mobile-foot-menu{display:none!important} }  
+  .back-top{display:none;z-index:1010;width:32px;height:32px;position:fixed;bottom:25px;right:25px;cursor:pointer;overflow:hidden;font-size:13px;color:#fff;text-align:center;line-height:32px;border-radius:2px}  
+  .back-top:after{content:'\f077';position:relative;font-family:FontAwesome;font-weight:400;opacity:.8;transition:opacity .17s ease}  
+  
+    
+    
+    
+    
+    
+/* â Shompadito: Side Menu-r menu items theke social buttons-er distance komanor jonyo (Ager poriborton) */
+#social-platforms {  
+  position:relative;  
+  top:10px; 
+  font-size:1rem;  
+  text-align:center;  
+  height:auto; 
+  overflow:hidden;  
+  margin-top: 20px; 
+}  
+
+/* --- CUSTOM SIDE MENU CLOSE ARROW (NEW PORIBORTON) --- */
+.mobile-side-menu-close-arrow {
+    position: absolute;
+    top: 50%;
+    /* Menu-er dan diker border-e bashaar jonnyo */
+    right: -17px; 
+    transform: translateY(-50%);
+    width: 20px;
+    height: 30px;
+    background-color: var(--menu-bg-color); /* Menu-r background color */
+    border: 1px solid rgb(235 235 235 / 1); /* Menu-r border color */
+    border-left: none; /* Menu-r shathe jure thakar jonnyo left border off */
+    border-radius: 0 5px 5px 0;
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    box-shadow: 2px 0 5px rgba(0, 0, 0, 0.05); /* Ektu shadow jog kora */
+    z-index: 151516; /* Menu-r cheye beshi z-index */
+    transition: background-color 0.3s ease, border-color 0.3s ease, right 0.3s ease;
+}
+
+.mobile-side-menu-close-arrow::before {
+    content: '';
+    width: 8px;
+    height: 8px;
+    border-bottom: 2px solid var(--menu-color); /* Menu color diye arrow-er design */
+    border-left: 2px solid var(--menu-color);
+    /* Arrow-ke bam dike mukh kora */
+    transform: rotate(45deg); 
+    transition: border-color 0.3s ease, transform 0.3s ease;
+}
+
+/* Hover Effect: Arrow-ti dan dike ektu shore jabe */
+.mobile-side-menu-close-arrow:hover {
+    background-color: var(--menu-hover); /* Hover-e background color change */
+    right: -20px; /* Menu-r theke ektu beshi beriye ashbe */
+}
+
+/* Hover Effect: Arrow-er color change (White korar jonnyo) */
+.mobile-side-menu-close-arrow:hover::before {
+    border-bottom-color: white; 
+    border-left-color: white;
+}
+
+/* Dark Mode adjustment */
+html.is-dark .mobile-side-menu-close-arrow {
+    background-color: var(--menu-bg-color);
+    border: 1px solid rgba(155,155,155,0.15);
+    border-left: none;
+    box-shadow: -2px 0 5px rgba(0, 0, 0, 0.4);
+}
+  
+/* ... [Baki Social Button Styles] ... */
+  
+.btn {  
+  clear:both;  
+  white-space:nowrap;  
+  font-size:.8em;  
+  display:inline-block;  
+  border-radius:5px;  
+  box-shadow: 0 1px 5px 0 rgba(0, 0, 0, 0.35);  
+  margin:2px;  
+  -webkit-transition:all .5s;  
+  -moz-transition:all .5s;  
+  transition:all .5s;  
+  overflow:hidden  
+}  
+  
+.btn:hover {  
+  box-shadow: 0 5px 15px 0 rgba(0, 0, 0, 0.45);  
+}  
+  
+.btn:focus {  
+  box-shadow: 3px 10px 0 rgba(0,0,0);  
+}  
+  
+.btn > span,.btn-icon > i {  
+  float:left;  
+  padding:13px;  
+  -webkit-transition:all .5s;  
+  -moz-transition:all .5s;  
+  transition:all .5s;  
+  line-height:1em  
+}  
+  
+.btn > span {  
+  padding:14px 18px 16px;  
+  white-space:nowrap;  
+  color:#FFF;  
+  background:#b8b8b8  
+}  
+  
+.btn:focus > span {  
+  background:#9a9a9a  
+}  
+  
+.btn-icon > i {  
+  border-radius:5px 0 0 5px;  
+  position:relative;  
+  width:30px;  
+  text-align:center;  
+  font-size:1.25em;  
+  color:#fff;  
+  background:#212121  
+}  
+  
+.btn-icon > i:after {  
+  content:"";  
+  border:10px solid;  
+  border-color:transparent transparent transparent #222;  
+  position:absolute;  
+  top:13px;  
+  right:-15px  
+}  
+  
+.btn-icon:hover > i,.btn-icon:focus > i {  
+  color:#FFF  
+}  
+  
+.btn-icon > span {  
+  border-radius:0 10px 10px 5  
+}  
+  
+.btn-facebook:hover > i,.btn-facebook:focus > i {  
+  color:#3b5998  
+}  
+  
+.btn-facebook > span {  
+  background:#3b5998  
+}  
+  
+.btn-twitter:hover > i,.btn-twitter:focus > i {  
+  color:#55acee  
+}  
+  
+.btn-twitter > span {  
+  background:#55acee  
+}  
+  
+.btn-googleplus:hover > i,.btn-googleplus:focus > i {  
+  color:#dd4b39  
+}  
+  
+.btn-googleplus > span {  
+  background:#dd4b39  
+}  
+  
+.btn-pinterest:hover > i,.btn-pinterest:focus > i {  
+  color:#cb2028  
+}  
+  
+.btn-pinterest > span {  
+  background:#cb2028  
+}  
+  
+.btn-linkedin:hover > i,.btn-linkedin:focus > i {  
+  color:#007bb6  
+}  
+  
+.btn-linkedin > span {  
+  background:#0077b6  
+}  
+
+/* --- Footer Credit CSS Removed as per request. Using default/inline style. --- */
+  </style>  
+
+<link href='https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css' rel='stylesheet'/> 
+
+  <div class="top-bar">
+    <div class="top-bar-left">
+        <button class="menu-icon-btn" id="btnOpenMenuTop">
+            <i class="ri-menu-line"></i>
+        </button>
+        <a class="top-bar-logo" href="https://csm-mohasin.github.io">CSM MOHASIN ALAM</a>
+    </div>
+    <div class="top-bar-right">
+        <button class="menu-icon-btn" id="btnOpenSearchTop">
+            <i class="ri-search-line"></i> 
+        </button>
+    </div>
+  </div>
+
+  <div class="cursor"><div class="dot"></div></div>  
+<link href='https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css' rel='stylesheet'/>  
+  <div class='mobile-side-menu' id='hide-them-menu' style="visibility:hidden;opacity:0;transform:translateX(-100%);">  
+    
+    <div class="mobile-side-menu-close-arrow" onclick="closeSideMenu()"></div>
+    
+    <div class='mobile-side-menu-inner'>  
+      <div class='slide-menu-header'>  
+        <div class='flex-content flex-center'>  
+          <div class='header-logo section' id='header-logo' name='Header Logo'>  
+            <div class='widget Header' data-version='2' id='Header1'>  
+              <div class='header-widget'>  
+                <a class='header-image-wrapper' href='https://csm-mohasin.github.io'>  
+                  <img alt='Menu logo Csm Mohasin Alam' width='100%' src='https://raw.githubusercontent.com/csm-mohasin/csm-mohasin.github.io/refs/heads/main/Gemini_Generated_Image_v2xjdv2xjdv2xjdv.jpg' />  
+                </a>  
+              </div>  
+            </div>  
+          </div>  
+        </div>   
+      </div>  
+     
+      <div class='slide-menu-flex'>  
+        <div class='mobile-menu-wrap'>  
+          <div class='mobile-menu'>  
+            <ul>  
+              <li><a href='https://csm-mohasin.github.io'>Home</a></li>  
+              <li class='has-sub'><a href='#about'>About</a></li>  
+              <li><a href='#contact'>Contact</a></li>  
+              <li><a href='#photos'>Photos</a></li>  
+            </ul>  </div></div> 
+   <div id="social-platforms">
+
+<a class="btn btn-icon btn-facebook" href="https://facebook.com/csm.mohasin"><i class="fa fa-facebook"></i><span>Facebook</span></a>
+<a class="btn btn-icon btn-twitter" href="https://x.com/csm_mohasin"><i class="fa fa-twitter"></i><span>Twitter</span></a>
+<a class="btn btn-icon btn-googleplus" href="https://www.instagram.com/csm.mohasin.alam/"><i class="fa fa-instagram"></i><span>Instagram</span></a>
+<a class="btn btn-icon btn-pinterest" href="https://github.com/csm-mohasin"><i class="fa fa-pinterest"></i><span>GitHub</span></a>
+<a class="btn btn-icon btn-linkedin" href="https://bd.linkedin.com/in/csm-mohasin-alam-0b1753389"><i class="fa fa-linkedin"></i><span>LinkedIn</span></a>
+
+</div>  
+         
+</div>  
+      </div>  
+    </div>  
+  </div>    <div class='overlay' id='overlay'></div>  
+  <div class='full-screen-search' id='fullScreenSearch'>  
+    <div class='mobile-search'>  
+      <form action='https://magic-cv-soratemplates.blog./search' class='search-form' role='search' id='searchForm'>  
+        <input autocomplete='off' class='search-input' name='q' placeholder='Search' type='search' value=''/>  
+        <button class='search-action' type='submit' value=''></button>  
+      </form>  
+    </div>  
+  </div>  
+  <div class='searchlay'></div>  
+  <div class='mobile-foot-menu' id="mobileFootMenu">  
+    <div class='mobile-foot-menu-wrapper'>  
+      <span class='mobile-foot-menu-home'>  
+        <a href='https://csm-mohasin.github.io'></a>  
+      </span>  
+      <span class='mobile-foot-menu-search' id="btnOpenSearch"></span>  
+      <span class='mobile-foot-menu-menu' id="btnOpenMenu"></span>  
+      <span class='mobile-foot-menu-dark' id="btnToggleDark"></span>  
+      <span class='mobile-foot-menu-top' id="btnScrollTop"></span>  
+    </div>  
+  </div>  
+  <a class='back-top' id='backTop' href='javascript:void(0)'></a>    
+  
+  <br>   <br><br><uc>  <div class="author-photo-widget">
+
+      <center> <div class="custom-image">  
+        <div class="custom-author-image"></center>
+</div>
+<style>
+
+/* === Original Magic CV Style === */
+.author-photo-widget .custom-image .custom-author-image {
+  width: 250px;
+  height: 250px;
+  border-radius: 9999px;
+  background-image: url("https://pix1.wapkizfile.info/download/24802665c75caa825a4e6758ec3011d8/mohasin+wapzim+com/Gemini-Generated-Image-wac1v7wac1v7wac1-2-(mohasin.wapzim.com).jpg");
+  background-repeat: no-");
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: cover;
+  object-fit: cover;
+  /*filter: grayscale(1);  <-- Eta remove kora holo */
+  animation: morph 8s ease-in-out infinite 1s;
+  background-blend-mode: multiply;
+  box-shadow: inset 0 0 0 9px rgba(255,255,255,0.3);
+}
+
+/* === Wave (Morphing Border) Animation === */
+@keyframes morph {
+  0% {
+    border-radius: 60% 40% 30% 70% / 60% 30% 70% 40%;
+  }
+  50% {
+    border-radius: 30% 60% 70% 40% / 50% 60% 30% 60%;
+  }
+  100% {
+    border-radius: 60% 40% 30% 70% / 60% 30% 70% 40%;
+  }
+}
+</style>
+       
+
+   
+    
+   
+  <div class="profile">  
+      <span class="hello">&nbsp;&nbsp;HELLO</span>  
+      <h2>Csm Mohasin Alam  <img src="https://dl8.wapkizfile.info/download/c4275ed00b49e8d2f586ffbd4dc6c25f/csm-mohasin-alam+wapkizs+com/2-jpg-(csm-mohasin-alam.wapkizs.com).jpg" width="26px">
+      </h2>  
+      <p>Lorem Ipsum has been the industry's standard dummy text.</p>  
+      <section class="about-section">
+  <h2 class="section-title">About Me</h2>
+    <ul class="info-list">  
+      <li><b id="about">Name:</b> Csm Mohasin Alam </li>  
+      <li><b>Father’s Name:</b> Makidul Islam</li>  
+      <li><b>Mother’s Name:</b> Salma Begum</li>  
+      <li><b>Date of Birth:</b> 3 February 2007</li>  
+      <li><b>Nationality:</b> Bangladeshi</li>  
+      <li><b>Religion:</b> Islam</li>  
+      <li><b>Blood Group:</b> A+</li>  
+      <li><b>Marital Status:</b> Single</li>  
+      <li><b>Height & Weight:</b> 5.8 ft, 53 kg</li>  
+      <li><b>Institute:</b> Arpara Sadar Alim Madrasah</li>  
+      <li><b>Education:</b> Alim 1st Year (2020 – Present)</li>  
+      <li><b>Address:</b> Arpara, Shalikha, Magura, Bangladesh</li>  
+      <li><b>Phone:</b> 01960848643</li>  
+      <li><b>Email:</b> <a href="mailto:csm.mohasin@gmail.com">csm.mohasin@gmail.com</a></li>  
+      <li><b>Languages:</b> Bangla (Fluent), English (Intermediate)</li>  
+      <li><b>Skills:</b> HTML, CSS, JavaScript, Python, C, C++</li>  
+      <li><b>Expertise:</b> Website Design, Problem Solving, Logical Thinking</li>  
+      <li><b>Experience:</b> 10+ Years, 20+ Projects Completed</li>  
+      <li><b>Leadership:</b> Student Welfare & Finance Secretary, Bangladesh Islami Chhatra Shibir (Arpara Union)</li>  
+      <li><b>Hobbies:</b> Programming, YouTube Content Creation, Story Reading, Cycling</li>  
+      <li><b>Available:</b> Online 24/7</li>  
+      <li><b>WhatsApp:</b> <a href="https://wa.me/88016258945" target="_blank">+88016258945</a></li>  
+      <li><b>Messenger:</b> <a href="https://m.me/csm.mohasin" target="_blank">csm.mohasin</a></li>  
+    </ul>
+  </div>
+</section>
+        
+        
+<section class="performance-board">
+  <h2 class="section-title">My Performance</h2>
+
+  <div class="skills-container">
+    <div class="skill" data-percent="90">
+      <div class="skill-info">
+        <span>HTML</span><span class="percent">0%</span>
+      </div>
+      <div class="progress-bar"><div class="progress"></div></div>
+    </div>
+
+    <div class="skill" data-percent="80">
+      <div class="skill-info">
+        <span>CSS</span><span class="percent">0%</span>
+      </div>
+      <div class="progress-bar"><div class="progress"></div></div>
+    </div>
+
+    <div class="skill" data-percent="60">
+      <div class="skill-info">
+        <span>JavaScript</span><span class="percent">0%</span>
+      </div>
+      <div class="progress-bar"><div class="progress"></div></div>
+    </div>
+
+    <div class="skill" data-percent="85">
+      <div class="skill-info">
+        <span>React</span><span class="percent">0%</span>
+      </div>
+      <div class="progress-bar"><div class="progress"></div></div>
+    </div>
+
+    <div class="skill" data-percent="90">
+      <div class="skill-info">
+        <span>Figma</span><span class="percent">0%</span>
+      </div>
+      <div class="progress-bar"><div class="progress"></div></div>
+    </div>
+
+    <div class="skill" data-percent="80">
+      <div class="skill-info">
+        <span>Sketch</span><span class="percent">0%</span>
+      </div>
+      <div class="progress-bar"><div class="progress"></div></div>
+    </div>
+
+    <div class="skill" data-percent="70">
+      <div class="skill-info">
+        <span>Photoshop</span><span class="percent">0%</span>
+      </div>
+      <div class="progress-bar"><div class="progress"></div></div>
+    </div>
+
+    <div class="skill" data-percent="80">
+      <div class="skill-info">
+        <span>PHP</span><span class="percent">0%</span>
+      </div>
+      <div class="progress-bar"><div class="progress"></div></div>
+    </div>
+
+    <div class="skill" data-percent="80">
+      <div class="skill-info">
+        <span>Python</span><span class="percent">0%</span>
+      </div>
+      <div class="progress-bar"><div class="progress"></div></div>
+    </div>
+
+    <div class="skill" data-percent="70">
+      <div class="skill-info">
+        <span>MySQL</span><span class="percent">0%</span>
+      </div>
+      <div class="progress-bar"><div class="progress"></div></div>
+    </div>
+
+    <div class="skill" data-percent="75">
+      <div class="skill-info">
+        <span>Firebase</span><span class="percent">0%</span>
+      </div>
+      <div class="progress-bar"><div class="progress"></div></div>
+    </div>
+  </div>
+</section>
+
+
+<style>
+.performance-board {
+  padding: 50px 20px;
+  border-radius: 15px;
+  box-shadow: 0 4px 20px rgba(255, 105, 180, 0.15);
+  max-width: 900px;
+  margin: 50px auto;
+  font-family: 'Poppins', sans-serif;
+}
+
+.section-title {
+  text-align: center;
+  font-size: 28px;
+  margin-bottom: 30px;
+  font-weight: 600;
+  position: relative;
+}
+
+.section-title::after {
+  content: '';
+  display: block;
+  width: 70px;
+  height: 3px;
+  background: #ff4f9a;
+  margin: 10px auto 0;
+  border-radius: 3px;
+}
+
+.skills-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 25px;
+}
+
+.skill {
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.skill:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 5px 15px rgba(255, 79, 154, 0.2);
+}
+
+.skill-info {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 10px;
+  font-weight: 500;
+}
+
+.progress-bar {
+  height: 10px;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.progress {
+  height: 100%;
+  background: linear-gradient(90deg, #ff4f9a, #ff8dcf);
+  border-radius: 10px;
+  width: 0%;
+  transition: width 1.5s ease-in-out;
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+  .skills-container {
+    grid-template-columns: 1fr;
+  }
+}
+</style>
+
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+  const skills = document.querySelectorAll(".skill");
+
+  const observer = new IntersectionObserver((entries, observer) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        const skill = entry.target;
+        const percent = skill.getAttribute("data-percent");
+        const progress = skill.querySelector(".progress");
+        const percentText = skill.querySelector(".percent");
+        let count = 0;
+
+        const counter = setInterval(() => {
+          if (count >= percent) {
+            clearInterval(counter);
+          } else {
+            count++;
+            percentText.textContent = count + "%";
+            progress.style.width = count + "%";
+          }
+        }, 15);
+
+        observer.unobserve(skill);
+      }
+    });
+  }, { threshold: 0.3 });
+
+  skills.forEach(skill => observer.observe(skill));
+});
+</script>
+<style>
+/* ====== Only Outer Modern Layout ====== */
+
+.about-section {
+  padding: 40px 20px;
+  border-radius: 15px;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+  max-width: 800px;
+  margin: 40px auto;
+  font-family: 'Poppins', sans-serif;
+}
+
+.section-title {
+  text-align: center;
+  font-size: 28px;
+  margin-bottom: 25px;
+  font-weight: 600;
+  position: relative;
+}
+
+.section-title::after {
+  content: '';
+  display: block;
+  width: 60px;
+  height: 3px;
+  margin: 10px auto 0;
+  border-radius: 3px;
+}
+
+.about-card {
+  border-radius: 12px;
+  padding: 30px 35px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+  transition: 0.3s ease;
+}
+
+.about-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 6px 20px rgba(0,0,0,0.07);
+}
+
+/* তোমার .info-list এর CSS আগের মতোই থাকবে, আমি কিছু পরিবর্তন করিনি ✅ */
+</style>
+       <br><br>
+      <div class="wrapper">
+    <a href="https://facebook.com/csm.mohasin"><div class="icon"  style="--color: #3B5999">
+      <div class="tooltip">Facebook</div>
+      <span><ion-icon name="logo-facebook"></ion-icon></span>
+    </div></a>
+        <a href="https://www.instagram.com/csm.mohasin.alam/"><div class="icon"  style="--color: #E1308B">
+      <div class="tooltip">Instagram</div>
+      <span><ion-icon name="logo-instagram"></ion-icon></span>
+    </div></a>
+        <a href="https://x.com/csm_mohasin"><div class="icon" style="--color: #46C1F6">
+      <div class="tooltip">Twitter</div>
+      <span><ion-icon name="logo-twitter"></ion-icon></span>
+    </div></a>
+        <a href="https://github.com/csm-mohasin"><div class="icon"  style="--color: #333">
+      <div class="tooltip">Github</div>
+      <span><ion-icon name="logo-github"></ion-icon></span>
+    </div></a>
+          
+          
+        <a href="https://youtube.com/@csm-mohasin"> <div class="icon"  style="--color: #DE463B">
+      <div class="tooltip">YouTube</div>
+      <span><ion-icon name="logo-youtube"></ion-icon></span>
+    </div></div> </a> <br><br>
+        
+        <div align="center" id="footerCredit">
+      
+         
+       <b>  Developed by: <a href="https://csm-mohasin.github.io" target="_blank" style=" color:#fc0517; text-decoration: none; font-weight: 600;">Csm Mohasin Alam <img src="https://dl8.wapkizfile.info/download/c4275ed00b49e8d2f586ffbd4dc6c25f/csm-mohasin-alam+wapkizs+com/2-jpg-(csm-mohasin-alam.wapkizs.com).jpg" width="15px"></a>
+      <br><br> <br><br>
+        
+ <script src='https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js'></script>
+
+<script type='text/javascript'>
+//<![CDATA[
+$(document).ready(function() {
+    // à¦¦à§à¦à¦¿ à¦¸à¦®à¦¯à¦¼à¦à§ à¦à§à¦°à§à¦¯à¦¾à¦ à¦à¦°à¦¾à¦° à¦à¦¨à§à¦¯ à¦­à§à¦°à¦¿à¦¯à¦¼à§à¦¬à¦²
+    var minDisplayTime = 4000; // à§ª à¦¸à§à¦à§à¦¨à§à¦¡ = à§ªà§¦à§¦à§¦ à¦®à¦¿à¦²à¦¿à¦¸à§à¦à§à¦¨à§à¦¡
+    var pageLoadTime = Date.now();
+    var loadComplete = false;
+
+    // A) à§ª à¦¸à§à¦à§à¦¨à§à¦¡ à¦ªà¦°à§ à¦à¦ à¦«à¦¾à¦à¦¶à¦¨à¦à¦¿ à¦à¦²à¦¬à§
+    function hidePreloader() {
+        if (loadComplete) {
+            // à¦¯à¦¦à¦¿ à¦ªà§à¦ à¦²à§à¦¡ à¦¹à¦¯à¦¼à§ à¦¥à¦¾à¦à§, à¦¤à¦¬à§ à¦²à§à¦¡à¦¾à¦°à¦à¦¿ à¦¸à¦°à¦¿à¦¯à¦¼à§ à¦¦à¦¾à¦
+            $('#preloader').fadeOut('slow', function() {
+                $(this).remove();
+            });
+        }
+    }
+
+    // à§ª à¦¸à§à¦à§à¦¨à§à¦¡à§à¦° à¦à¦¨à§à¦¯ à¦à¦à¦à¦¿ à¦à¦¾à¦à¦®à¦¾à¦° à¦¸à§à¦ à¦à¦°à¦¾
+    setTimeout(hidePreloader, minDisplayTime);
+
+    // B) à¦ªà§à¦ à¦¸à¦®à§à¦ªà§à¦°à§à¦£ à¦²à§à¦¡ à¦¹à¦à§à¦¾à¦° à¦ªà¦° à¦à¦ à¦«à¦¾à¦à¦¶à¦¨à¦à¦¿ à¦à¦²à¦¬à§
+    $(window).on('load', function() {
+        loadComplete = true;
+        var currentTime = Date.now();
+        var elapsedTime = currentTime - pageLoadTime;
+        
+        // à¦¯à¦¦à¦¿ à§ª à¦¸à§à¦à§à¦¨à§à¦¡à§à¦° à¦à¦à§à¦ à¦²à§à¦¡ à¦¹à¦¯à¦¼à§ à¦¯à¦¾à¦¯à¦¼, à¦¤à¦¬à§ à¦¬à¦¾à¦à¦¿ à¦¸à¦®à¦¯à¦¼à§à¦° à¦à¦¨à§à¦¯ à¦à¦ªà§à¦à§à¦·à¦¾ à¦à¦°à§
+        if (elapsedTime < minDisplayTime) {
+            var remainingTime = minDisplayTime - elapsedTime;
+            setTimeout(hidePreloader, remainingTime);
+        } else {
+            // à§ª à¦¸à§à¦à§à¦¨à§à¦¡à§à¦° à¦¬à§à¦¶à¦¿ à¦¸à¦®à¦¯à¦¼ à¦²à¦¾à¦à¦²à§, à¦¸à¦¾à¦¥à§ à¦¸à¦¾à¦¥à§à¦ à¦²à§à¦¡à¦¾à¦°à¦à¦¿ à¦¸à¦°à¦¿à¦¯à¦¼à§ à¦¦à¦¾à¦
+            hidePreloader();
+        }
+    });
+});
+//]]>
+</script>
+      
+  
+  
+
+
+    
+
+
+
+  <style>
+@import url("https://fonts.googleapis.com/css2?family=Poppins&display=swap");
+
+:root {
+  --cb: cubic-bezier(.68,-0.55,.26,1.55);
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+
+.wrapper {
+  display: inline-flex;
+}
+
+.wrapper .icon {
+  position: relative;
+  display: flex;
+  background-color: white;
+  color: var(--color);
+  border-radius: 50%;
+  padding: 23px 15px 15px 15px;
+  margin: 10px;
+  width: 50px;
+  height: 50px;
+  font-size: 25px;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  box-shadow: 0 10px 10px #00000015;
+  cursor: pointer;
+  transition: color 0.4s ease,
+  background-color 0.4s ease;
+}
+
+.wrapper .tooltip {
+  position: absolute;
+  top: 0;
+  font-size: 14px;
+  color: white;
+  padding: 5px 8px;
+  background-color: #000;
+  border-radius: 5px;
+  box-shadow: 0 10px 10px #00000015;
+  opacity: 0;
+  pointer-events: none;
+  transition: all 0.3s var(--cb);
+}
+
+.wrapper .tooltip::before {
+  content: "";
+  position: absolute;
+  height: 8px;
+  width: 8px;
+  background-color: #000;
+  bottom: -3px;
+  left: 50%;
+  transform: translate(-50%) rotate(45deg);
+  transition: all 0.3s var(--cb);
+}
+
+/* Hover */
+.wrapper .icon:hover .tooltip {
+  top: -45px;
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+}
+
+.wrapper .icon:hover,
+.wrapper .icon:hover .tooltip,
+.wrapper .icon:hover .tooltip::before {
+  background-color: var(--color);
+  color: white;
+}
+</style>
+  
+<script type="module" src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.esm.js"></script>
+<script nomodule src="https://unpkg.com/ionicons@5.5.2/dist/ionicons/ionicons.js"></script>
+
+
+  
+
+ 
+
+    <body>  </div></div>
+  </b></div></div></div></body>
+    <script>
+    // --- CURSOR EFFECT JS (NO CHANGE) ---  
+    const cursor = document.querySelector('.cursor');  
+    const interactiveElements = document.querySelectorAll('button, a, h1, span, uc, li, .menu-icon-btn, custom-author-image'); 
+    const colors = ["#ff0000", "#ff9900", "#ffff00", "#33ff00", "#00ffff", "#0000ff", "#9900ff"];  
+    let colorIndex = 0;  
+    
+    let mouseX = 0, mouseY = 0;  
+    let currentX = 0, currentY = 0;  
+    
+    window.addEventListener('mousemove', (e) => {  
+      mouseX = e.clientX;  
+      mouseY = e.clientY;  
+    });  
+      
+    
+
+    function animateCursor() {  
+      currentX += (mouseX - currentX) * 0.90;  
+      currentY += (mouseY - currentY) * 0.90;  
+    
+      cursor.style.transform = `translate(${currentX}px, ${currentY}px) translate(-50%, -50%)`;  
+    
+      requestAnimationFrame(animateCursor);  
+    }  
+    animateCursor();  
+    
+    interactiveElements.forEach(el => {  
+      el.addEventListener('mouseenter', () => {  
+        cursor.classList.add('hovered');  
+      });  
+    
+      el.addEventListener('mousemove', (e) => {  
+        const rect = el.getBoundingClientRect();  
+        const x = e.clientX - rect.left - rect.width / 2;  
+        const y = e.clientY - rect.top - rect.height / 2;  
+          
+        el.style.transform = `translate(${x * 0.3}px, ${y * 0.3}px)`;  
+    
+        const color = colors[colorIndex];  
+        cursor.style.borderColor = color;  
+        cursor.style.boxShadow = `0 0 20px ${color}, 0 0 40px ${color}, 0 0 60px ${color}`;  
+        cursor.querySelector('.dot').style.background = color;  
+    
+        colorIndex = (colorIndex + 1) % colors.length;  
+      });  
+    
+      el.addEventListener('mouseleave', () => {  
+        el.style.transform = 'translate(0,0)'; 
+        cursor.classList.remove('hovered');  
+    
+        cursor.style.borderColor = "#ffffff";  
+        cursor.style.boxShadow = "none";  
+        cursor.querySelector('.dot').style.background = "#ffffff";  
+      });  
+    });  
+    
+      
+      
+      
+    // --- EXISTING HUBO-HU TEMPLATE BEHAVIOR JS (NO CHANGE) ---  
+    
+    /* Short references */  
+    var $body = document.body;  
+    var overlay = document.getElementById('overlay');  
+    var mobileSide = document.querySelector('.mobile-side-menu');  
+    var fullSearch = document.querySelector('.full-screen-search');  
+    var backTop = document.getElementById('backTop');  
+    
+    /* Open side menu (adds nav-active on body) */  
+    function openSideMenu(){  
+    $body.classList.add('nav-active');  
+    if(mobileSide){  
+    mobileSide.style.visibility = 'visible';  
+    mobileSide.style.opacity = '1';  
+    mobileSide.style.transform = 'translateX(0)';  
+    }  
+    if(overlay){  
+    overlay.style.display = 'block';  
+    overlay.style.visibility = 'visible';  
+    overlay.style.opacity = '1';  
+    }  
+    }  
+    
+    /* Close side menu */  
+    function closeSideMenu(){  
+    $body.classList.remove('nav-active');  
+    if(mobileSide){  
+    mobileSide.style.transform = 'translateX(-100%)';  
+    mobileSide.style.opacity = '0';  
+    mobileSide.style.visibility = 'hidden';  
+    }  
+    if(overlay){  
+    overlay.style.display = '';  
+    overlay.style.visibility = '';  
+    overlay.style.opacity = '';  
+    }  
+    }  
+    
+    /* Open search */  
+    function openSearch(){  
+    $body.classList.add('search-active');  
+    if(fullSearch){  
+    fullSearch.style.display = 'block';  
+    fullSearch.style.visibility = 'visible';  
+    fullSearch.style.opacity = '1';  
+    var si = fullSearch.querySelector('.search-input');  
+    if(si) si.focus();  
+    }  
+    if(overlay){  
+    overlay.style.display = 'block';  
+    overlay.style.visibility = 'visible';  
+    overlay.style.opacity = '1';  
+    }  
+    }  
+    
+    /* Close search */  
+    function closeSearch(){  
+    $body.classList.remove('search-active');  
+    if(fullSearch){  
+    fullSearch.style.display = '';  
+    fullSearch.style.visibility = '';  
+    fullSearch.style.opacity = '';  
+    }  
+    if(overlay){  
+    overlay.style.display = '';  
+    overlay.style.visibility = '';  
+    overlay.style.opacity = '';  
+    }  
+    }  
+    
+    /* Toggle dark mode exactly like original (toggle html.is-dark) */  
+    function toggleDarkMode(){  
+    var htmlEl = document.documentElement;  
+    if(htmlEl.classList.contains('is-dark')){  
+    htmlEl.classList.remove('is-dark');  
+    try { localStorage.setItem('sora_dark','0'); } catch(e){}  
+    } else {  
+    htmlEl.classList.add('is-dark');  
+    try { localStorage.setItem('sora_dark','1'); } catch(e){}  
+    }  
+    }  
+    
+    /* Scroll to top */  
+    function scrollToTop(){  
+    window.scrollTo({top:0, behavior:'smooth'});  
+    }  
+    
+    /* Wire buttons after DOM ready */  
+    document.addEventListener('DOMContentLoaded', function(){  
+    // bottom menu buttons (matching original classes)  
+    var btnSearch = document.querySelector('.mobile-foot-menu-search') || document.getElementById('btnOpenSearch');  
+    var btnMenu   = document.querySelector('.mobile-foot-menu-menu')   || document.getElementById('btnOpenMenu');  
+    var btnDark   = document.querySelector('.mobile-foot-menu-dark')   || document.getElementById('btnToggleDark');  
+    var btnTop    = document.querySelector('.mobile-foot-menu-top')    || document.getElementById('btnScrollTop');  
+    
+    // Top Bar Buttons
+    var btnMenuTop   = document.getElementById('btnOpenMenuTop');
+    var btnSearchTop = document.getElementById('btnOpenSearchTop'); 
+
+    if(btnSearch){  
+    btnSearch.addEventListener('click', function(){ openSearch(); });  
+    }  
+    
+    if(btnMenu){  
+    btnMenu.addEventListener('click', function(){ openSideMenu(); });  
+    }  
+
+    // Top Bar Menu Button er click event
+    if(btnMenuTop){
+        btnMenuTop.addEventListener('click', function(){ openSideMenu(); });
+    }
+    
+    // Top Bar Search Button er click event
+    if(btnSearchTop){
+        btnSearchTop.addEventListener('click', function(){ openSearch(); });
+    }
+    
+    if(btnDark){  
+    btnDark.addEventListener('click', function(){ toggleDarkMode(); });  
+    }  
+    
+    if(btnTop){  
+    btnTop.addEventListener('click', function(){ scrollToTop(); });  
+    }  
+    
+    // close overlay click closes menu & search  
+    if(overlay){  
+    overlay.addEventListener('click', function(){  
+    closeSideMenu();  
+    closeSearch();  
+    });  
+    }  
+    
+    // ESC closes  
+    document.addEventListener('keydown', function(e){  
+    if(e.key === 'Escape'){  
+    closeSideMenu();  
+    closeSearch();  
+    }  
+    });  
+    
+    // back-to-top visibility  
+    window.addEventListener('scroll', function(){  
+    if(window.scrollY > 300){  
+    if(backTop) backTop.style.display = 'block';  
+    } else {  
+    if(backTop) backTop.style.display = 'none';  
+    }  
+    });  
+    
+    if(backTop) backTop.addEventListener('click', scrollToTop);  
+    
+    // load saved dark preference (from original behavior)  
+    try {  
+    var pref = localStorage.getItem('sora_dark');  
+    if(pref === '1') document.documentElement.classList.add('is-dark');  
+    } catch(e){}  
+    });  
+    
+    // --- SUBMENU JQUERY (NO CHANGE) ---  
+    $(document).ready(function(){  
+      // Submenu Toggle functionality (using jQuery since original file included it)  
+      $('.mobile-menu ul li.has-sub .submenu-toggle').on('click', function(){  
+        var parentLi = $(this).parent('li');  
+        parentLi.toggleClass('show');  
+        parentLi.find('>.m-sub').slideToggle(200);  
+      });  
+    });  
+</script>  
+
+
+<script>
+(function() {
+
+
+devName = "Csm Mohasin Alam"
+  
+var devLink = "https://csm-mohasin.github.io";
+    var footerEl = document.getElementById('footerCredit');
+    
+    function checkCredit() {
+        if (!footerEl) return;
+        var footerHTML = footerEl.innerHTML;
+        
+        // Check 1: If the developer's name is not present
+        if (footerHTML.indexOf(devName) === -1) {
+            window.location.replace(devLink);
+            return;
+        }
+        
+        // Check 2: If the correct link is not present or link text is altered
+        var anchor = footerEl.querySelector('a[href="' + devLink + '"]');
+        if (!anchor || anchor.innerText.indexOf(devName) === -1) {
+            window.location.replace(devLink);
+            return;
+        }
+    }
+    
+    // Run check immediately and periodically (every 5 seconds)
+    checkCredit();
+    setInterval(checkCredit, 5000); 
+})();
+</script>
