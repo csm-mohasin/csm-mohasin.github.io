@@ -1,80 +1,142 @@
 <!DOCTYPE html>
-<html lang="bn">
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Camera Upload | Supabase</title>
+  <title>Supabase Multiple File Upload</title>
   <style>
     body {
-      font-family: Arial, sans-serif;
+      font-family: "Segoe UI", sans-serif;
       background: #eef6ff;
-      text-align: center;
-      padding: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      margin: 0;
     }
-    video {
-      width: 320px;
-      border-radius: 10px;
+    .container {
+      background: white;
+      padding: 30px;
+      border-radius: 16px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+      width: 90%;
+      max-width: 480px;
+      text-align: center;
+    }
+    h2 {
       margin-bottom: 15px;
+      color: #007bff;
+    }
+    input[type="file"] {
+      display: block;
+      margin: 10px auto 20px;
     }
     button {
       background: #007bff;
-      border: none;
       color: white;
-      padding: 10px 20px;
+      border: none;
+      padding: 10px 25px;
       border-radius: 8px;
-      font-size: 16px;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+    button:hover {
+      background: #0056b3;
+    }
+    .progress {
+      width: 100%;
+      height: 12px;
+      background: #e0e0e0;
+      border-radius: 8px;
+      overflow: hidden;
+      margin-top: 15px;
+      display: none;
+    }
+    .progress-bar {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, #007bff, #00b4ff);
+      transition: width 0.2s;
     }
     #status {
-      margin-top: 10px;
-      font-weight: bold;
+      margin-top: 15px;
+      font-size: 14px;
+      word-break: break-all;
+      text-align: left;
+    }
+    a {
+      color: #007bff;
+      text-decoration: none;
     }
   </style>
 </head>
 <body>
-  <h2>📸 Camera Upload to Supabase</h2>
-  <video id="camera" autoplay playsinline></video><br>
-  <button id="capture">📷 Capture & Upload</button>
-  <p id="status"></p>
+
+  <div class="container">
+    <h2>📤 Supabase Multiple File Upload</h2>
+    <input type="file" id="fileInput" multiple />
+    <button id="uploadBtn">Upload All</button>
+
+    <div class="progress" id="progressContainer">
+      <div class="progress-bar" id="progressBar"></div>
+    </div>
+
+    <div id="status"></div>
+  </div>
 
   <script type="module">
-    import { createClient } from "https://esm.sh/@supabase/supabase-js";
+    import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
-    // 🔗 তোমার Supabase config
-    const SUPABASE_URL = "https://htjhodnmgaozujwrluqm.supabase.co";
-    const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh0amhvZG5tZ2FvenVqd3JsdXFtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjIzOTUzMDQsImV4cCI6MjA3Nzk3MTMwNH0.YW1YUz-OtZVjF7A8KW9lOrx3sH7w-Xw_ZEVIQ6QQywQ";
-    const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
+    // ✅ তোমার Supabase project config
+    const supabaseUrl = "https://htjhodnmgaozujwrluqm.supabase.co";
+    const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imh0amhvZG5tZ2FvenVqd3JsdXFtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjIzOTUzMDQsImV4cCI6MjA3Nzk3MTMwNH0.YW1YUz-OtZVjF7A8KW9lOrx3sH7w-Xw_ZEVIQ6QQywQ";
+    const supabase = createClient(supabaseUrl, supabaseKey);
 
-    const video = document.getElementById("camera");
-    const status = document.getElementById("status");
+    const fileInput = document.getElementById('fileInput');
+    const uploadBtn = document.getElementById('uploadBtn');
+    const progressContainer = document.getElementById('progressContainer');
+    const progressBar = document.getElementById('progressBar');
+    const statusDiv = document.getElementById('status');
 
-    // 🎥 Camera start
-    navigator.mediaDevices.getUserMedia({ video: true })
-      .then(stream => { video.srcObject = stream; })
-      .catch(err => { status.textContent = "❌ Camera access failed: " + err.message; });
+    uploadBtn.addEventListener('click', async () => {
+      const files = fileInput.files;
+      if (!files.length) return alert("Please select at least one file!");
 
-    // 📸 Capture & Upload
-    document.getElementById("capture").onclick = async () => {
-      const canvas = document.createElement("canvas");
-      canvas.width = video.videoWidth;
-      canvas.height = video.videoHeight;
-      canvas.getContext("2d").drawImage(video, 0, 0);
+      statusDiv.innerHTML = "";
+      progressContainer.style.display = "block";
+      progressBar.style.width = "0%";
 
-      const blob = await new Promise(resolve => canvas.toBlob(resolve, "image/jpeg"));
-      const fileName = `photo_${Date.now()}.jpg`;
+      let uploadedCount = 0;
+      const totalFiles = files.length;
 
-      status.textContent = "⏳ Uploading...";
+      for (let file of files) {
+        const fileName = `${Date.now()}-${file.name}`;
+        const { data, error } = await supabase.storage
+          .from('photos') // 🪣 তোমার bucket name (photos)
+          .upload(fileName, file, {
+            cacheControl: '3600',
+            upsert: false
+          });
 
-      const { data, error } = await supabase.storage
-        .from("photos") // তোমার bucket নাম
-        .upload(fileName, blob, { contentType: "image/jpeg" });
+        if (error) {
+          statusDiv.innerHTML += `❌ ${file.name} failed: ${error.message}<br>`;
+        } else {
+          const { data: urlData } = supabase
+            .storage
+            .from('photos')
+            .getPublicUrl(fileName);
+          const fileUrl = urlData.publicUrl;
 
-      if (error) {
-        status.textContent = "❌ Upload failed: " + error.message;
-      } else {
-        const url = `${SUPABASE_URL}/storage/v1/object/public/photos/${fileName}`;
-        status.innerHTML = `✅ Uploaded successfully!<br><a href="${url}" target="_blank">View Photo</a>`;
+          statusDiv.innerHTML += `✅ ${file.name} uploaded<br>📎 <a href="${fileUrl}" target="_blank">${fileUrl}</a><br><br>`;
+        }
+
+        uploadedCount++;
+        const progress = Math.round((uploadedCount / totalFiles) * 100);
+        progressBar.style.width = progress + "%";
       }
-    };
+
+      statusDiv.innerHTML += `<hr><b>🎉 ${uploadedCount}/${totalFiles} files uploaded successfully!</b>`;
+    });
   </script>
 </body>
 </html>
