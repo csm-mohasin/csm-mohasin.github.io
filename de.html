@@ -166,11 +166,20 @@ function initMapAndData() {
     // শুধুমাত্র একবার ম্যাপ ইনিশিয়ালাইজ করা
     if (!map) {
         map = L.map("map");
-        // *** সংশোধিত টাইল লেয়ার URL ***
-        let normal = L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png");
+        
+        // *** সংশোধিত Normal Layer: Google Roads/Standard Map (lyrs=m) ব্যবহার করা হয়েছে ***
+        let normal = L.tileLayer("https://{s}.google.com/vt/lyrs=m&x={x}&y={y}&z={z}",{
+            maxZoom: 20,
+            subdomains:['mt0','mt1','mt2','mt3'],
+            attribution: 'Map data © Google' // Google অ্যাট্রিবিউশন
+        });
+        
+        // স্যাটেলাইট ভিউ অপরিবর্তিত (lyrs=s)
         let satellite = L.tileLayer("https://{s}.google.com/vt/lyrs=s&x={x}&y={y}&z={z}",{subdomains:['mt0','mt1','mt2','mt3'], maxZoom: 20});
+        
         normal.addTo(map);
-        L.control.layers({"Normal":normal,"Satellite":satellite}).addTo(map);
+        // ম্যাপ কন্ট্রোলে লেয়ারের নাম পরিবর্তন করা হয়েছে
+        L.control.layers({"Google Road Map":normal,"Satellite":satellite}).addTo(map);
         map.invalidateSize(); // ম্যাপের আকার ঠিক করা
     }
 
