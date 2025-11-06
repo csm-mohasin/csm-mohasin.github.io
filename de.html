@@ -68,8 +68,8 @@ header{padding:12px;font-size:20px;font-weight:bold;background:#007bff;color:whi
 #map{height:75vh;margin:10px;border-radius:10px}
 .card{background:white;margin:10px;padding:12px;border-radius:10px;box-shadow: 0 4px 8px rgba(0,0,0,0.1);}
 select, .card button{
- width:100%;padding:10px;margin-top:8px;border-radius:8px;
- border:1px solid #007bff;font-size:16px;box-sizing: border-box;
+    width:100%;padding:10px;margin-top:8px;border-radius:8px;
+    border:1px solid #007bff;font-size:16px;box-sizing: border-box;
 }
 .card button{background:#007bff;color:white;border:none;cursor:pointer}
 .card button:hover{background:#005fcc}
@@ -85,13 +85,13 @@ select, .card button{
 <script>
 // --- Firebase Config ---
 const firebaseConfig = {
- apiKey:"AIzaSyCsGBSRCHVUhXQZ5DNMEZWgQWk1gxMF1E4",
- authDomain:"signup-d32c5.firebaseapp.com",
- projectId:"signup-d32c5",
- storageBucket:"signup-d32c5.firebasestorage.app",
- messagingSenderId:"583812949955",
- appId:"1:583812949955:web:fab1bb7be94bc1b4ab3f76",
- databaseURL:"https://signup-d32c5-default-rtdb.firebaseio.com/"
+    apiKey:"AIzaSyCsGBSRCHVUhXQZ5DNMEZWgQWk1gxMF1E4",
+    authDomain:"signup-d32c5.firebaseapp.com",
+    projectId:"signup-d32c5",
+    storageBucket:"signup-d32c5.firebasestorage.app",
+    messagingSenderId:"583812949955",
+    appId:"1:583812949955:web:fab1bb7be94bc1b4ab3f76",
+    databaseURL:"https://signup-d32c5-default-rtdb.firebaseio.com/"
 };
 firebase.initializeApp(firebaseConfig);
 
@@ -117,7 +117,7 @@ const ADMIN_PASSWORD = "hack me";
 
 <div id="app-content">
     <div class="card">
-        <select id="userSelect" onchange="centerMapToUser()"> 
+        <select id="userSelect" onchange="centerMapToUser()"> 
             <option value="">Select User ID</option>
         </select>
 
@@ -166,7 +166,8 @@ function initMapAndData() {
     // শুধুমাত্র একবার ম্যাপ ইনিশিয়ালাইজ করা
     if (!map) {
         map = L.map("map");
-        let normal = L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png");
+        // *** সংশোধিত টাইল লেয়ার URL ***
+        let normal = L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png");
         let satellite = L.tileLayer("https://{s}.google.com/vt/lyrs=s&x={x}&y={y}&z={z}",{subdomains:['mt0','mt1','mt2','mt3'], maxZoom: 20});
         normal.addTo(map);
         L.control.layers({"Normal":normal,"Satellite":satellite}).addTo(map);
@@ -180,20 +181,20 @@ function initMapAndData() {
 
 // --- Map Marker Icons ---
 let adminIcon = L.divIcon({
-    html: `<div style="position:relative;transform:translate(-50%, -50%); width:24px;height:24px;background:green;border-radius:50%;border:2px solid white;"></div><div style="position:absolute;top:-25px;left:-20px;background:white;padding:3px 8px;border-radius:6px;border:1px solid #ccc;font-size:12px;white-space:nowrap;">Csm Mohasin Alam <img src="https://dl8.wapkizfile.info/download/c4275ed00b49e8d2f586ffbd4dc6c25f/csm-mohasin-alam+wapkizs+com/2-jpg-(csm-mohasin-alam.wapkizs.com).jpg" style="width:14px;height:14px;border-radius:50%;margin-left:3px;"></div>`
+    html: `<div style="position:relative;transform:translate(-50%, -50%); width:24px;height:24px;background:green;border-radius:50%;border:2px solid white;"></div><div style="position:absolute;top:-25px;left:-20px;background:white;padding:3px 8px;border-radius:6px;border:1px solid #ccc;font-size:12px;white-space:nowrap;">Csm Mohasin Alam <img src="https://dl8.wapkizfile.info/download/c4275ed00b49e8d2f586ffbd4dc6c25f/csm-mohasin-alam+wapkizs+com/2-jpg-(csm-mohasin-alam.wapkizs.com).jpg" style="width:14px;height:14px;border-radius:50%;margin-left:3px;"></div>`
 });
 let userIcon = L.divIcon({
- html:`<div style="width:22px;height:22px;background:red;border-radius:50%;border:2px solid white;"></div>`
+    html:`<div style="width:22px;height:22px;background:red;border-radius:50%;border:2px solid white;"></div>`
 });
 
 
 // Function to format time
 function formatTime(isoTime) {
-    if (!isoTime) return 'N/A';
-    return new Date(isoTime).toLocaleString('en-GB', { 
-      hour: '2-digit', minute: '2-digit', second: '2-digit', 
-      day: '2-digit', month: 'short', year: 'numeric' 
-    });
+    if (!isoTime) return 'N/A';
+    return new Date(isoTime).toLocaleString('en-GB', { 
+      hour: '2-digit', minute: '2-digit', second: '2-digit', 
+      day: '2-digit', month: 'short', year: 'numeric' 
+    });
 }
 
 // --- অ্যাডমিন জিপিএস ট্র্যাকিং ---
@@ -232,106 +233,106 @@ function setupUserTracking() {
 }
 
 function updateMarker(snap){
- let id=snap.key;
- let u=snap.val();
- const lat = u.latitude || u.last_lat;
- const lon = u.longitude || u.last_lon;
- if (!lat || !lon) return;
+    let id=snap.key;
+    let u=snap.val();
+    const lat = u.latitude || u.last_lat;
+    const lon = u.longitude || u.last_lon;
+    if (!lat || !lon) return;
 
- if(!userMarkers[id]){
-   userMarkers[id]=L.marker([lat,lon],{icon:userIcon}).addTo(map);
-   userMarkers[id].bindTooltip(id.substring(0, 8),{permanent:false}); 
- }else{
-   userMarkers[id].setLatLng([lat,lon]);
- }
- 
- const isLive = !!u.latitude; 
- const timeStamp = u.time || u.last_time;
- const statusClass = isLive ? 'status-live' : 'status-last';
- 
- let popupContent = `<div class="popup-content">
-                            **User ID:** ${id.substring(0, 8)}... <hr style="margin:5px 0;">
-                            **Status:** <span class="${statusClass}">${isLive ? 'LIVE' : 'LAST SEEN'}</span> <br>
-                            **Battery:** ${u.battery || 'N/A'} <br>
-                            **Speed:** ${u.speed ? u.speed + ' km/h' : 'N/A'} <br>
-                            **Network:** ${u.network || 'N/A'} <br>
-                            **Last Update:** ${formatTime(timeStamp)}
-                          </div>`;
-                          
- userMarkers[id].bindPopup(popupContent);
+    if(!userMarkers[id]){
+        userMarkers[id]=L.marker([lat,lon],{icon:userIcon}).addTo(map);
+        userMarkers[id].bindTooltip(id.substring(0, 8),{permanent:false}); 
+    }else{
+        userMarkers[id].setLatLng([lat,lon]);
+    }
+
+    const isLive = !!u.latitude; 
+    const timeStamp = u.time || u.last_time;
+    const statusClass = isLive ? 'status-live' : 'status-last';
+
+    let popupContent = `<div class="popup-content">
+                             **User ID:** ${id.substring(0, 8)}... <hr style="margin:5px 0;">
+                             **Status:** <span class="${statusClass}">${isLive ? 'LIVE' : 'LAST SEEN'}</span> <br>
+                             **Battery:** ${u.battery || 'N/A'} <br>
+                             **Speed:** ${u.speed ? u.speed + ' km/h' : 'N/A'} <br>
+                             **Network:** ${u.network || 'N/A'} <br>
+                             **Last Update:** ${formatTime(timeStamp)}
+                           </div>`;
+
+    userMarkers[id].bindPopup(popupContent);
 }
 
 // 🚀 ইউজারকে ম্যাপে সেন্টারিং ফাংশন 
 function centerMapToUser() {
- let id = document.getElementById("userSelect").value;
- if (!id) return;
- let u = users[id];
- const lat = u.latitude || u.last_lat;
- const lon = u.longitude || u.last_lon;
- if (lat && lon) {
-   map.setView([lat, lon], 16);
-   userMarkers[id].openPopup(); 
- }
+    let id = document.getElementById("userSelect").value;
+    if (!id) return;
+    let u = users[id];
+    const lat = u.latitude || u.last_lat;
+    const lon = u.longitude || u.last_lon;
+    if (lat && lon) {
+        map.setView([lat, lon], 16);
+        userMarkers[id].openPopup(); 
+    }
 }
 
 // --- রাউটিং ফাংশন ---
 function drawRoute(){
- let id=document.getElementById("userSelect").value;
- if(!id){alert("Select a user ID first");return;}
- let u=users[id];
- const lat = u.latitude || u.last_lat;
- const lon = u.longitude || u.last_lon;
- 
- if(!adminLat || !adminLon) {
-   alert("Your (Admin) location is not yet available. Please wait for GPS lock.");
-   return;
- }
- if(!lat || !lon) {
-   alert("Location data not available for this user.");
-   return;
- }
+    let id=document.getElementById("userSelect").value;
+    if(!id){alert("Select a user ID first");return;}
+    let u=users[id];
+    const lat = u.latitude || u.last_lat;
+    const lon = u.longitude || u.last_lon;
 
- if(route) map.removeControl(route);
- document.getElementById("dist").innerText="Calculating...";
- document.getElementById("eta").innerText="...";
+    if(!adminLat || !adminLon) {
+        alert("Your (Admin) location is not yet available. Please wait for GPS lock.");
+        return;
+    }
+    if(!lat || !lon) {
+        alert("Location data not available for this user.");
+        return;
+    }
 
- route = L.Routing.control({
-   waypoints:[L.latLng(adminLat,adminLon),L.latLng(lat,lon)],
-   addWaypoints:false,
-   router: L.Routing.osrmv1({
-     serviceUrl: 'https://router.project-osrm.org/route/v1'
-   })
- }).addTo(map);
+    if(route) map.removeControl(route);
+    document.getElementById("dist").innerText="Calculating...";
+    document.getElementById("eta").innerText="...";
 
- route.on('routesfound', function(e) {
-   var routes = e.routes;
-   if (routes.length === 0) {
-     document.getElementById("dist").innerText="--";
-     document.getElementById("eta").innerText="--";
-     return;
-   }
-   
-   var summary = routes[0].summary;
-   let distKm = summary.totalDistance / 1000;
-   let etaMin = Math.round(summary.totalTime / 60); 
+    route = L.Routing.control({
+        waypoints:[L.latLng(adminLat,adminLon),L.latLng(lat,lon)],
+        addWaypoints:false,
+        router: L.Routing.osrmv1({
+            serviceUrl: 'https://router.project-osrm.org/route/v1'
+        })
+    }).addTo(map);
 
-   document.getElementById("dist").innerText=distKm.toFixed(2);
-   document.getElementById("eta").innerText=etaMin;
- });
+    route.on('routesfound', function(e) {
+        var routes = e.routes;
+        if (routes.length === 0) {
+            document.getElementById("dist").innerText="--";
+            document.getElementById("eta").innerText="--";
+            return;
+        }
 
- route.on('routingerror', function(e) {
-   console.error("Routing Error:", e.error);
-   document.getElementById("dist").innerText="Error!";
-   document.getElementById("eta").innerText="Error!";
-   alert("Routing failed! Check your connection.");
- });
+        var summary = routes[0].summary;
+        let distKm = summary.totalDistance / 1000;
+        let etaMin = Math.round(summary.totalTime / 60); 
+
+        document.getElementById("dist").innerText=distKm.toFixed(2);
+        document.getElementById("eta").innerText=etaMin;
+    });
+
+    route.on('routingerror', function(e) {
+        console.error("Routing Error:", e.error);
+        document.getElementById("dist").innerText="Error!";
+        document.getElementById("eta").innerText="Error!";
+        alert("Routing failed! Check your connection.");
+    });
 }
 
 // clear route
 function clearRoute(){
- if(route) map.removeControl(route);
- document.getElementById("dist").innerText="--";
- document.getElementById("eta").innerText="--";
+    if(route) map.removeControl(route);
+    document.getElementById("dist").innerText="--";
+    document.getElementById("eta").innerText="--";
 }
 </script>
 
