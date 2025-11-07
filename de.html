@@ -16,7 +16,6 @@ body {
     margin: 0;
     font-family: Arial;
     background: #eaf3ff;
-    /* 💡 Fix: Ensures minimum width for desktop view to prevent hidden buttons */
     min-width: 480px; 
 }
 header {
@@ -25,7 +24,6 @@ header {
     font-weight: bold;
     background: #007bff;
     color: white;
-    /* 💡 Fix: Ensures header stays on top when scrolling */
     position: sticky;
     top: 0;
     z-index: 1001; 
@@ -85,7 +83,6 @@ header {
 #map-container {
     display: flex; 
     flex-direction: column; 
-    /* 💡 Fix: Ensures minimum width for the container */
     min-width: 460px; 
 }
 #map{
@@ -165,7 +162,6 @@ header {
     padding:12px;
     border-radius:10px;
     box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-    /* 💡 Fix: Ensures minimum width for the card */
     min-width: 460px; 
     box-sizing: border-box;
 }
@@ -203,9 +199,10 @@ select, .card button{
 
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
 
 <script>
-// --- Firebase Config ---
+// --- Firebase Config (অপরিবর্তিত থাকবে) ---
 const firebaseConfig = {
     apiKey:"AIzaSyCsGBSRCHVUhXQZ5DNMEZWgQWk1gxMF1E4",
     authDomain:"signup-d32c5.firebaseapp.com",
@@ -217,9 +214,9 @@ const firebaseConfig = {
 };
 firebase.initializeApp(firebaseConfig);
 
-// 🔒 অ্যাডমিন ক্রেডেনশিয়ালস - এই দুটি পরিবর্তন করতে হবে!
-const ADMIN_USERNAME = "csm-login";
-const ADMIN_PASSWORD = "hack me";
+// 🔒 অ্যাডমিন ক্রেডেনশিয়ালস ভেরিয়েবলগুলি সম্পূর্ণভাবে মুছে ফেলা হয়েছে
+// const ADMIN_USERNAME = "csm-login"; 
+// const ADMIN_PASSWORD = "hack me"; 
 </script>
 </head>
 
@@ -230,7 +227,7 @@ const ADMIN_PASSWORD = "hack me";
 <div id="login-screen">
     <div class="login-box">
         <h2>Admin Login</h2>
-        <input type="text" id="username" placeholder="Username">
+        <input type="email" id="username" placeholder="Email Address">
         <input type="password" id="password" placeholder="Password">
         <button onclick="attemptLogin()">Login</button>
         <p id="login-message"></p>
@@ -266,23 +263,36 @@ const ADMIN_PASSWORD = "hack me";
 
 <script>
 // ------------------------------------
-// 🔒 লগইন লজিক
+// 🔒 সুরক্ষিত লগইন লজিক (Firebase Authentication ব্যবহার করে)
 // ------------------------------------
 function attemptLogin() {
-    const user = document.getElementById('username').value;
-    const pass = document.getElementById('password').value;
+    const email = document.getElementById('username').value;
+    const password = document.getElementById('password').value;
     const msg = document.getElementById('login-message');
+    msg.textContent = 'Logging in...';
 
-    if (user === ADMIN_USERNAME && pass === ADMIN_PASSWORD) {
-        // সফল লগইন
-        document.getElementById('login-screen').style.display = 'none';
-        document.getElementById('app-content').style.display = 'block';
-        // ম্যাপের ইনিশিয়ালাইজেশন শুরু
-        initMapAndData(); 
-    } else {
-        // ব্যর্থ লগইন
-        msg.textContent = 'Invalid Username or Password!';
-    }
+    // Firebase-এর সাইন ইন ফাংশন ব্যবহার করা হলো
+    firebase.auth().signInWithEmailAndPassword(email, password)
+        .then(() => {
+            // সফল লগইন
+            msg.textContent = `Login successful! Redirecting...`;
+
+            // UI দেখানো
+            document.getElementById('login-screen').style.display = 'none';
+            document.getElementById('app-content').style.display = 'block';
+            
+            // ম্যাপের ইনিশিয়ালাইজেশন শুরু
+            initMapAndData(); 
+        })
+        .catch((error) => {
+            // ব্যর্থ লগইন
+            console.error("Login Error:", error);
+            if (error.code === 'auth/invalid-email' || error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
+                msg.textContent = 'Invalid Email or Password!';
+            } else {
+                msg.textContent = 'Login failed! Check console for details.';
+            }
+        });
 }
 
 // ------------------------------------
@@ -298,30 +308,26 @@ function initMapAndData() {
     if (!map) {
         map = L.map("map");
         
-        // --- 1. OpenStreetMap (OSM) - Stable Map Layer (Default) ---
+        // --- Map Layers Setup (OSM, Google Roads, Google Hybrid) ---
         let osmRoads = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             maxZoom: 19,
             attribution: '© <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
         });
         
-        // --- 2. Google Road Map (lyrs=m) ---
         let googleRoads = L.tileLayer("https://{s}.google.com/vt/lyrs=m&x={x}&y={y}&z={z}",{
             maxZoom: 20,
             subdomains:['mt0','mt1','mt2','mt3'],
             attribution: 'Map data © Google' 
         });
         
-        // --- 3. Google Satellite Hybrid (lyrs=y) - Satellite + Labels ---
         let googleHybrid = L.tileLayer("https://{s}.google.com/vt/lyrs=y&x={x}&y={y}&z={z}",{
             maxZoom: 20,
             subdomains:['mt0','mt1','mt2','mt3'],
             attribution: 'Map data © Google'
         });
         
-        // ডিফল্ট হিসেবে স্থিতিশীল OSM Roads যোগ করা
         osmRoads.addTo(map);
 
-        // ম্যাপ কন্ট্রোলে লেয়ার সেট করা
         L.control.layers({
             "OSM Road Map (Stable)": osmRoads,
             "Google Road Map": googleRoads,
@@ -416,6 +422,11 @@ function updateMarker(snap){
                              **Network:** ${u.network || 'N/A'} <br>
                              **Last Update:** ${formatTime(timeStamp)}
                              <hr style="margin:8px 0;">
+                             
+                             <button onclick="drawRouteFromPopup('${id}')" class="street-view-btn" style="background:#007bff;margin-top:0;">
+                                 ➡️ Get Route Here
+                             </button>
+                             
                              <button onclick="streetViewInPage(${lat}, ${lon})" class="street-view-btn">
                                  🌎 View Street View (360°)
                              </button>
@@ -424,32 +435,26 @@ function updateMarker(snap){
     userMarkers[id].bindPopup(popupContent);
 }
 
-// --- Street View ফাংশন (বার্তা ও বাটন সহ, কাছাকাছি প্যানোরামা খোঁজা) ---
+// --- Street View ফাংশন (কাছাকাছি প্যানোরামা খোঁজা সহ) ---
 function streetViewInPage(lat, lon) {
-    // Street View URL for new tab (most reliable format for finding closest panorama)
-    const googleMapsUrl = `https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${lat},${lon}`;
+    const googleMapsUrl = `https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=$${lat},${lon}`;
     
     const panel = document.getElementById('street-view-panel');
     const contentArea = document.getElementById('street-view-content-area');
     const mapDiv = document.getElementById('map');
     
-    // Content area তৈরি করা হয়েছে (iframe-এর বদলে)
     contentArea.innerHTML = `
         <p>⚠️ **Street View 360° Image Not Available In-Page**</p>
         <p>The image is either not available for this location, or is blocked from loading inside this page.</p>
-        <span>Csm Mohasin Alam</span>
+        <p style="color: blue; font-weight: bold;">Click the button below. Google will try to find the **closest available Street View** panorama for this area.</p>
         <a href="${googleMapsUrl}" target="_blank">
             Open Street View in Google Maps ↗️
         </a>
     `;
 
-    // প্যানেল দেখানো
     panel.classList.add('active');
-
-    // ম্যাপের আকার কমাতে হবে যাতে প্যানেলটি মানানসই হয়
     mapDiv.style.height = '35vh'; 
 
-    // ম্যাপকে রিফ্রেশ করে তার লেআউট ঠিক করা (Leaflet এর জন্য প্রয়োজনীয়)
     setTimeout(() => {
         map.invalidateSize();
     }, 550); 
@@ -458,22 +463,27 @@ function streetViewInPage(lat, lon) {
 // Street View প্যানেল বন্ধ করা
 function closeStreetViewPanel() {
     const panel = document.getElementById('street-view-panel');
-    const contentArea = document.getElementById('street-view-content-area');
     const mapDiv = document.getElementById('map');
 
-    // প্যানেল লুকানো
     panel.classList.remove('active');
-    
-    // কন্টেন্ট খালি করা
-    contentArea.innerHTML = '';
-    
-    // ম্যাপের হাইট ফিরিয়ে আনা
+    document.getElementById('street-view-content-area').innerHTML = '';
     mapDiv.style.height = '75vh'; 
 
-    // ম্যাপকে আবার রিফ্রেশ করে তার লেআউট ঠিক করা
     setTimeout(() => {
         map.invalidateSize();
     }, 550);
+}
+
+// 🗺️ ফাংশন: পপআপ বাটন থেকে রুট তৈরি করা
+function drawRouteFromPopup(userId) {
+    // 1. ড্রপডাউন মেনুটিকেও এই ইউজার আইডিতে সেট করে দেওয়া
+    document.getElementById("userSelect").value = userId;
+
+    // 2. মূল drawRoute ফাংশনকে কল করা
+    drawRoute();
+
+    // 3. পপআপটি বন্ধ করে দেওয়া
+    userMarkers[userId].closePopup();
 }
 
 
