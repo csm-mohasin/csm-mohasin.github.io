@@ -4,11 +4,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Neon Pink Snake Trail</title>
+<title>Neon Gradient Snake Trail</title>
 <style>
   body {
     margin: 0;
-    background: #060606;
+    background: #050505;
     height: 100vh;
     overflow: hidden;
     cursor: none;
@@ -37,27 +37,53 @@
   });
 
   const points = [];
-  const maxPoints = 60; // Snake length
+  const maxPoints = 15;
 
   document.addEventListener('mousemove', e => {
     points.push({ x: e.clientX, y: e.clientY });
     if (points.length > maxPoints) points.shift();
   });
 
+  const colors = [
+    { r: 255, g: 0, b: 153 },   // pink
+    { r: 180, g: 0, b: 255 },   // purple
+    { r: 0, g: 150, b: 255 }    // blue
+  ];
+
+  let colorStep = 0;
+  let colorSpeed = 0.02;
+
+  function interpolateColor(c1, c2, t) {
+    return {
+      r: c1.r + (c2.r - c1.r) * t,
+      g: c1.g + (c2.g - c1.g) * t,
+      b: c1.b + (c2.b - c1.b) * t
+    };
+  }
+
   function draw() {
     ctx.clearRect(0, 0, width, height);
 
-    // Neon trail effect
+    // Color transition
+    const c1 = colors[Math.floor(colorStep) % colors.length];
+    const c2 = colors[(Math.floor(colorStep) + 1) % colors.length];
+    const t = colorStep % 1;
+    const color = interpolateColor(c1, c2, t);
+    colorStep += colorSpeed;
+
     for (let i = 0; i < points.length - 1; i++) {
       const p1 = points[i];
       const p2 = points[i + 1];
       const opacity = i / points.length;
-      const color = `rgba(255, 0, 153, ${opacity})`; // Neon pink fade
 
-      ctx.strokeStyle = color;
-      ctx.lineWidth = 8 * (1 - i / points.length);
-      ctx.shadowBlur = 20;
-      ctx.shadowColor = "#ff33cc";
+      const r = Math.floor(color.r);
+      const g = Math.floor(color.g);
+      const b = Math.floor(color.b);
+
+      ctx.strokeStyle = `rgba(${r}, ${g}, ${b}, ${opacity})`;
+      ctx.lineWidth = 14 * (1 - i / points.length);
+      ctx.shadowBlur = 25;
+      ctx.shadowColor = `rgba(${r}, ${g}, ${b}, 1)`;
 
       ctx.beginPath();
       ctx.moveTo(p1.x, p1.y);
@@ -73,7 +99,6 @@
 
 </body>
 </html>
-
 
 
 <!DOCTYPE html>
