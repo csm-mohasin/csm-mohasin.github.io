@@ -1,3 +1,81 @@
+
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Neon Pink Snake Trail</title>
+<style>
+  body {
+    margin: 0;
+    background: #060606;
+    height: 100vh;
+    overflow: hidden;
+    cursor: none;
+  }
+
+  canvas {
+    position: fixed;
+    top: 0;
+    left: 0;
+  }
+</style>
+</head>
+<body>
+
+<canvas id="trail"></canvas>
+
+<script>
+  const canvas = document.getElementById('trail');
+  const ctx = canvas.getContext('2d');
+  let width = canvas.width = window.innerWidth;
+  let height = canvas.height = window.innerHeight;
+
+  window.addEventListener('resize', () => {
+    width = canvas.width = window.innerWidth;
+    height = canvas.height = window.innerHeight;
+  });
+
+  const points = [];
+  const maxPoints = 60; // Snake length
+
+  document.addEventListener('mousemove', e => {
+    points.push({ x: e.clientX, y: e.clientY });
+    if (points.length > maxPoints) points.shift();
+  });
+
+  function draw() {
+    ctx.clearRect(0, 0, width, height);
+
+    // Neon trail effect
+    for (let i = 0; i < points.length - 1; i++) {
+      const p1 = points[i];
+      const p2 = points[i + 1];
+      const opacity = i / points.length;
+      const color = `rgba(255, 0, 153, ${opacity})`; // Neon pink fade
+
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 8 * (1 - i / points.length);
+      ctx.shadowBlur = 20;
+      ctx.shadowColor = "#ff33cc";
+
+      ctx.beginPath();
+      ctx.moveTo(p1.x, p1.y);
+      ctx.lineTo(p2.x, p2.y);
+      ctx.stroke();
+    }
+
+    requestAnimationFrame(draw);
+  }
+
+  draw();
+</script>
+
+</body>
+</html>
+
+
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
