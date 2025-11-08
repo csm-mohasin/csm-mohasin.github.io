@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="bn">
 <head>
@@ -18,10 +17,11 @@
         touch-action: pan-y; 
     }
 
-    /* Bubble এবং Window-এর জন্য absolute পজিশন */
+    /* Bubble এবং Window-এর জন্য fixed পজিশন */
     .chat-bubble, .chat-window {
-      position: absolute; 
-      z-index: 9999;
+      /* *** ফিক্স: position: fixed ব্যবহার করা হলো *** */
+      position: fixed; 
+      z-index: 99999; /* নিশ্চিত করার জন্য উচ্চ z-index */
       cursor: grab; 
     }
 
@@ -277,10 +277,10 @@ function toggleChatWindow(event) {
         
         // 1. চ্যাট উইন্ডোর পজিশন সেট করা
         const windowWidth = chatWindow.offsetWidth;
-        const windowHeight = 300; // নিশ্চিত উচ্চতা
+        const windowHeight = 300; // নিশ্চিত উচ্চতা (আপনার CSS অনুযায়ী)
 
-        let newLeft = bubbleRect.left - windowWidth - 10; // বাবলের বাম দিকে ১০ পিক্সেল দূরে
-        let newTop = bubbleRect.top - windowHeight - 10; // বাবলের উপরে ১০ পিক্সেল দূরে
+        let newLeft = bubbleRect.left - windowWidth - 10; 
+        let newTop = bubbleRect.top - windowHeight - 10; 
 
         // 2. ভিউপোর্ট সীমানা নিয়ন্ত্রণ 
         
@@ -338,6 +338,7 @@ document.addEventListener('click', (event) => {
 // --- Dragging Logic (মোবাইল ও ডেস্কটপ সাপোর্ট) ---
 
 function makeDraggable(element, windowElement) {
+    // position: fixed এর জন্য initialTop/Left সরাসরি offsetTop/Left ব্যবহার করে কাজ করবে।
     let initialTop = 0, initialLeft = 0; 
     let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
 
@@ -413,20 +414,20 @@ function makeDraggable(element, windowElement) {
         element.style.top = newTop + "px";
         element.style.left = newLeft + "px";
         
-        // চ্যাট উইন্ডো মুভমেন্ট লজিক (বাবলের সাথে উইন্ডোও মুভ হবে)
+        // চ্যাট উইন্ডো মুভমেন্ট লজিক
         if (element === chatBubble && windowElement.classList.contains('is-visible')) {
             const windowWidth = windowElement.offsetWidth;
-            const windowHeight = 300; // নিশ্চিত উচ্চতা
+            const windowHeight = 300; 
             
             let winLeft = newLeft - windowWidth - 10; 
             let winTop = newTop - windowHeight - 10; 
 
             // উইন্ডো যেন ভিউপোর্টের বাইরে না যায় তার জন্যও অ্যাডজাস্টমেন্ট
             if (winLeft < 10) {
-                 winLeft = newLeft + element.offsetWidth + 10; // বাবলের ডানে সরাও
+                 winLeft = newLeft + element.offsetWidth + 10; 
              }
              if (winTop < 10) {
-                 winTop = newTop + element.offsetHeight + 10; // বাবলের নিচে সরাও
+                 winTop = newTop + element.offsetHeight + 10; 
              }
              if (winLeft + windowWidth > window.innerWidth - 10) {
                 winLeft = window.innerWidth - windowWidth - 10;
@@ -570,6 +571,9 @@ async function sendMessage() {
 
 </body>
 </html>
+
+
+
 <meta name="viewport" content="width=device-width, initial-scale=1.0"> 
 <head>
   <!-- Basic SEO -->
