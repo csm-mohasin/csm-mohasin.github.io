@@ -176,7 +176,7 @@
 
 <div class="chat-window" id="chatWindow">
   <div class="chat-header">Developed by: Csm Mohasin Alam</div>
-  <font color="f00000"><div class="chat-body" id="chatBody">
+  <font color="#FF69B4"><div class="chat-body" id="chatBody">
     <p><b>Reply:</b> ডেটা লোড হচ্ছে... অনুগ্রহ করে একটু অপেক্ষা করুন।</p>
   </div>
   <div class="chat-input">
@@ -312,7 +312,7 @@ loadQnADictionary().then(success => {
     if (success) {
         const initialMessage = chatBody.querySelector('p');
         if (initialMessage && initialMessage.innerHTML.includes('ডেটা লোড হচ্ছে')) {
-             initialMessage.innerHTML = `<center>হ্যালো! আমি <b>Csm Mohasin Alam</b> এর Ai সহকারী। কিভাবে সাহায্য করতে পারি?</center>`;
+             initialMessage.innerHTML = `<font color="black"><center>হ্যালো! আমি <b>Csm Mohasin Alam</b> এর Ai সহকারী। কিভাবে সাহায্য করতে পারি?</center></font>`;
         }
     } else {
         chatBody.innerHTML = `<p><b>Bot:</b> ডেটাবেস লোড করা সম্ভব হয়নি। অনুগ্রহ করে ইন্টারনেট সংযোগ এবং Firebase কনফিগারেশন চেক করুন।</p>`;
