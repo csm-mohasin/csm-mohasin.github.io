@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="bn">
 <head>
@@ -8,10 +9,24 @@
     body {
         height: 100vh;
         margin: 0;
+        /* ড্র্যাগিং-এর জন্য নির্বাচন (selection) বন্ধ করা */
+        user-select: none; 
+        -webkit-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
+        /* মোবাইল ব্রাউজারে স্ক্রলিং নিয়ন্ত্রণ */
+        touch-action: pan-y; 
+    }
+
+    /* Bubble এবং Window-এর জন্য absolute পজিশন */
+    .chat-bubble, .chat-window {
+      position: absolute; 
+      z-index: 9999;
+      cursor: grab; 
     }
 
     .chat-bubble {
-      position: fixed;
+      /* প্রাথমিক অবস্থান (স্ক্রিনের ডান-নিচে) */
       bottom: 20px;
       right: 20px;
       background-color: #ff1493;
@@ -25,7 +40,6 @@
       cursor: pointer;
       font-size: 30px;
       box-shadow: 0 4px 10px rgba(0,0,0,0.3);
-      z-index: 9999;
       transition: transform 0.3s, background-color 0.3s;
     }
 
@@ -56,32 +70,32 @@
         font-size: 30px;
     }
 
-
     /* চ্যাট উইন্ডোর জন্য Fade Effect */
     .chat-window {
-      position: fixed;
-      bottom: 90px;
-      right: 20px;
+      /* জাভাস্ক্রিপ্ট দ্বারা পজিশন সেট করার জন্য কোনো ডিফল্ট bottom/left নেই */
       width: 300px;
       background: white;
       border-radius: 15px;
       box-shadow: 0 4px 15px rgba(0,0,0,0.2);
       
-      /* Fade ট্রানজিশনের জন্য */
       display: flex;
-      visibility: hidden; /* প্রাথমিক অবস্থায় সম্পূর্ণ লুকানো */
-      opacity: 0; /* প্রাথমিক অবস্থায় অস্বচ্ছ */
+      visibility: hidden; 
+      opacity: 0; 
       transition: opacity 1.2s ease-in-out, visibility 0.3s ease-in-out; 
       
       flex-direction: column;
       overflow: hidden;
-      z-index: 9999;
     }
 
     /* যখন উইন্ডো খোলা থাকবে */
     .chat-window.is-visible {
         visibility: visible;
         opacity: 1;
+    }
+    
+    /* ড্র্যাগ করার সময় কার্সার পরিবর্তন */
+    .is-dragging {
+        cursor: grabbing !important;
     }
 
     .chat-header {
@@ -193,7 +207,7 @@ const firebaseConfig = {
     projectId: "muktoshopchatbot-60905",
     storageBucket: "muktoshopchatbot-60905.firebasestorage.app",
     messagingSenderId: "595769392691",
-    appId: "1:595769392691:web:0ea7122a9f42eaf79ced46",
+    appId: "1:595769392691:web:0ea7122a9f42eeaf79ced46",
     measurementId: "G-NPLMLXJFCC"
 };
 
@@ -209,42 +223,96 @@ const userInput = document.getElementById('userInput');
 let qaDictionary = {};
 let isQALoaded = false;
 
-// --- নতুন Type Reply ফাংশন (HTML ট্যাগ সাপোর্ট সহ) ---
+// গ্লোবাল ফ্ল্যাগ যা ট্র্যাক করবে সর্বশেষ ইন্টারঅ্যাকশন ড্র্যাগ ছিল কিনা।
+let isDraggingHappened = false; 
+const DRAG_THRESHOLD = 5; // ৫ পিক্সেলের বেশি নড়লে ড্র্যাগ হিসেবে গণ্য হবে
+
+// --- Type Reply ফাংশন (Typewriter এফেক্ট) ---
 function typeReply(element, textWithHtml) {
-    let outputText = '<b><font color="black">Reply:</b> '; // Bot: ট্যাগটি প্রথমে যোগ করা
-    element.innerHTML = outputText; // প্রথমে শুধু Bot: যোগ করে দেওয়া
+    let outputText = '<b><font color="black">Reply:</b> ';
+    element.innerHTML = outputText; 
     
     let i = 0;
     
-    // প্রতি 30ms অন্তর একটি করে অক্ষর যোগ করা হবে
     const typingInterval = setInterval(() => {
         if (i < textWithHtml.length) {
             let char = textWithHtml.charAt(i);
 
             if (char === '<') {
-                // < চিহ্ন পাওয়া গেলে, ট্যাগটি শেষ না হওয়া পর্যন্ত পুরোটা একবারে যোগ করে দেওয়া
                 const tagEndIndex = textWithHtml.indexOf('>', i);
                 if (tagEndIndex !== -1) {
                     const tag = textWithHtml.substring(i, tagEndIndex + 1);
                     outputText += tag;
-                    i = tagEndIndex + 1; // ইনডেক্স ট্যাগ শেষ হওয়ার পর সেট করা
+                    i = tagEndIndex + 1; 
                 } else {
                     outputText += char;
                     i++;
                 }
             } else {
-                // এটি একটি সাধারণ অক্ষর, এটি যোগ করো।
                 outputText += char;
                 i++;
             }
 
-            element.innerHTML = outputText; // নতুন কন্টেন্ট আপডেট করা
+            element.innerHTML = outputText; 
             chatBody.scrollTop = chatBody.scrollHeight; 
         } else {
-            // সব অক্ষর টাইপ হয়ে গেলে ইন্টারভাল বন্ধ করা
             clearInterval(typingInterval);
         }
-    }, 30); // দ্রুততার জন্য ms সেট করা
+    }, 30); 
+}
+
+// --- নতুন টগল ফাংশন (পজিশন সেট করা সহ) ---
+function toggleChatWindow(event) {
+    event.stopPropagation();
+    const isCurrentlyOpen = chatWindow.classList.contains('is-visible');
+    const bubbleRect = chatBubble.getBoundingClientRect(); // বাবল-এর অবস্থান নেওয়া
+
+    if (isCurrentlyOpen) {
+        // বন্ধ করার লজিক
+        chatWindow.classList.remove('is-visible');
+        chatBubble.classList.remove('is-open');
+        chatBubble.innerHTML = '💬';
+    } else {
+        // খোলার লজিক
+        
+        // 1. চ্যাট উইন্ডোর পজিশন সেট করা
+        const windowWidth = chatWindow.offsetWidth;
+        const windowHeight = 300; // নিশ্চিত উচ্চতা
+
+        let newLeft = bubbleRect.left - windowWidth - 10; // বাবলের বাম দিকে ১০ পিক্সেল দূরে
+        let newTop = bubbleRect.top - windowHeight - 10; // বাবলের উপরে ১০ পিক্সেল দূরে
+
+        // 2. ভিউপোর্ট সীমানা নিয়ন্ত্রণ 
+        
+        // বাম সীমানা
+        if (newLeft < 10) { 
+            newLeft = bubbleRect.right + 10; // বাবলের ডান দিকে খোলা হবে
+        }
+        // উপর সীমানা
+        if (newTop < 10) { 
+            newTop = bubbleRect.bottom + 10; // বাবলের নিচের দিকে খোলা হবে
+        }
+        // ডান সীমানা
+        if (newLeft + windowWidth > window.innerWidth - 10) {
+            newLeft = window.innerWidth - windowWidth - 10; // ডান দিকে লেগে যাবে
+        }
+        // নিচে সীমানা
+        if (newTop + windowHeight > window.innerHeight - 10) {
+            newTop = window.innerHeight - windowHeight - 10; // নিচের দিকে লেগে যাবে
+        }
+
+        // পজিশন CSS এ প্রয়োগ করা
+        chatWindow.style.top = newTop + 'px';
+        chatWindow.style.left = newLeft + 'px';
+        chatWindow.style.bottom = 'auto';
+        chatWindow.style.right = 'auto';
+        
+        // উইন্ডো ভিজিবল করা
+        chatWindow.classList.add('is-visible');
+        chatBubble.classList.add('is-open');
+        chatBubble.innerHTML = ''; 
+        chatBody.scrollTop = chatBody.scrollHeight; 
+    }
 }
 
 // --- UI Logic ---
@@ -252,29 +320,14 @@ function typeReply(element, textWithHtml) {
 // বাবল-এর প্রাথমিক কন্টেন্ট সেট করা
 chatBubble.innerHTML = '💬';
 
-// চ্যাট উইন্ডো টগল করার ফাংশন (X-বাটন এবং Fade লজিক)
-chatBubble.onclick = (event) => {
-  event.stopPropagation();
-  const isCurrentlyOpen = chatWindow.classList.contains('is-visible');
-  
-  if (isCurrentlyOpen) {
-    // Fade Out
-    chatWindow.classList.remove('is-visible');
-    chatBubble.classList.remove('is-open');
-    chatBubble.innerHTML = '💬';
-  } else {
-    // Fade In
-    chatWindow.classList.add('is-visible');
-    chatBubble.classList.add('is-open');
-    chatBubble.innerHTML = ''; 
-    chatBody.scrollTop = chatBody.scrollHeight; 
-  }
-};
-
 // বাইরে ক্লিক করলে চ্যাট উইন্ডো বন্ধ করার লজিক
 document.addEventListener('click', (event) => {
+    if (isDraggingHappened) {
+        isDraggingHappened = false; 
+        return;
+    }
+    
     if (chatWindow.classList.contains('is-visible') && !chatWindow.contains(event.target) && !chatBubble.contains(event.target)) {
-        // Fade Out
         chatWindow.classList.remove('is-visible');
         chatBubble.classList.remove('is-open');
         chatBubble.innerHTML = '💬';
@@ -282,7 +335,137 @@ document.addEventListener('click', (event) => {
 });
 
 
-// --- Firebase Logic ---
+// --- Dragging Logic (মোবাইল ও ডেস্কটপ সাপোর্ট) ---
+
+function makeDraggable(element, windowElement) {
+    let initialTop = 0, initialLeft = 0; 
+    let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
+
+    element.addEventListener('mousedown', dragMouseDown);
+    element.addEventListener('touchstart', dragMouseDown); 
+
+    function dragMouseDown(e) {
+        if (windowElement.classList.contains('is-visible') && (e.target.closest('.chat-input') || e.target.closest('.chat-body'))) {
+             return;
+        }
+
+        e = e || window.event;
+        e.preventDefault(); 
+
+        let clientX = e.clientX;
+        let clientY = e.clientY;
+
+        if (e.type === 'touchstart') {
+            clientX = e.touches[0].clientX;
+            clientY = e.touches[0].clientY;
+        }
+        
+        initialTop = element.offsetTop;
+        initialLeft = element.offsetLeft;
+        
+        pos3 = clientX;
+        pos4 = clientY;
+        
+        isDraggingHappened = false; 
+
+        element.classList.add('is-dragging');
+
+        if (e.type === 'touchstart') {
+            document.addEventListener('touchend', closeDragElement);
+            document.addEventListener('touchmove', elementDrag);
+        } else {
+            document.addEventListener('mouseup', closeDragElement);
+            document.addEventListener('mousemove', elementDrag);
+        }
+    }
+
+    function elementDrag(e) {
+        e = e || window.event;
+        
+        let clientX = e.clientX;
+        let clientY = e.clientY;
+
+        if (e.type === 'touchmove') {
+            clientX = e.touches[0].clientX;
+            clientY = e.touches[0].clientY;
+        }
+        
+        pos1 = pos3 - clientX;
+        pos2 = pos4 - clientY;
+        pos3 = clientX;
+        pos4 = clientY;
+        
+        let newTop = element.offsetTop - pos2;
+        let newLeft = element.offsetLeft - pos1;
+        
+        // মুভমেন্ট চেক
+        if (Math.abs(element.offsetTop - initialTop) > DRAG_THRESHOLD || Math.abs(element.offsetLeft - initialLeft) > DRAG_THRESHOLD) {
+            isDraggingHappened = true;
+        }
+
+        // ভিউপোর্ট সীমানার মধ্যে অবস্থান সীমাবদ্ধ করা (Guardrails)
+        newTop = Math.max(0, Math.min(newTop, window.innerHeight - element.offsetHeight));
+        newLeft = Math.max(0, Math.min(newLeft, window.innerWidth - element.offsetWidth));
+
+        // পজিশন সেট করা
+        element.style.bottom = "auto";
+        element.style.right = "auto";
+        element.style.top = newTop + "px";
+        element.style.left = newLeft + "px";
+        
+        // চ্যাট উইন্ডো মুভমেন্ট লজিক (বাবলের সাথে উইন্ডোও মুভ হবে)
+        if (element === chatBubble && windowElement.classList.contains('is-visible')) {
+            const windowWidth = windowElement.offsetWidth;
+            const windowHeight = 300; // নিশ্চিত উচ্চতা
+            
+            let winLeft = newLeft - windowWidth - 10; 
+            let winTop = newTop - windowHeight - 10; 
+
+            // উইন্ডো যেন ভিউপোর্টের বাইরে না যায় তার জন্যও অ্যাডজাস্টমেন্ট
+            if (winLeft < 10) {
+                 winLeft = newLeft + element.offsetWidth + 10; // বাবলের ডানে সরাও
+             }
+             if (winTop < 10) {
+                 winTop = newTop + element.offsetHeight + 10; // বাবলের নিচে সরাও
+             }
+             if (winLeft + windowWidth > window.innerWidth - 10) {
+                winLeft = window.innerWidth - windowWidth - 10;
+             }
+             if (winTop + windowHeight > window.innerHeight - 10) {
+                winTop = window.innerHeight - windowHeight - 10;
+             }
+            
+            windowElement.style.left = winLeft + "px";
+            windowElement.style.top = winTop + "px";
+            windowElement.style.bottom = "auto";
+            windowElement.style.right = "auto";
+        }
+    }
+
+    function closeDragElement(e) {
+        // ড্র্যাগিং বন্ধ হলে ইভেন্ট লিসেনার সরানো
+        document.removeEventListener('mouseup', closeDragElement);
+        document.removeEventListener('mousemove', elementDrag);
+        document.removeEventListener('touchend', closeDragElement);
+        document.removeEventListener('touchmove', elementDrag);
+
+        element.classList.remove('is-dragging');
+        
+        // যদি DRAG না হয় (অর্থাৎ শুধু ক্লিক/ট্যাপ), তবে উইন্ডো টগল করা
+        if (!isDraggingHappened) {
+            toggleChatWindow(e);
+        }
+    }
+}
+
+// বাবলকে ড্রাগেবল করা
+makeDraggable(chatBubble, chatWindow);
+
+// চ্যাট উইন্ডোকে ড্রাগেবল করা
+makeDraggable(chatWindow, chatWindow);
+
+
+// --- Firebase Data & Chat Logic (ঠিক থাকবে) ---
 
 async function loadQnADictionary() {
     if (isQALoaded) return true;
@@ -294,7 +477,6 @@ async function loadQnADictionary() {
         snapshot.forEach(doc => {
             const data = doc.data();
             if (data.query && data.reply) {
-                // Key-কে lowercase করে saving (Case-insensitive matching এর জন্য)
                 qaDictionary[data.query.toLowerCase().trim()] = data.reply;
             }
         });
@@ -307,15 +489,17 @@ async function loadQnADictionary() {
     }
 }
 
-// পেজ লোড হওয়ার সাথে সাথেই ডেটা লোড করা শুরু
+// পেজ লোড হওয়ার সাথে সাথেই ডেটা লোড করা শুরু
 loadQnADictionary().then(success => {
+    const initialMessage = chatBody.querySelector('p');
     if (success) {
-        const initialMessage = chatBody.querySelector('p');
         if (initialMessage && initialMessage.innerHTML.includes('ডেটা লোড হচ্ছে')) {
              initialMessage.innerHTML = `<font color="black"><center>হ্যালো! আমি <b>Csm Mohasin Alam</b> এর Ai সহকারী। কিভাবে সাহায্য করতে পারি?</center></font>`;
         }
     } else {
-        chatBody.innerHTML = `<p><b>Bot:</b> ডেটাবেস লোড করা সম্ভব হয়নি। অনুগ্রহ করে ইন্টারনেট সংযোগ এবং Firebase কনফিগারেশন চেক করুন।</p>`;
+        if (initialMessage) {
+            initialMessage.innerHTML = `<p><b>Reply:</b> ডেটাবেস লোড করা সম্ভব হয়নি। অনুগ্রহ করে ইন্টারনেট সংযোগ চেক করুন।</p>`;
+        }
     }
     chatBody.scrollTop = chatBody.scrollHeight;
 });
@@ -355,10 +539,9 @@ async function sendMessage() {
     let reply = "দুঃখিত, আমি এই মুহূর্তে আপনার প্রশ্নের উত্তরটি ডেটাবেসে খুঁজে পাচ্ছি না। 😊";
     const userMessageLower = message.toLowerCase();
 
-    // Firebase থেকে লোড হওয়া ডেটা দিয়ে matching করা (Case-insensitive)
+    // Firebase থেকে লোড হওয়া ডেটা দিয়ে matching করা (Case-insensitive)
     let matched = false;
     for (const query in qaDictionary) {
-        // Simple Substring Match
         if (userMessageLower.includes(query)) { 
             reply = qaDictionary[query];
             matched = true;
@@ -370,7 +553,7 @@ async function sendMessage() {
     setTimeout(() => {
         const typingDiv = document.getElementById(typingMessageId);
         if (typingDiv) {
-            // অ্যানিমেশন ডিভ-কে নতুন <p> ট্যাগ দিয়ে প্রতিস্থাপন
+            // অ্যানিমেশন ডিভ-কে নতুন <p> ট্যাগ দিয়ে প্রতিস্থাপন
             const replyP = document.createElement('p');
             typingDiv.replaceWith(replyP); 
 
@@ -387,7 +570,6 @@ async function sendMessage() {
 
 </body>
 </html>
-
 <meta name="viewport" content="width=device-width, initial-scale=1.0"> 
 <head>
   <!-- Basic SEO -->
