@@ -104,14 +104,14 @@
     }
 
     .chat-body p:has(b:contains('Reply:')) {
-        color: #ff1493; 
+        color: #000000; 
     }
     
     /* টাইপিং অ্যানিমেশন স্টাইল */
     .typing-animation p {
         display: flex;
         align-items: center;
-        color: #ff1493;
+        color: #000000;
         font-weight: bold;
         margin: 5px 0;
     }
@@ -211,7 +211,7 @@ let isQALoaded = false;
 
 // --- নতুন Type Reply ফাংশন (HTML ট্যাগ সাপোর্ট সহ) ---
 function typeReply(element, textWithHtml) {
-    let outputText = '<b>Reply:</b> '; // Bot: ট্যাগটি প্রথমে যোগ করা
+    let outputText = '<b><font color="black">Reply:</b> '; // Bot: ট্যাগটি প্রথমে যোগ করা
     element.innerHTML = outputText; // প্রথমে শুধু Bot: যোগ করে দেওয়া
     
     let i = 0;
