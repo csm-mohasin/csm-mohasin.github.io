@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>📍 Live Location Tracker (User)</title>
+
+<style>
+body {
+  font-family: Arial, sans-serif;
+  background: #e9f3ff;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  margin: 0;
+}
+.card {
+  background: #fff;
+  padding: 25px;
+  width: 350px;
+  border-radius: 12px;
+  text-align: center;
+  box-shadow: 0 6px 15px rgba(0,0,0,0.15);
+}
+h2 {
+  color: #007bff;
+  margin-top: 0;
+}
+.loading {
+  font-size: 16px;
+  font-weight: bold;
+  color: #0a7b0a;
+  min-height: 22px;
+}
+#user-id-display {
+  font-size: 12px;
+  color: #6c757d;
+  margin-top: 15px;
+  word-break: break-all;
+}
+</style>
+</head>
+<body>
+
+<div class="card">
+  <h2>📍 Sharing Live Location</h2>
+  <p id="permission-status" class="loading">⏳ Requesting location permission...</p>
+  <p id="user-id-display">User ID: Generating...</p>
+</div>
+
+<script type="module">
+// --- Firebase Import ---
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getDatabase, ref, update } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+
+// ✅ Firebase Config
+const firebaseConfig = {
+  apiKey: "AIzaSyCsGBSRCHVUhXQZ5DNMEZWgQWk1gxMF1E4",
+  authDomain: "signup-d32c5.firebaseapp.com",
+  databaseURL: "https://signup-d32c5-default-rtdb.firebaseio.com",
+  projectId: "signup-d32c5",
+  storageBucket: "signup-d32c5.firebasestorage.app",
+  messagingSenderId: "583812949955",
+  appId: "1:583812949955:web:fab1bb7be94bc1b4ab3f76",
+  measurementId: "G-VLC3QHK8CG"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+const statusEl = document.getElementById("permission-status");
+const userIdDisplay = document.getElementById("user-id-display");
+
+const USER_ID_KEY = 'live_location_user_id';
+let UNIQUE_USER_ID;
+
+// --- Unique ID Generate ---
+function getOrCreateUniqueId() {
+  let id = localStorage.getItem(USER_ID_KEY);
+  if (!id) {
+    id = crypto.randomUUID();
+    localStorage.setItem(USER_ID_KEY, id);
+  }
+  userIdDisplay.textContent = `User ID: ${id.substring(0, 8)}...`;
+  return id;
+}
+UNIQUE_USER_ID = getOrCreateUniqueId();
+
+// --- Battery & Network Functions ---
+async function getBatteryLevel() {
+  try {
+    const battery = await navigator.getBattery();
+    return Math.round(battery.level * 100) + "%";
+  } catch {
+    return "N/A";
+  }
+}
+function getNetworkType() {
+  return navigator.connection?.effectiveType ?? "unknown";
+}
+
+// --- Save Last Known Location ---
+function saveLast(lat, lon) {
+  update(ref(db, "users/" + UNIQUE_USER_ID), {
+    last_lat: lat,
+    last_lon: lon,
+    last_time: new Date().toISOString()
+  });
+}
+
+// --- Main Tracking Function ---
+async function sendLocation(position) {
+  const lat = position.coords.latitude;
+  const lon = position.coords.longitude;
+  const speed = position.coords.speed ? (position.coords.speed * 3.6).toFixed(1) : "0";
+  const battery = await getBatteryLevel();
+  const network = getNetworkType();
+
+  statusEl.textContent = `📡 Sending data... (${lat.toFixed(4)}, ${lon.toFixed(4)})`;
+
+  try {
+    await update(ref(db, "users/" + UNIQUE_USER_ID), {
+      latitude: lat,
+      longitude: lon,
+      speed: speed,
+      battery: battery,
+      network: network,
+      time: new Date().toISOString()
+    });
+    saveLast(lat, lon);
+    statusEl.textContent = "✅ Location updated successfully!";
+  } catch (error) {
+    console.error("Firebase Error:", error);
+    statusEl.textContent = "⚠️ Firebase update failed!";
+  }
+}
+
+// --- Error Handler ---
+function handleError(err) {
+  console.error("Location Error:", err);
+  if (err.code === 1) {
+    statusEl.textContent = "❌ Permission denied! Please allow location access.";
+  } else if (err.code === 2) {
+    statusEl.textContent = "⚠️ Location unavailable!";
+  } else if (err.code === 3) {
+    statusEl.textContent = "⏳ Location request timed out.";
+  } else {
+    statusEl.textContent = "❌ Unknown location error.";
+  }
+}
+
+// --- Ask for Permission First ---
+window.onload = () => {
+  if (!("geolocation" in navigator)) {
+    statusEl.textContent = "❌ Your browser doesn’t support geolocation.";
+    return;
+  }
+
+  statusEl.textContent = "📍 Requesting location access...";
+  navigator.geolocation.getCurrentPosition(
+    (pos) => {
+      statusEl.textContent = "✅ Permission granted! Starting tracking...";
+      startTracking();
+    },
+    (err) => handleError(err),
+    { enableHighAccuracy: true, timeout: 10000 }
+  );
+};
+
+// --- Start Watching (after permission granted) ---
+function startTracking() {
+  navigator.geolocation.watchPosition(
+    (pos) => sendLocation(pos),
+    (err) => handleError(err),
+    { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+  );
+}
+
+// --- Save last location when closing tab ---
+window.addEventListener("beforeunload", () => {
+  navigator.geolocation.getCurrentPosition((p) => {
+    saveLast(p.coords.latitude, p.coords.longitude);
+  });
+});
+</script>
+
+</body>
+</html>
