@@ -3,12 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>📍 Live Location Tracker (User)</title>
+<title>📍 Live Location (User)</title>
 
 <style>
 body {
   font-family: Arial, sans-serif;
-  background: #e9f3ff;
+  background: #eef5ff;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -16,27 +16,30 @@ body {
   margin: 0;
 }
 .card {
-  background: #fff;
+  background: white;
   padding: 25px;
-  width: 350px;
-  border-radius: 12px;
+  width: 340px;
+  border-radius: 14px;
   text-align: center;
   box-shadow: 0 6px 15px rgba(0,0,0,0.15);
 }
 h2 {
   color: #007bff;
-  margin-top: 0;
+  margin-bottom: 15px;
 }
-.loading {
-  font-size: 16px;
+p {
+  font-size: 15px;
+  color: #333;
+}
+#status {
   font-weight: bold;
-  color: #0a7b0a;
-  min-height: 22px;
+  color: green;
+  margin-top: 10px;
 }
-#user-id-display {
+#user-id {
   font-size: 12px;
-  color: #6c757d;
-  margin-top: 15px;
+  color: #666;
+  margin-top: 10px;
   word-break: break-all;
 }
 </style>
@@ -44,17 +47,16 @@ h2 {
 <body>
 
 <div class="card">
-  <h2>📍 Sharing Live Location</h2>
-  <p id="permission-status" class="loading">⏳ Requesting location permission...</p>
-  <p id="user-id-display">User ID: Generating...</p>
+  <h2>📡 Live Location Sharing</h2>
+  <p id="status">⏳ Waiting for location permission...</p>
+  <p id="user-id">User ID: Generating...</p>
 </div>
 
 <script type="module">
-// --- Firebase Import ---
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getDatabase, ref, update } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
-// ✅ Firebase Config
+// 🔥 Firebase Config
 const firebaseConfig = {
   apiKey: "AIzaSyCsGBSRCHVUhXQZ5DNMEZWgQWk1gxMF1E4",
   authDomain: "signup-d32c5.firebaseapp.com",
@@ -62,127 +64,93 @@ const firebaseConfig = {
   projectId: "signup-d32c5",
   storageBucket: "signup-d32c5.firebasestorage.app",
   messagingSenderId: "583812949955",
-  appId: "1:583812949955:web:fab1bb7be94bc1b4ab3f76",
-  measurementId: "G-VLC3QHK8CG"
+  appId: "1:583812949955:web:fab1bb7be94bc1b4ab3f76"
 };
 
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
-const statusEl = document.getElementById("permission-status");
-const userIdDisplay = document.getElementById("user-id-display");
 
-const USER_ID_KEY = 'live_location_user_id';
-let UNIQUE_USER_ID;
+const statusEl = document.getElementById("status");
+const userIdEl = document.getElementById("user-id");
+const USER_ID_KEY = "live_location_user_id";
+let UNIQUE_ID;
 
-// --- Unique ID Generate ---
-function getOrCreateUniqueId() {
+// 🔹 Unique ID তৈরি / লোড
+function getOrCreateId() {
   let id = localStorage.getItem(USER_ID_KEY);
   if (!id) {
     id = crypto.randomUUID();
     localStorage.setItem(USER_ID_KEY, id);
   }
-  userIdDisplay.textContent = `User ID: ${id.substring(0, 8)}...`;
+  userIdEl.textContent = `User ID: ${id.substring(0, 8)}...`;
   return id;
 }
-UNIQUE_USER_ID = getOrCreateUniqueId();
+UNIQUE_ID = getOrCreateId();
 
-// --- Battery & Network Functions ---
-async function getBatteryLevel() {
+// 🔹 লোকেশন Firebase এ পাঠানো
+async function sendToFirebase(lat, lon) {
   try {
-    const battery = await navigator.getBattery();
-    return Math.round(battery.level * 100) + "%";
-  } catch {
-    return "N/A";
-  }
-}
-function getNetworkType() {
-  return navigator.connection?.effectiveType ?? "unknown";
-}
-
-// --- Save Last Known Location ---
-function saveLast(lat, lon) {
-  update(ref(db, "users/" + UNIQUE_USER_ID), {
-    last_lat: lat,
-    last_lon: lon,
-    last_time: new Date().toISOString()
-  });
-}
-
-// --- Main Tracking Function ---
-async function sendLocation(position) {
-  const lat = position.coords.latitude;
-  const lon = position.coords.longitude;
-  const speed = position.coords.speed ? (position.coords.speed * 3.6).toFixed(1) : "0";
-  const battery = await getBatteryLevel();
-  const network = getNetworkType();
-
-  statusEl.textContent = `📡 Sending data... (${lat.toFixed(4)}, ${lon.toFixed(4)})`;
-
-  try {
-    await update(ref(db, "users/" + UNIQUE_USER_ID), {
+    await update(ref(db, "users/" + UNIQUE_ID), {
       latitude: lat,
       longitude: lon,
-      speed: speed,
-      battery: battery,
-      network: network,
       time: new Date().toISOString()
     });
-    saveLast(lat, lon);
-    statusEl.textContent = "✅ Location updated successfully!";
-  } catch (error) {
-    console.error("Firebase Error:", error);
-    statusEl.textContent = "⚠️ Firebase update failed!";
+    statusEl.textContent = `✅ Location updated: (${lat.toFixed(4)}, ${lon.toFixed(4)})`;
+  } catch (e) {
+    statusEl.textContent = "⚠️ Failed to send location.";
+    console.error(e);
   }
 }
 
-// --- Error Handler ---
+// 🔹 Error Handle
 function handleError(err) {
   console.error("Location Error:", err);
   if (err.code === 1) {
-    statusEl.textContent = "❌ Permission denied! Please allow location access.";
+    statusEl.textContent = "❌ Permission denied! Please allow location.";
   } else if (err.code === 2) {
     statusEl.textContent = "⚠️ Location unavailable!";
   } else if (err.code === 3) {
-    statusEl.textContent = "⏳ Location request timed out.";
+    statusEl.textContent = "⏳ Request timed out!";
   } else {
-    statusEl.textContent = "❌ Unknown location error.";
+    statusEl.textContent = "❌ Unknown error occurred.";
   }
 }
 
-// --- Ask for Permission First ---
+// 🔹 পেজ লোড হতেই পারমিশন চাওয়া
 window.onload = () => {
   if (!("geolocation" in navigator)) {
-    statusEl.textContent = "❌ Your browser doesn’t support geolocation.";
+    statusEl.textContent = "❌ Geolocation not supported in this browser.";
     return;
   }
 
-  statusEl.textContent = "📍 Requesting location access...";
+  // 👉 Permission popup trigger
   navigator.geolocation.getCurrentPosition(
-    (pos) => {
+    pos => {
       statusEl.textContent = "✅ Permission granted! Starting tracking...";
       startTracking();
     },
-    (err) => handleError(err),
+    err => handleError(err),
     { enableHighAccuracy: true, timeout: 10000 }
   );
 };
 
-// --- Start Watching (after permission granted) ---
+// 🔹 Live tracking চালু করা
 function startTracking() {
   navigator.geolocation.watchPosition(
-    (pos) => sendLocation(pos),
-    (err) => handleError(err),
-    { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+    pos => {
+      sendToFirebase(pos.coords.latitude, pos.coords.longitude);
+    },
+    err => handleError(err),
+    { enableHighAccuracy: true, maximumAge: 0, timeout: 10000 }
   );
 }
 
-// --- Save last location when closing tab ---
+// 🔹 ট্যাব বন্ধের সময় শেষ লোকেশন সেভ
 window.addEventListener("beforeunload", () => {
-  navigator.geolocation.getCurrentPosition((p) => {
-    saveLast(p.coords.latitude, p.coords.longitude);
+  navigator.geolocation.getCurrentPosition(p => {
+    sendToFirebase(p.coords.latitude, p.coords.longitude);
   });
 });
 </script>
-
 </body>
 </html>
