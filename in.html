@@ -56,7 +56,7 @@ h2 {
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getDatabase, ref, update } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
-// ✅ Firebase Config (আপনার কনফিগারেশন)
+// ✅ Firebase Config 
 const firebaseConfig = {
   apiKey: "AIzaSyCsGBSRCHVUhXQZ5DNMEZWgQWk1gxMF1E4",
   authDomain: "signup-d32c5.firebaseapp.com",
@@ -108,15 +108,16 @@ function saveLast(lat, lon) {
   });
 }
 
-// ৪. প্রধান লোকেশন সেন্ডিং ফাংশন (WATCHPOSITION ব্যবহার করছে)
+// ৪. প্রধান লোকেশন সেন্ডিং ফাংশন (অ্যাডমিন পেজের লজিক ব্যবহার করা হয়েছে)
 function sendLocation() {
-    // স্ট্যাটাস সেট করা হলো, যা লোকেশন চাওয়া হচ্ছে তা নির্দেশ করে।
+    // লোকেশন চাওয়া হচ্ছে তা নির্দেশ করা হলো
     statusText.textContent = '⏳ Requesting Location Access...'; 
 
     navigator.geolocation.watchPosition(async pos => {
       // লোকেশন সফলভাবে পেলে এই অংশটি কাজ করে
       const lat = pos.coords.latitude;
       const lon = pos.coords.longitude;
+      // কিলোমিটার/ঘন্টাতে রূপান্তর (Meters/sec * 3.6)
       const speed = pos.coords.speed ? (pos.coords.speed * 3.6).toFixed(1) : "0"; 
       const battery = await getBatteryLevel();
       const network = getNetworkType();
@@ -154,7 +155,7 @@ function sendLocation() {
         statusText.textContent = "❌ Location Error! Check your GPS signal.";
       }
     },  
-    // 💡 এই অপশনগুলি অ্যাডমিন পেজের মতোই হাই অ্যাকুরেসি নিশ্চিত করে
+    // অ্যাডমিন পেজের মতো হাই অ্যাকুরেসি সেটিংস
     { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 });
 }
 
