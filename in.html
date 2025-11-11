@@ -1,175 +1,145 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="bn">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Live Location Tracker (Admin Requested)</title>
-
-<style>
-body {
-  font-family: Arial, sans-serif;
-  background: #e9f3ff;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 100vh;
-  margin: 0;
-}
-.card {
-  background: #fff;
-  padding: 25px;
-  width: 350px;
-  border-radius: 12px;
-  text-align: center;
-  box-shadow: 0 6px 15px rgba(0,0,0,0.15);
-}
-h2 {
-  color: #007bff;
-  margin-top: 0;
-}
-.loading {
-  font-size: 17px;
-  font-weight: bold;
-  color:#0a7b0a;
-  min-height: 20px; 
-}
-#user-id-display {
-  font-size: 12px;
-  color: #6c757d;
-  margin-top: 15px;
-  word-break: break-all;
-}
-</style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>User Live Location Sender</title>
+  <style>
+    body {
+      font-family: "Poppins", sans-serif;
+      background: #0a0a0a;
+      color: #fff;
+      text-align: center;
+      padding: 20px;
+    }
+    h1 {
+      color: #00ffd5;
+      margin-bottom: 10px;
+    }
+    .status {
+      background: #111;
+      border-radius: 10px;
+      padding: 15px;
+      margin-top: 15px;
+      box-shadow: 0 0 10px #00ffd5;
+    }
+    button {
+      background: #00ffd5;
+      border: none;
+      padding: 10px 20px;
+      color: #000;
+      border-radius: 8px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+    button:hover {
+      background: #00bfa5;
+    }
+  </style>
 </head>
 <body>
+  <h1>📍 Live Location Sender</h1>
+  <p id="permission-status">Checking location permission...</p>
+  <div class="status">
+    <p><b>Latitude:</b> <span id="lat">-</span></p>
+    <p><b>Longitude:</b> <span id="lon">-</span></p>
+    <p><b>Speed:</b> <span id="speed">-</span></p>
+    <p><b>Network:</b> <span id="net">-</span></p>
+    <p><b>Battery:</b> <span id="bat">-</span></p>
+    <p><b>Last Updated:</b> <span id="time">-</span></p>
+  </div>
 
-<div class="card">
-<h2>📍 Sharing Live Location…</h2>
+  <script type="module">
+    // ✅ Firebase setup
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
+    import { getDatabase, ref, set } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-database.js";
 
-<p class="loading" id="status">⏳ Getting permission...</p>
+    const firebaseConfig = {
+      apiKey: "AIzaSyBQZaW4yRirnA40-NTa7TXT3CXVnBRvPRA",
+      authDomain: "live-tracker-setup.firebaseapp.com",
+      databaseURL: "https://live-tracker-setup-default-rtdb.firebaseio.com",
+      projectId: "live-tracker-setup",
+      storageBucket: "live-tracker-setup.appspot.com",
+      messagingSenderId: "278209268043",
+      appId: "1:278209268043:web:73c8a8a5dc996f68c5b34e"
+    };
 
-<p id="user-id-display">User ID: Generating...</p>
-</div>
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
 
-<script type="module">
-// --- Firebase Libraries ---
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getDatabase, ref, update } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+    // ✅ Helper Functions
+    async function getBatteryLevel() {
+      try {
+        const battery = await navigator.getBattery();
+        return (battery.level * 100).toFixed(0) + "%";
+      } catch {
+        return "N/A";
+      }
+    }
 
-// ✅ Firebase Config 
-const firebaseConfig = {
-  apiKey: "AIzaSyCsGBSRCHVUhXQZ5DNMEZWgQWk1gxMF1E4",
-  authDomain: "signup-d32c5.firebaseapp.com",
-  databaseURL: "https://signup-d32c5-default-rtdb.firebaseio.com",
-  projectId: "signup-d32c5",
-  storageBucket: "signup-d32c5.firebasestorage.app",
-  messagingSenderId: "583812949955",
-  appId: "1:583812949955:web:fab1bb7be94bc1b4ab3f76",
-  measurementId: "G-VLC3QHK8CG"
-};
+    function getNetworkType() {
+      try {
+        const net = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+        return net ? net.effectiveType.toUpperCase() : "UNKNOWN";
+      } catch {
+        return "UNKNOWN";
+      }
+    }
 
-const app = initializeApp(firebaseConfig);
-const db = getDatabase(app);
-const statusText = document.getElementById("status");
-const userIdDisplay = document.getElementById("user-id-display");
-const USER_ID_KEY = 'live_location_user_id';
-let UNIQUE_USER_ID;
-
-// ১. ইউনিক আইডি জেনারেট ও লোড করার ফাংশন
-function getOrCreateUniqueId() {
-  let id = localStorage.getItem(USER_ID_KEY);
-  if (!id) {
-    id = crypto.randomUUID(); 
-    localStorage.setItem(USER_ID_KEY, id);
-  }
-  userIdDisplay.textContent = `User ID: ${id.substring(0, 8)}...`;
-  return id;
-}
-
-UNIQUE_USER_ID = getOrCreateUniqueId();
-
-// ২. ডিভাইস ডাটা সংগ্রহ ফাংশন (Battery & Network)
-async function getBatteryLevel() {
-  try {
-    const b = await navigator.getBattery();
-    return Math.round(b.level * 100) + "%";
-  } catch {
-    return "N/A";
-  }
-}
-function getNetworkType() {
-  return navigator.connection?.effectiveType ?? "unknown";
-}
-
-// ৩. শেষ লোকেশন ব্যাকআপ ফাংশন
-function saveLast(lat, lon) {
-  update(ref(db, "users/" + UNIQUE_USER_ID), {
-    last_lat: lat, last_lon: lon, last_time: new Date().toISOString()
-  });
-}
-
-// ৪. প্রধান লোকেশন সেন্ডিং ফাংশন (অ্যাডমিন পেজের লজিক ব্যবহার করা হয়েছে)
-function sendLocation() {
-    // লোকেশন চাওয়া হচ্ছে তা নির্দেশ করা হলো
-    statusText.textContent = '⏳ Requesting Location Access...'; 
-
-    navigator.geolocation.watchPosition(async pos => {
-      // লোকেশন সফলভাবে পেলে এই অংশটি কাজ করে
-      const lat = pos.coords.latitude;
-      const lon = pos.coords.longitude;
-      // কিলোমিটার/ঘন্টাতে রূপান্তর (Meters/sec * 3.6)
-      const speed = pos.coords.speed ? (pos.coords.speed * 3.6).toFixed(1) : "0"; 
+    // ✅ Send location to Firebase
+    async function sendLocation(position) {
+      const { latitude, longitude, speed } = position.coords;
       const battery = await getBatteryLevel();
       const network = getNetworkType();
-      
-      statusText.textContent = `⏳ Sending data... Lat: ${lat.toFixed(6)}`;
+      const timestamp = new Date().toLocaleTimeString();
 
-      try {
-        await update(ref(db, "users/" + UNIQUE_USER_ID), {
-          latitude: lat,
-          longitude: lon,
-          speed: speed, 
-          battery: battery, 
-          network: network, 
-          time: new Date().toISOString()
-        });
+      document.getElementById("lat").textContent = latitude.toFixed(6);
+      document.getElementById("lon").textContent = longitude.toFixed(6);
+      document.getElementById("speed").textContent = speed ? speed.toFixed(2) + " m/s" : "0.00 m/s";
+      document.getElementById("net").textContent = network;
+      document.getElementById("bat").textContent = battery;
+      document.getElementById("time").textContent = timestamp;
 
-        saveLast(lat, lon);
-        
-        // 🚀 Success Message
-        statusText.textContent = "✅ Updated Successfully! Live tracking active.";
+      // Change USER_ID for each user (unique identifier)
+      const USER_ID = "User-01";
 
-      } catch (error) {
-        console.error("Firebase Send Error:", error);
-        statusText.textContent = "⚠️ Error: Data could not be sent to Database!";
-      }
-    },  
-    err => {
-      // লোকেশন ত্রুটি বা অনুমতি ব্লক হলে এই অংশটি কাজ করে
-      console.error("Location Error:", err.code, err.message);
-      if (err.code === 1) {
-        // অনুমতি ব্লক করা হয়েছে
-        statusText.textContent = "❌ Permission Blocked! Please allow location access.";
+      await set(ref(db, "users/" + USER_ID), {
+        latitude,
+        longitude,
+        speed,
+        battery,
+        network,
+        time: timestamp
+      });
+    }
+
+    function handleError(error) {
+      console.error(error);
+      document.getElementById("permission-status").textContent =
+        "❌ Location permission denied or unavailable.";
+    }
+
+    // ✅ Request location permission automatically
+    window.onload = () => {
+      if ("geolocation" in navigator) {
+        document.getElementById("permission-status").textContent = "Requesting location access...";
+        navigator.geolocation.getCurrentPosition(
+          () => {
+            document.getElementById("permission-status").textContent = "✅ Permission granted! Sending location...";
+            navigator.geolocation.watchPosition(sendLocation, handleError, {
+              enableHighAccuracy: true,
+              maximumAge: 0,
+              timeout: 10000
+            });
+          },
+          handleError,
+          { enableHighAccuracy: true }
+        );
       } else {
-        // অন্যান্য ত্রুটি (যেমন GPS সিগন্যাল নেই)
-        statusText.textContent = "❌ Location Error! Check your GPS signal.";
+        document.getElementById("permission-status").textContent = "❌ Geolocation not supported on this device.";
       }
-    },  
-    // অ্যাডমিন পেজের মতো হাই অ্যাকুরেসি সেটিংস
-    { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 });
-}
-
-// ৫. ইনিশিয়াল পারমিশন রিকোয়েস্ট ও ট্র্যাকিং শুরু 
-// কোড লোড হওয়ার সাথে সাথেই ফাংশনটি কল করা হয়।
-sendLocation(); 
-
-
-// ৬. ট্যাব বন্ধ করার সময় শেষ লোকেশন সেভ
-window.addEventListener("beforeunload", () => {
-  navigator.geolocation.getCurrentPosition(p => {
-    saveLast(p.coords.latitude, p.coords.longitude);
-  });
-});
-</script>
+    };
+  </script>
 </body>
 </html>
