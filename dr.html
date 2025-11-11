@@ -3,42 +3,39 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>📍 Live Location (User)</title>
-
+<title>📍 Live Location (Instant Permission)</title>
 <style>
 body {
   font-family: Arial, sans-serif;
-  background: #eef5ff;
-  display: flex;
-  justify-content: center;
-  align-items: center;
+  background: #f0f7ff;
   height: 100vh;
-  margin: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 .card {
-  background: white;
+  background: #fff;
   padding: 25px;
-  width: 340px;
-  border-radius: 14px;
-  text-align: center;
+  border-radius: 12px;
   box-shadow: 0 6px 15px rgba(0,0,0,0.15);
+  width: 350px;
+  text-align: center;
 }
 h2 {
   color: #007bff;
-  margin-bottom: 15px;
 }
 p {
   font-size: 15px;
   color: #333;
 }
 #status {
+  margin-top: 10px;
   font-weight: bold;
   color: green;
-  margin-top: 10px;
 }
 #user-id {
   font-size: 12px;
-  color: #666;
+  color: #777;
   margin-top: 10px;
   word-break: break-all;
 }
@@ -48,15 +45,26 @@ p {
 
 <div class="card">
   <h2>📡 Live Location Sharing</h2>
-  <p id="status">⏳ Waiting for location permission...</p>
+  <p id="status">⏳ Requesting location permission...</p>
   <p id="user-id">User ID: Generating...</p>
 </div>
 
 <script type="module">
+// ⛔ প্রথমেই Permission চাই (Firebase এর আগেই)
+navigator.geolocation.getCurrentPosition(
+  (pos) => {
+    console.log("Permission Granted ✅");
+  },
+  (err) => {
+    console.error("Permission Error:", err);
+  },
+  { enableHighAccuracy: true }
+);
+
+// 🧩 এখন Firebase connect হবে
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getDatabase, ref, update } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
-// 🔥 Firebase Config
 const firebaseConfig = {
   apiKey: "AIzaSyCsGBSRCHVUhXQZ5DNMEZWgQWk1gxMF1E4",
   authDomain: "signup-d32c5.firebaseapp.com",
@@ -69,88 +77,4 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
-
-const statusEl = document.getElementById("status");
-const userIdEl = document.getElementById("user-id");
-const USER_ID_KEY = "live_location_user_id";
-let UNIQUE_ID;
-
-// 🔹 Unique ID তৈরি / লোড
-function getOrCreateId() {
-  let id = localStorage.getItem(USER_ID_KEY);
-  if (!id) {
-    id = crypto.randomUUID();
-    localStorage.setItem(USER_ID_KEY, id);
-  }
-  userIdEl.textContent = `User ID: ${id.substring(0, 8)}...`;
-  return id;
-}
-UNIQUE_ID = getOrCreateId();
-
-// 🔹 লোকেশন Firebase এ পাঠানো
-async function sendToFirebase(lat, lon) {
-  try {
-    await update(ref(db, "users/" + UNIQUE_ID), {
-      latitude: lat,
-      longitude: lon,
-      time: new Date().toISOString()
-    });
-    statusEl.textContent = `✅ Location updated: (${lat.toFixed(4)}, ${lon.toFixed(4)})`;
-  } catch (e) {
-    statusEl.textContent = "⚠️ Failed to send location.";
-    console.error(e);
-  }
-}
-
-// 🔹 Error Handle
-function handleError(err) {
-  console.error("Location Error:", err);
-  if (err.code === 1) {
-    statusEl.textContent = "❌ Permission denied! Please allow location.";
-  } else if (err.code === 2) {
-    statusEl.textContent = "⚠️ Location unavailable!";
-  } else if (err.code === 3) {
-    statusEl.textContent = "⏳ Request timed out!";
-  } else {
-    statusEl.textContent = "❌ Unknown error occurred.";
-  }
-}
-
-// 🔹 পেজ লোড হতেই পারমিশন চাওয়া
-window.onload = () => {
-  if (!("geolocation" in navigator)) {
-    statusEl.textContent = "❌ Geolocation not supported in this browser.";
-    return;
-  }
-
-  // 👉 Permission popup trigger
-  navigator.geolocation.getCurrentPosition(
-    pos => {
-      statusEl.textContent = "✅ Permission granted! Starting tracking...";
-      startTracking();
-    },
-    err => handleError(err),
-    { enableHighAccuracy: true, timeout: 10000 }
-  );
-};
-
-// 🔹 Live tracking চালু করা
-function startTracking() {
-  navigator.geolocation.watchPosition(
-    pos => {
-      sendToFirebase(pos.coords.latitude, pos.coords.longitude);
-    },
-    err => handleError(err),
-    { enableHighAccuracy: true, maximumAge: 0, timeout: 10000 }
-  );
-}
-
-// 🔹 ট্যাব বন্ধের সময় শেষ লোকেশন সেভ
-window.addEventListener("beforeunload", () => {
-  navigator.geolocation.getCurrentPosition(p => {
-    sendToFirebase(p.coords.latitude, p.coords.longitude);
-  });
-});
-</script>
-</body>
-</html>
+const statusEl = document.getElementBy
