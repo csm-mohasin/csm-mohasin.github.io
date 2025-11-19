@@ -3,21 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Modern Live Speed Test</title>
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700&display=swap" rel="stylesheet">
+    <title>Futuristic Speed Test</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
     <style>
-        /* CSS কোড: আধুনিক ডার্ক থিম স্টাইলিং */
+        /* CSS কোড: ফিউচারিস্টিক ডিজাইন ও অ্যানিমেশন */
         :root {
-            --bg-color: #121212;
-            --card-color: #1e1e1e;
+            --bg-color: #0d0d1a; /* Dark Blue-Purple */
+            --card-color: #1a1a2e; /* Darker Card */
             --text-color: #e0e0e0;
-            --primary-color: #00e0b3; /* Neon Teal */
-            --accent-color: #ff3d71; /* Accent Pink */
-            --gauge-color: #2c2c2c;
+            --primary-color: #00ffff; /* Cyber Cyan */
+            --accent-color: #ff00ff; /* Magenta Glow */
+            --warning-color: #ffcc00; /* Yellow */
+            --danger-color: #ff3333; /* Red */
+            --gauge-fill-color: #00ffff44; /* Semi-transparent Cyan */
         }
 
         body {
-            font-family: 'Orbitron', sans-serif;
+            font-family: 'Roboto Mono', monospace; /* Modern, techy font */
             background-color: var(--bg-color);
             color: var(--text-color);
             display: flex;
@@ -25,60 +27,114 @@
             align-items: center;
             min-height: 100vh;
             margin: 0;
+            overflow: hidden; /* Hide potential overflow from particles */
+            position: relative;
+        }
+
+        /* --- Background Animation (Optional) --- */
+        .background-lines {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            pointer-events: none;
+            z-index: 0;
+        }
+        .line {
+            position: absolute;
+            background: rgba(0, 255, 255, 0.1); /* Cyan lines */
+            box-shadow: 0 0 5px rgba(0, 255, 255, 0.5);
+            animation: lineMove 15s linear infinite;
+        }
+        .line:nth-child(1) { width: 2px; height: 100%; left: 10%; animation-delay: 0s; }
+        .line:nth-child(2) { width: 1px; height: 100%; left: 30%; animation-delay: 3s; }
+        .line:nth-child(3) { width: 3px; height: 100%; left: 50%; animation-delay: 6s; }
+        .line:nth-child(4) { width: 1px; height: 100%; left: 70%; animation-delay: 9s; }
+        .line:nth-child(5) { width: 2px; height: 100%; left: 90%; animation-delay: 12s; }
+
+        @keyframes lineMove {
+            0% { transform: translateY(-100%); opacity: 0; }
+            50% { opacity: 1; }
+            100% { transform: translateY(100%); opacity: 0; }
         }
 
         .speed-test-container {
             background: var(--card-color);
             border-radius: 20px;
             padding: 30px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            box-shadow: 0 0 40px rgba(0, 255, 255, 0.3); /* Cyan Glow */
+            border: 2px solid var(--primary-color);
             width: 90%;
-            max-width: 500px;
+            max-width: 550px;
             text-align: center;
+            position: relative;
+            z-index: 1; /* Bring to front of background lines */
+            animation: fadeIn 1s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
         header h1 {
-            font-size: 1.8em;
+            font-family: 'Share Tech Mono', monospace; /* More aggressive techy font */
+            font-size: 2.2em;
             margin-bottom: 25px;
             color: var(--primary-color);
+            text-shadow: 0 0 10px var(--primary-color);
+            letter-spacing: 2px;
         }
 
         .lightning {
-            color: yellow;
-            margin-right: 5px;
+            color: var(--accent-color);
+            margin-right: 8px;
+            animation: pulseGlow 1.5s infinite alternate;
+        }
+
+        @keyframes pulseGlow {
+            from { text-shadow: 0 0 5px var(--accent-color); }
+            to { text-shadow: 0 0 20px var(--accent-color), 0 0 30px var(--accent-color); }
         }
 
         /* --- Gauge (Speed Meter) Styling --- */
         .gauge-area {
-            margin: 30px 0;
+            margin: 30px auto;
             position: relative;
             display: inline-block;
+            width: 280px; /* Slightly larger */
+            height: 140px;
         }
 
         .gauge {
-            width: 250px;
-            height: 125px;
-            background: var(--gauge-color);
-            border-radius: 125px 125px 0 0;
+            width: 280px;
+            height: 140px;
+            background: linear-gradient(to right, #00ffff11, #ff00ff11); /* Subtle gradient */
+            border-radius: 140px 140px 0 0;
             position: relative;
             overflow: hidden;
+            border: 1px solid rgba(0, 255, 255, 0.3);
+            box-shadow: inset 0 0 15px rgba(0, 255, 255, 0.2);
         }
 
-        .gauge::before {
-            content: '';
+        .gauge__fill {
             position: absolute;
-            top: 5px;
-            left: 5px;
-            right: 5px;
-            bottom: 5px;
-            background: var(--card-color);
-            border-radius: 125px 125px 0 0;
-            z-index: 1;
+            top: 100%; /* Starts hidden */
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--gauge-fill-color);
+            transform-origin: center top;
+            transition: transform 0.8s ease-out; /* Smooth fill animation */
+            border-radius: 140px 140px 0 0;
+            z-index: 2;
         }
 
         .gauge__center {
-            width: 20px;
-            height: 20px;
+            width: 25px;
+            height: 25px;
             background: var(--accent-color);
             border-radius: 50%;
             position: absolute;
@@ -86,12 +142,12 @@
             left: 50%;
             transform: translate(-50%, 50%);
             z-index: 5;
-            box-shadow: 0 0 10px var(--accent-color);
+            box-shadow: 0 0 15px var(--accent-color), 0 0 25px var(--accent-color);
         }
 
         .gauge__needle {
             width: 2px;
-            height: 110px;
+            height: 125px;
             background: var(--accent-color);
             position: absolute;
             bottom: 5px;
@@ -99,27 +155,32 @@
             transform-origin: bottom center;
             transform: translateX(-50%) rotate(-90deg); /* Start position */
             z-index: 4;
-            transition: transform 0.8s ease-out;
+            transition: transform 0.8s ease-out, background 0.3s;
+            box-shadow: 0 0 8px var(--accent-color);
         }
 
+        /* Speed Text Glow */
         .speed-text {
             position: absolute;
-            top: 50%;
+            top: 55%; /* Slightly lower */
             left: 50%;
             transform: translate(-50%, -50%);
-            font-size: 2.5em;
+            font-size: 3em; /* Larger */
             color: var(--primary-color);
+            text-shadow: 0 0 15px var(--primary-color); /* Glow */
             z-index: 10;
-            transition: color 0.5s;
+            transition: color 0.5s, text-shadow 0.5s;
+            font-family: 'Share Tech Mono', monospace;
         }
 
         .unit-text {
             position: absolute;
-            bottom: -15px;
+            bottom: -20px;
             left: 50%;
             transform: translateX(-50%);
-            font-size: 0.9em;
+            font-size: 1em;
             color: var(--text-color);
+            opacity: 0.7;
             z-index: 10;
         }
 
@@ -129,103 +190,173 @@
             justify-content: space-between;
             gap: 15px;
             margin-bottom: 30px;
+            animation: slideUp 1s ease-out 0.5s backwards;
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
         .result-box {
             flex: 1;
-            padding: 15px 10px;
-            background: var(--bg-color);
-            border-radius: 10px;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 18px 10px;
+            background: rgba(30, 30, 46, 0.8); /* Semi-transparent card */
+            border-radius: 12px;
+            box-shadow: 0 0 15px rgba(0, 255, 255, 0.15);
+            border: 1px solid rgba(0, 255, 255, 0.2);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .result-box::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background: var(--primary-color);
+            transform: translateX(-100%);
+            animation: borderScan 3s infinite linear;
+        }
+        .result-box:nth-child(2)::before { animation-delay: 1s; }
+        .result-box:nth-child(3)::before { animation-delay: 2s; }
+
+        @keyframes borderScan {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
         }
 
         .result-box p {
-            font-size: 0.7em;
+            font-size: 0.8em;
             margin: 5px 0;
             color: var(--primary-color);
+            text-transform: uppercase;
+            letter-spacing: 1px;
         }
 
         .result-box .icon {
-            font-size: 1.2em;
+            font-size: 1.5em;
+            color: var(--accent-color);
+            margin-bottom: 5px;
         }
 
         .result-box .value {
-            font-size: 1.5em;
+            font-size: 1.8em;
             font-weight: 700;
             color: var(--text-color);
+            text-shadow: 0 0 8px rgba(255, 255, 255, 0.5);
+            font-family: 'Share Tech Mono', monospace;
         }
 
         .result-box .unit {
-            font-size: 0.7em;
-            color: #999;
+            font-size: 0.8em;
+            color: #aaa;
         }
 
         /* --- Button and Status Styling --- */
         .start-button {
-            background: var(--accent-color);
+            background: linear-gradient(45deg, var(--accent-color), var(--primary-color));
             color: #fff;
             border: none;
-            padding: 15px 40px;
-            border-radius: 50px;
-            font-size: 1.5em;
+            padding: 18px 45px;
+            border-radius: 60px;
+            font-size: 1.6em;
             font-weight: 700;
             cursor: pointer;
-            box-shadow: 0 5px 20px rgba(255, 61, 113, 0.5);
-            transition: background 0.3s, transform 0.1s, box-shadow 0.3s;
+            box-shadow: 0 0 25px rgba(255, 0, 255, 0.7), 0 0 40px rgba(0, 255, 255, 0.5);
+            transition: all 0.3s ease-in-out;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            font-family: 'Share Tech Mono', monospace;
         }
 
         .start-button:hover {
-            background: #ff6a96;
-            transform: translateY(-2px);
-            box-shadow: 0 7px 25px rgba(255, 61, 113, 0.7);
+            transform: scale(1.05);
+            box-shadow: 0 0 35px rgba(255, 0, 255, 0.9), 0 0 50px rgba(0, 255, 255, 0.7);
         }
 
         .start-button:active {
-            transform: translateY(0);
-            box-shadow: 0 5px 20px rgba(255, 61, 113, 0.5);
+            transform: scale(0.98);
+            box-shadow: 0 0 15px rgba(255, 0, 255, 0.5), 0 0 25px rgba(0, 255, 255, 0.3);
         }
 
         .start-button:disabled {
-            background: #555;
+            background: #444;
             box-shadow: none;
             cursor: not-allowed;
+            transform: none;
+            opacity: 0.6;
         }
 
         .status-message {
-            margin-top: 20px;
-            font-size: 0.9em;
+            margin-top: 25px;
+            font-size: 1em;
             color: var(--primary-color);
+            text-shadow: 0 0 5px rgba(0, 255, 255, 0.5);
+            animation: typing 2s steps(20, end) infinite alternate;
+            overflow: hidden; /* Ensures text is hidden before typing */
+            white-space: nowrap; /* Keeps text on a single line */
+            border-right: 2px solid var(--accent-color); /* Blinking cursor */
+            width: 0; /* Starts with 0 width */
+            margin-left: auto;
+            margin-right: auto;
+            max-width: fit-content;
+        }
+
+        @keyframes typing {
+            from { width: 0; }
+            to { width: 100%; }
         }
 
         /* Responsive Adjustments */
-        @media (max-width: 480px) {
+        @media (max-width: 580px) {
             .speed-test-container {
                 padding: 20px;
+                max-width: 95%;
+            }
+            header h1 {
+                font-size: 1.8em;
             }
             .gauge {
-                width: 200px;
-                height: 100px;
+                width: 240px;
+                height: 120px;
+            }
+            .gauge-area {
+                width: 240px;
+                height: 120px;
             }
             .speed-text {
-                font-size: 2em;
+                font-size: 2.5em;
             }
             .start-button {
-                padding: 12px 30px;
-                font-size: 1.3em;
+                padding: 15px 35px;
+                font-size: 1.4em;
+            }
+            .results-grid {
+                flex-direction: column; /* Stack results vertically on smaller screens */
             }
         }
     </style>
 </head>
 <body>
+    <div class="background-lines">
+        <div class="line"></div>
+        <div class="line"></div>
+        <div class="line"></div>
+        <div class="line"></div>
+        <div class="line"></div>
+    </div>
+
     <div class="speed-test-container">
         <header>
-            <h1><span class="lightning">⚡</span> Internet Speed Test</h1>
+            <h1><span class="lightning">⚡</span> NEURO-LINK TEST</h1>
         </header>
 
         <div class="gauge-area">
             <div class="gauge">
-                <div class="gauge__needle"></div>
+                <div class="gauge__fill"></div> <div class="gauge__needle"></div>
                 <div class="gauge__center"></div>
                 <div class="speed-text" id="liveSpeed">0.00</div>
                 <div class="unit-text">Mbps</div>
@@ -234,33 +365,34 @@
         
         <div class="results-grid">
             <div class="result-box ping-box">
-                <span class="icon">📶</span>
-                <p>PING</p>
+                <span class="icon">📡</span>
+                <p>PING LATENCY</p>
                 <div class="value" id="pingResult">--</div>
                 <div class="unit">ms</div>
             </div>
             <div class="result-box download-box">
-                <span class="icon">⬇️</span>
-                <p>DOWNLOAD</p>
+                <span class="icon">🔽</span>
+                <p>DATA RECEIVE</p>
                 <div class="value" id="downloadResult">--</div>
                 <div class="unit">Mbps</div>
             </div>
             <div class="result-box upload-box">
-                <span class="icon">⬆️</span>
-                <p>UPLOAD</p>
+                <span class="icon">🔼</span>
+                <p>DATA TRANSMIT</p>
                 <div class="value" id="uploadResult">--</div>
                 <div class="unit">Mbps</div>
             </div>
         </div>
 
-        <button id="startButton" class="start-button" onclick="startTest()">GO</button>
+        <button id="startButton" class="start-button" onclick="startTest()">INITIATE</button>
 
-        <p class="status-message" id="statusMessage">Ready to test</p>
+        <p class="status-message" id="statusMessage">System Idle. Awaiting Command...</p>
     </div>
 
     <script>
-        // JavaScript কোড: ফাংশনালিটি এবং Realistic সিমুলেশন
+        // JavaScript কোড: ফাংশনালিটি এবং Realistic সিমুলেশন (আগের মতোই)
         const needle = document.querySelector('.gauge__needle');
+        const gaugeFill = document.querySelector('.gauge__fill');
         const liveSpeed = document.getElementById('liveSpeed');
         const startButton = document.getElementById('startButton');
         const statusMessage = document.getElementById('statusMessage');
@@ -268,13 +400,27 @@
         const downloadResult = document.getElementById('downloadResult');
         const uploadResult = document.getElementById('uploadResult');
 
-        // স্পিডমিটারের সর্বাধিক গতি (MAX_SPEED)
-        const MAX_SPEED = 100; 
+        const MAX_SPEED = 100; // স্পিডমিটারের সর্বাধিক গতি
 
         function setNeedle(speed) {
-            // 0 থেকে MAX_SPEED এর মধ্যে স্পিডকে 0 থেকে 180 ডিগ্রীতে ম্যাপ করা
             const degrees = Math.min(180, (speed / MAX_SPEED) * 180);
             needle.style.transform = `translateX(-50%) rotate(${degrees - 90}deg)`;
+            
+            // Gauge fill animation
+            const fillHeight = Math.min(100, (speed / MAX_SPEED) * 100);
+            gaugeFill.style.transform = `translateY(${100 - fillHeight}%)`;
+
+            // Change needle color based on speed (optional futuristic touch)
+            if (speed > 80) {
+                needle.style.background = 'var(--primary-color)';
+                needle.style.boxShadow = '0 0 10px var(--primary-color)';
+            } else if (speed > 40) {
+                needle.style.background = 'var(--warning-color)';
+                needle.style.boxShadow = '0 0 10px var(--warning-color)';
+            } else {
+                needle.style.background = 'var(--accent-color)';
+                needle.style.boxShadow = '0 0 8px var(--accent-color)';
+            }
         }
 
         function updateLiveSpeed(speed) {
@@ -287,38 +433,34 @@
             downloadResult.textContent = '--';
             uploadResult.textContent = '--';
             updateLiveSpeed(0);
-            statusMessage.textContent = 'Ready to test';
+            statusMessage.textContent = 'System Idle. Awaiting Command...';
             startButton.disabled = false;
-            startButton.textContent = 'GO';
+            startButton.textContent = 'INITIATE';
         }
 
         function startTest() {
             startButton.disabled = true;
-            startButton.textContent = 'TESTING...';
+            startButton.textContent = 'TEST IN PROGRESS...';
             resetTestResults(); 
 
-            // ১. PING টেস্ট সিমুলেশন
-            statusMessage.textContent = 'Testing Ping...';
+            statusMessage.textContent = 'Scanning Latency Channels...';
             simulatePingTest();
 
-            // ২. DOWNLOAD টেস্ট সিমুলেশন
             setTimeout(() => {
-                statusMessage.textContent = 'Testing Download Speed...';
+                statusMessage.textContent = 'Establishing Data Receive Link...';
                 simulateDownloadTest();
-            }, 2000); 
+            }, 2500); // 2.5 সেকেন্ড পর ডাউনলোড টেস্ট শুরু
 
-            // ৩. UPLOAD টেস্ট সিমুলেশন
             setTimeout(() => {
-                statusMessage.textContent = 'Testing Upload Speed...';
+                statusMessage.textContent = 'Initiating Data Transmit Burst...';
                 simulateUploadTest();
-            }, 5000); 
+            }, 6000); // 6 সেকেন্ড পর আপলোড টেস্ট শুরু
 
-            // ৪. ফলাফল প্রদর্শন এবং শেষ
             setTimeout(() => {
-                statusMessage.textContent = 'Test Complete!';
+                statusMessage.textContent = 'Analysis Complete. Reconfiguring...';
                 startButton.disabled = false;
-                startButton.textContent = 'TEST AGAIN';
-            }, 8000); 
+                startButton.textContent = 'RE-INITIATE';
+            }, 9500); // 9.5 সেকেন্ড পর শেষ হবে
         }
 
         function resetTestResults() {
@@ -331,19 +473,20 @@
         // --- Realistic টেস্ট সিমুলেশন ফাংশন ---
 
         function simulatePingTest() {
-            // Ping (50ms থেকে 150ms)
-            const ping = Math.floor(Math.random() * 100) + 50; 
+            // Ping (30ms থেকে 120ms)
+            const ping = Math.floor(Math.random() * 90) + 30; 
             pingResult.textContent = ping;
-            updateLiveSpeed(ping / 10); // গেজ হালকা নড়াচড়া করবে
+            // গেজ হালকা নড়াচড়া করবে, কিন্তু খুব বেশি গতি দেখাবে না পিং টেস্টে
+            updateLiveSpeed(ping / 8); 
         }
 
         function simulateDownloadTest() {
             let currentSpeed = 0;
-            // Realistic Download: 5 Mbps থেকে 35 Mbps
-            const maxDownload = Math.floor(Math.random() * 30) + 5; 
+            // Realistic Download: 10 Mbps থেকে 60 Mbps
+            const maxDownload = Math.floor(Math.random() * 50) + 10; 
             const interval = setInterval(() => {
                 if (currentSpeed < maxDownload) {
-                    currentSpeed += Math.random() * 5; 
+                    currentSpeed += Math.random() * 7; // Faster speed increase
                     if (currentSpeed > maxDownload) currentSpeed = maxDownload;
                     updateLiveSpeed(currentSpeed);
                 } else {
@@ -351,16 +494,16 @@
                     downloadResult.textContent = maxDownload.toFixed(2);
                     updateLiveSpeed(maxDownload); 
                 }
-            }, 100); 
+            }, 80); // Quick updates for a dynamic feel
         }
 
         function simulateUploadTest() {
             let currentSpeed = 0;
-            // Realistic Upload: 2 Mbps থেকে 15 Mbps
-            const maxUpload = Math.floor(Math.random() * 13) + 2; 
+            // Realistic Upload: 5 Mbps থেকে 25 Mbps
+            const maxUpload = Math.floor(Math.random() * 20) + 5; 
             const interval = setInterval(() => {
                 if (currentSpeed < maxUpload) {
-                    currentSpeed += Math.random() * 3;
+                    currentSpeed += Math.random() * 4; // Faster speed increase
                     if (currentSpeed > maxUpload) currentSpeed = maxUpload;
                     updateLiveSpeed(currentSpeed);
                 } else {
@@ -368,10 +511,9 @@
                     uploadResult.textContent = maxUpload.toFixed(2);
                     updateLiveSpeed(maxUpload); 
                 }
-            }, 150); 
+            }, 120); // Quick updates for a dynamic feel
         }
 
-        // লোড হওয়ার সাথে সাথে গেজ রিসেট
         window.onload = resetTest;
     </script>
 </body>
