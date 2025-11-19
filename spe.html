@@ -3,23 +3,24 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Futuristic Speed Test</title>
+    <title>Futuristic Speed Test - Responsive</title>
+    
     <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
     <style>
         /* CSS কোড: ফিউচারিস্টিক ডিজাইন ও অ্যানিমেশন */
         :root {
-            --bg-color: #0d0d1a; /* Dark Blue-Purple */
-            --card-color: #1a1a2e; /* Darker Card */
+            --bg-color: #0d0d1a; 
+            --card-color: #1a1a2e; 
             --text-color: #e0e0e0;
-            --primary-color: #00ffff; /* Cyber Cyan */
-            --accent-color: #ff00ff; /* Magenta Glow */
-            --warning-color: #ffcc00; /* Yellow */
-            --danger-color: #ff3333; /* Red */
-            --gauge-fill-color: #00ffff44; /* Semi-transparent Cyan */
+            --primary-color: #00ffff; 
+            --accent-color: #ff00ff; 
+            --warning-color: #ffcc00; 
+            --danger-color: #ff3333; 
+            --gauge-fill-color: #00ffff44; 
         }
 
         body {
-            font-family: 'Roboto Mono', monospace; /* Modern, techy font */
+            font-family: 'Roboto Mono', monospace;
             background-color: var(--bg-color);
             color: var(--text-color);
             display: flex;
@@ -27,11 +28,11 @@
             align-items: center;
             min-height: 100vh;
             margin: 0;
-            overflow: hidden; /* Hide potential overflow from particles */
+            overflow-x: hidden; /* Prevent horizontal scroll on mobile */
             position: relative;
         }
 
-        /* --- Background Animation (Optional) --- */
+        /* --- Background Animation (Lines are subtle, so kept) --- */
         .background-lines {
             position: absolute;
             top: 0;
@@ -44,7 +45,7 @@
         }
         .line {
             position: absolute;
-            background: rgba(0, 255, 255, 0.1); /* Cyan lines */
+            background: rgba(0, 255, 255, 0.1);
             box-shadow: 0 0 5px rgba(0, 255, 255, 0.5);
             animation: lineMove 15s linear infinite;
         }
@@ -64,13 +65,13 @@
             background: var(--card-color);
             border-radius: 20px;
             padding: 30px;
-            box-shadow: 0 0 40px rgba(0, 255, 255, 0.3); /* Cyan Glow */
+            box-shadow: 0 0 40px rgba(0, 255, 255, 0.3);
             border: 2px solid var(--primary-color);
-            width: 90%;
+            width: 95%; /* Increased width for better mobile fill */
             max-width: 550px;
             text-align: center;
             position: relative;
-            z-index: 1; /* Bring to front of background lines */
+            z-index: 1;
             animation: fadeIn 1s ease-out;
         }
 
@@ -80,7 +81,7 @@
         }
 
         header h1 {
-            font-family: 'Share Tech Mono', monospace; /* More aggressive techy font */
+            font-family: 'Share Tech Mono', monospace;
             font-size: 2.2em;
             margin-bottom: 25px;
             color: var(--primary-color);
@@ -104,14 +105,14 @@
             margin: 30px auto;
             position: relative;
             display: inline-block;
-            width: 280px; /* Slightly larger */
+            width: 280px; 
             height: 140px;
         }
 
         .gauge {
             width: 280px;
             height: 140px;
-            background: linear-gradient(to right, #00ffff11, #ff00ff11); /* Subtle gradient */
+            background: linear-gradient(to right, #00ffff11, #ff00ff11); 
             border-radius: 140px 140px 0 0;
             position: relative;
             overflow: hidden;
@@ -121,13 +122,13 @@
 
         .gauge__fill {
             position: absolute;
-            top: 100%; /* Starts hidden */
+            top: 100%; 
             left: 0;
             width: 100%;
             height: 100%;
             background: var(--gauge-fill-color);
             transform-origin: center top;
-            transition: transform 0.8s ease-out; /* Smooth fill animation */
+            transition: transform 0.8s ease-out; 
             border-radius: 140px 140px 0 0;
             z-index: 2;
         }
@@ -153,21 +154,20 @@
             bottom: 5px;
             left: 50%;
             transform-origin: bottom center;
-            transform: translateX(-50%) rotate(-90deg); /* Start position */
+            transform: translateX(-50%) rotate(-90deg); 
             z-index: 4;
             transition: transform 0.8s ease-out, background 0.3s;
             box-shadow: 0 0 8px var(--accent-color);
         }
 
-        /* Speed Text Glow */
         .speed-text {
             position: absolute;
-            top: 55%; /* Slightly lower */
+            top: 55%; 
             left: 50%;
             transform: translate(-50%, -50%);
-            font-size: 3em; /* Larger */
+            font-size: 3em; 
             color: var(--primary-color);
-            text-shadow: 0 0 15px var(--primary-color); /* Glow */
+            text-shadow: 0 0 15px var(--primary-color); 
             z-index: 10;
             transition: color 0.5s, text-shadow 0.5s;
             font-family: 'Share Tech Mono', monospace;
@@ -201,7 +201,7 @@
         .result-box {
             flex: 1;
             padding: 18px 10px;
-            background: rgba(30, 30, 46, 0.8); /* Semi-transparent card */
+            background: rgba(30, 30, 46, 0.8);
             border-radius: 12px;
             box-shadow: 0 0 15px rgba(0, 255, 255, 0.15);
             border: 1px solid rgba(0, 255, 255, 0.2);
@@ -255,7 +255,6 @@
             color: #aaa;
         }
 
-        /* --- Button and Status Styling --- */
         .start-button {
             background: linear-gradient(45deg, var(--accent-color), var(--primary-color));
             color: #fff;
@@ -274,12 +273,6 @@
 
         .start-button:hover {
             transform: scale(1.05);
-            box-shadow: 0 0 35px rgba(255, 0, 255, 0.9), 0 0 50px rgba(0, 255, 255, 0.7);
-        }
-
-        .start-button:active {
-            transform: scale(0.98);
-            box-shadow: 0 0 15px rgba(255, 0, 255, 0.5), 0 0 25px rgba(0, 255, 255, 0.3);
         }
 
         .start-button:disabled {
@@ -296,10 +289,10 @@
             color: var(--primary-color);
             text-shadow: 0 0 5px rgba(0, 255, 255, 0.5);
             animation: typing 2s steps(20, end) infinite alternate;
-            overflow: hidden; /* Ensures text is hidden before typing */
-            white-space: nowrap; /* Keeps text on a single line */
-            border-right: 2px solid var(--accent-color); /* Blinking cursor */
-            width: 0; /* Starts with 0 width */
+            overflow: hidden; 
+            white-space: nowrap; 
+            border-right: 2px solid var(--accent-color);
+            width: 0; 
             margin-left: auto;
             margin-right: auto;
             max-width: fit-content;
@@ -310,37 +303,76 @@
             to { width: 100%; }
         }
 
-        /* Responsive Adjustments */
+        /* ======================================= */
+        /* --- MOBILE RESPONSIVENESS (<= 580px) --- */
+        /* ======================================= */
         @media (max-width: 580px) {
+            
             .speed-test-container {
-                padding: 20px;
-                max-width: 95%;
+                padding: 20px 10px; /* Adjust padding on smaller screens */
+                width: 95%;
             }
+
             header h1 {
-                font-size: 1.8em;
+                font-size: 1.6em; /* Smaller title */
+                margin-bottom: 20px;
             }
-            .gauge {
-                width: 240px;
-                height: 120px;
-            }
+
+            /* --- Gauge Adjustment for Mobile --- */
             .gauge-area {
-                width: 240px;
-                height: 120px;
+                width: 220px; /* Smaller gauge */
+                height: 110px;
+                margin: 20px auto;
             }
+
+            .gauge {
+                width: 220px;
+                height: 110px;
+                border-radius: 110px 110px 0 0;
+            }
+
+            .gauge__needle {
+                height: 100px; /* Adjust needle length */
+            }
+
             .speed-text {
-                font-size: 2.5em;
+                font-size: 2.2em; /* Smaller speed number */
             }
-            .start-button {
-                padding: 15px 35px;
-                font-size: 1.4em;
+
+            .unit-text {
+                font-size: 0.8em;
+                bottom: -15px;
             }
+
+            /* --- Results Grid: Stack Vertically --- */
             .results-grid {
-                flex-direction: column; /* Stack results vertically on smaller screens */
+                flex-direction: column; /* Stack boxes vertically */
+                gap: 10px;
+                margin-bottom: 25px;
+            }
+            
+            .result-box {
+                padding: 15px;
+            }
+            
+            .result-box .value {
+                font-size: 1.5em; /* Smaller result numbers */
+            }
+
+            /* --- Button Adjustment --- */
+            .start-button {
+                padding: 15px 30px;
+                font-size: 1.3em;
+            }
+
+            .status-message {
+                font-size: 0.9em;
             }
         }
     </style>
 </head>
 <body>
+    
     <div class="background-lines">
         <div class="line"></div>
         <div class="line"></div>
@@ -356,7 +388,8 @@
 
         <div class="gauge-area">
             <div class="gauge">
-                <div class="gauge__fill"></div> <div class="gauge__needle"></div>
+                <div class="gauge__fill"></div> 
+                <div class="gauge__needle"></div>
                 <div class="gauge__center"></div>
                 <div class="speed-text" id="liveSpeed">0.00</div>
                 <div class="unit-text">Mbps</div>
@@ -400,17 +433,16 @@
         const downloadResult = document.getElementById('downloadResult');
         const uploadResult = document.getElementById('uploadResult');
 
-        const MAX_SPEED = 100; // স্পিডমিটারের সর্বাধিক গতি
+        const MAX_SPEED = 100;
 
         function setNeedle(speed) {
             const degrees = Math.min(180, (speed / MAX_SPEED) * 180);
             needle.style.transform = `translateX(-50%) rotate(${degrees - 90}deg)`;
             
-            // Gauge fill animation
             const fillHeight = Math.min(100, (speed / MAX_SPEED) * 100);
             gaugeFill.style.transform = `translateY(${100 - fillHeight}%)`;
 
-            // Change needle color based on speed (optional futuristic touch)
+            // Dynamic Needle Color
             if (speed > 80) {
                 needle.style.background = 'var(--primary-color)';
                 needle.style.boxShadow = '0 0 10px var(--primary-color)';
@@ -449,18 +481,18 @@
             setTimeout(() => {
                 statusMessage.textContent = 'Establishing Data Receive Link...';
                 simulateDownloadTest();
-            }, 2500); // 2.5 সেকেন্ড পর ডাউনলোড টেস্ট শুরু
+            }, 2500);
 
             setTimeout(() => {
                 statusMessage.textContent = 'Initiating Data Transmit Burst...';
                 simulateUploadTest();
-            }, 6000); // 6 সেকেন্ড পর আপলোড টেস্ট শুরু
+            }, 6000);
 
             setTimeout(() => {
                 statusMessage.textContent = 'Analysis Complete. Reconfiguring...';
                 startButton.disabled = false;
                 startButton.textContent = 'RE-INITIATE';
-            }, 9500); // 9.5 সেকেন্ড পর শেষ হবে
+            }, 9500);
         }
 
         function resetTestResults() {
@@ -470,23 +502,19 @@
             updateLiveSpeed(0);
         }
 
-        // --- Realistic টেস্ট সিমুলেশন ফাংশন ---
-
+        // --- Realistic টেস্ট সিমুলেশন ফাংশন (পরিবর্তন নেই) ---
         function simulatePingTest() {
-            // Ping (30ms থেকে 120ms)
             const ping = Math.floor(Math.random() * 90) + 30; 
             pingResult.textContent = ping;
-            // গেজ হালকা নড়াচড়া করবে, কিন্তু খুব বেশি গতি দেখাবে না পিং টেস্টে
             updateLiveSpeed(ping / 8); 
         }
 
         function simulateDownloadTest() {
             let currentSpeed = 0;
-            // Realistic Download: 10 Mbps থেকে 60 Mbps
             const maxDownload = Math.floor(Math.random() * 50) + 10; 
             const interval = setInterval(() => {
                 if (currentSpeed < maxDownload) {
-                    currentSpeed += Math.random() * 7; // Faster speed increase
+                    currentSpeed += Math.random() * 7; 
                     if (currentSpeed > maxDownload) currentSpeed = maxDownload;
                     updateLiveSpeed(currentSpeed);
                 } else {
@@ -494,16 +522,15 @@
                     downloadResult.textContent = maxDownload.toFixed(2);
                     updateLiveSpeed(maxDownload); 
                 }
-            }, 80); // Quick updates for a dynamic feel
+            }, 80);
         }
 
         function simulateUploadTest() {
             let currentSpeed = 0;
-            // Realistic Upload: 5 Mbps থেকে 25 Mbps
             const maxUpload = Math.floor(Math.random() * 20) + 5; 
             const interval = setInterval(() => {
                 if (currentSpeed < maxUpload) {
-                    currentSpeed += Math.random() * 4; // Faster speed increase
+                    currentSpeed += Math.random() * 4; 
                     if (currentSpeed > maxUpload) currentSpeed = maxUpload;
                     updateLiveSpeed(currentSpeed);
                 } else {
@@ -511,7 +538,7 @@
                     uploadResult.textContent = maxUpload.toFixed(2);
                     updateLiveSpeed(maxUpload); 
                 }
-            }, 120); // Quick updates for a dynamic feel
+            }, 120);
         }
 
         window.onload = resetTest;
