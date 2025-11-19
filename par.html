@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CYBER-LINK // Futuristic Parallax</title>
+    <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@500;700&display=swap" rel="stylesheet">
+    <style>
+        /* --- CSS Variables and Global Styles --- */
+        :root {
+            --bg-color: #0c001c; /* Deep Dark Blue/Purple */
+            --card-color: #1a0a38;
+            --text-color: #e0e0e0;
+            --primary-color: #00ffff; /* Cyber Cyan */
+            --accent-color: #ff00ff; /* Magenta Glow */
+            --header-height: 100vh;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Orbitron', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            line-height: 1.6;
+        }
+
+        /* --- Parallax Header Section --- */
+        .parallax-wrapper {
+            height: var(--header-height);
+            overflow-x: hidden;
+            overflow-y: scroll;
+            perspective: 1px; /* Enable 3D space for parallax */
+            transform-style: preserve-3d;
+            scroll-behavior: smooth;
+        }
+
+        .parallax-group {
+            position: relative;
+            height: var(--header-height);
+            transform-style: preserve-3d;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .parallax-layer {
+            position: absolute;
+            top: 0;
+            right: 0;
+            bottom: 0;
+            left: 0;
+            transform-origin: 0 0;
+            pointer-events: none;
+            will-change: transform; /* Performance optimization */
+        }
+
+        /* Speed Control (Parallax Effect) */
+        /* Layer 0: Closest to user, moves fastest */
+        .layer-0 {
+            transform: translateZ(0);
+            pointer-events: auto;
+            z-index: 10; 
+            text-align: center;
+        }
+        /* Layer -1: Mid-ground, moves slower */
+        .layer--1 {
+            transform: translateZ(-0.5px) scale(1.5); /* Scale is needed due to translateZ */
+            opacity: 0.8;
+            z-index: 9;
+        }
+        /* Layer -2: Background, moves slowest */
+        .layer--2 {
+            transform: translateZ(-1px) scale(2); 
+            background: var(--bg-color);
+            z-index: 8; 
+        }
+
+        /* Header Content Styling */
+        .header-title {
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 5vw; /* Responsive font size */
+            color: var(--primary-color);
+            text-shadow: 0 0 20px var(--primary-color);
+            transition: all 0.3s ease-out;
+            letter-spacing: 5px;
+        }
+        .header-subtitle {
+            font-family: 'Roboto Mono', monospace;
+            font-size: 1.5vw;
+            color: var(--accent-color);
+            text-shadow: 0 0 10px var(--accent-color);
+            margin-top: 10px;
+        }
+        .scroll-indicator {
+            position: absolute;
+            bottom: 50px;
+            color: var(--primary-color);
+            font-size: 1.5em;
+            animation: bounce 1.5s infinite;
+        }
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+            40% { transform: translateY(-10px); }
+            60% { transform: translateY(-5px); }
+        }
+
+        /* Animated Grid Overlay */
+        .animated-grid {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background-image: linear-gradient(to right, rgba(0, 255, 255, 0.1) 1px, transparent 1px),
+                              linear-gradient(to bottom, rgba(0, 255, 255, 0.1) 1px, transparent 1px);
+            background-size: 50px 50px;
+            animation: gridScan 15s linear infinite;
+        }
+        @keyframes gridScan {
+            from { background-position: 0 0; }
+            to { background-position: 50px 50px; }
+        }
+
+        /* --- Main Content Sections --- */
+        .main-content {
+            background-color: var(--card-color);
+            padding: 80px 5%;
+            z-index: 15;
+            position: relative; /* To overlap parallax section */
+            border-top: 5px solid var(--primary-color);
+            box-shadow: 0 0 30px rgba(0, 255, 255, 0.5);
+        }
+
+        .section-title {
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 3em;
+            text-align: center;
+            margin-bottom: 50px;
+            color: var(--accent-color);
+            text-shadow: 0 0 10px var(--accent-color);
+        }
+
+        .card-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+        }
+
+        .card {
+            background: var(--bg-color);
+            border: 1px solid var(--primary-color);
+            border-radius: 10px;
+            padding: 30px;
+            box-shadow: 0 0 15px rgba(0, 255, 255, 0.3);
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .card:hover {
+            transform: translateY(-10px) scale(1.02);
+            box-shadow: 0 0 25px var(--accent-color);
+        }
+
+        .card h3 {
+            font-family: 'Share Tech Mono', monospace;
+            color: var(--primary-color);
+            margin-bottom: 15px;
+            font-size: 1.5em;
+        }
+
+        .card p {
+            font-family: 'Roboto Mono', monospace;
+            font-size: 0.9em;
+            color: var(--text-color);
+        }
+
+        /* --- Footer --- */
+        .footer {
+            text-align: center;
+            padding: 20px;
+            background-color: var(--bg-color);
+            border-top: 1px solid rgba(0, 255, 255, 0.2);
+            font-size: 0.8em;
+            color: #888;
+        }
+
+        /* --- Responsive Design (Mobile Friendly) --- */
+        @media (max-width: 768px) {
+            .header-title {
+                font-size: 8vw; /* Smaller on mobile */
+                letter-spacing: 2px;
+            }
+            .header-subtitle {
+                font-size: 3vw;
+            }
+            .section-title {
+                font-size: 2em;
+                margin-bottom: 30px;
+            }
+            .main-content {
+                padding: 60px 5%;
+            }
+            .card-grid {
+                grid-template-columns: 1fr; /* Single column on mobile */
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="parallax-wrapper">
+        <div class="parallax-group">
+            
+            <div class="parallax-layer layer--2">
+                <div class="animated-grid"></div>
+            </div>
+
+            <div class="parallax-layer layer--1">
+                <h2 style="font-size: 15vw; color: rgba(255, 0, 255, 0.1); text-align: center;">CYBER</h2>
+            </div>
+
+            <div class="parallax-layer layer-0">
+                <h1 class="header-title">SYNAPSE NETWORKS</h1>
+                <p class="header-subtitle">DATA FLOW // OPTIMIZED FOR THE FUTURE</p>
+                <div class="scroll-indicator">▼ SCROLL TO ENGAGE</div>
+            </div>
+        </div>
+
+        <div class="main-content">
+            <h2 class="section-title">SERVICE PROTOCOLS</h2>
+            <div class="card-grid">
+                <div class="card">
+                    <h3>// 01_CORE_LINK</h3>
+                    <p>Dedicated high-speed connectivity with quantum encryption. Latency optimized for real-time data transfer across global hubs. 
+
+[Image of glowing data network]
+</p>
+                </div>
+                <div class="card">
+                    <h3>// 02_NEURAL_AI</h3>
+                    <p>Self-learning artificial intelligence monitors and adapts network performance to predicted user demand, eliminating bottlenecks before they occur. </p>
+                </div>
+                <div class="card">
+                    <h3>// 03_CYBER_SHIELD</h3>
+                    <p>Active threat assessment and defense matrix. Zero-day exploit detection and real-time countermeasure deployment. Your data remains incorruptible. 
+
+[Image of futuristic security interface]
+</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="main-content" style="padding-top: 50px;">
+            <h2 class="section-title">NETWORK METRICS</h2>
+            <div class="card-grid">
+                <div class="card">
+                    <h3>// UPTIME ANALYTICS</h3>
+                    <p>99.999% guaranteed operational capacity. Automated failover systems ensure continuous data access regardless of external conditions.</p>
+                </div>
+                <div class="card">
+                    <h3>// GLOBAL FOOTPRINT</h3>
+                    <p>Access points spanning all major continents and orbital platforms. Seamless transition between ground and satellite arrays.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>&copy; 2025 SYNAPSE NETWORKS. // ALL RIGHTS RESERVED // PROTOCOL VERSION 4.7</p>
+        </div>
+    </div>
+
+    <script>
+        // JavaScript is NOT strictly needed for this type of CSS parallax, 
+        // but included for future enhancements or more complex effects.
+        
+        // This function would be used for complex parallax calculation if the CSS method (translateZ) fails 
+        // or if you need mouse-based or scroll-linked animations beyond simple depth effects.
+
+        // For this simple CSS-only parallax effect, the script block can remain empty 
+        // or be removed, as the visual depth is created entirely by CSS transform: translateZ.
+    </script>
+</body>
+</html>
