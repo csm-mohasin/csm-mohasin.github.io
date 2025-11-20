@@ -1,9 +1,286 @@
+
+
+
+
 <!DOCTYPE html>
 <html lang="bn">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-   
+
+
+
+
+
+
+
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            padding: 0;
+            text-align: center;
+            color: #333;
+        }
+
+        .secret-menu, .secret-menu-2, .secret-menu-3 {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 9999;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            transform: translateY(100%); transition: transform 0.5s ease-out;
+            font-family: 'Arial', sans-serif;
+        }
+
+        .secret-menu { color: #00ff00; background-color: rgba(0, 0, 0, 0.95); }
+        .secret-menu-2 { color: #00ffff; background-color: rgba(25, 25, 112, 0.95); }
+        .secret-menu-3 { color: #ff0000; background-color: rgba(64, 0, 0, 0.95); }
+
+        .secret-menu.open, .secret-menu-2.open, .secret-menu-3.open { transform: translateY(0); }
+        
+        .secret-menu h2, .secret-menu-2 h2, .secret-menu-3 h2 { font-size: 3em; margin-bottom: 30px; text-shadow: 0 0 10px; }
+        .secret-menu a, .secret-menu-2 a, .secret-menu-3 a { 
+            text-decoration: none; font-size: 1.5em; padding: 10px 20px; display: inline-block; 
+            transition: all 0.3s; border: 1px solid currentColor; color: currentColor; margin: 10px 0; 
+        }
+        .secret-menu a:hover { background-color: #00ff00; color: #000; }
+        .secret-menu-2 a:hover { background-color: #00ffff; color: #000; }
+        .secret-menu-3 a:hover { background-color: #ff0000; color: #fff; }
+
+        .close-btn { position: absolute; top: 20px; right: 20px; font-size: 2em; cursor: pointer; }
+        .secret-menu .close-btn { color: #ff0000; }
+        .secret-menu-2 .close-btn { color: #ffa500; }
+        .secret-menu-3 .close-btn { color: #ccc; }
+        .secret-menu ul, .secret-menu-2 ul, .secret-menu-3 ul { list-style: none; padding: 0; }
+        .secret-menu li, .secret-menu-2 li, .secret-menu-3 li { margin: 10px 0; }
+
+        .password-popup {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background-color: rgba(0, 0, 0, 0.85); z-index: 10000; display: none;
+            justify-content: center; align-items: center; color: white;
+        }
+        .popup-content { background-color: #444; padding: 30px; border-radius: 10px; box-shadow: 0 0 20px rgba(0, 0, 0, 0.5); text-align: center; }
+        .popup-content input[type="password"] { padding: 10px; margin: 15px 0; border: none; border-radius: 5px; font-size: 1.2em; text-align: center; width: 200px; }
+        .popup-content button { padding: 10px 20px; background-color: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 1.1em; transition: background-color 0.3s; }
+        .popup-content button:hover { background-color: #0056b3; }
+        .password-popup .close-btn { color: #ddd; }
+    </style>
+</head>
+<body>
+    
+    <div class="secret-menu" id="secretMenu1">
+        <span class="close-btn" onclick="closeMenu('secretMenu1')">X</span>
+        <h2>গোপন নেভিগেশন (২ আঙুল সোয়াইপ)</h2>
+        <p>শুধুমাত্র আপনি এটি দেখতে পারেন!</p>
+        <ul>
+            <li><a href="#">প্রোজেক্ট X</a></li>
+            <li><a href="#">ডেভেলপার টুলস</a></li>
+            <li><a href="#">অ্যাডমিন সেটিংস</a></li>
+        </ul>
+    </div>
+
+    <div class="secret-menu-2" id="secretMenu2">
+        <span class="close-btn" onclick="closeMenu('secretMenu2')">X</span>
+        <h2>অতি গোপন নেভিগেশন (৩ আঙুল সোয়াইপ)</h2>
+        <p>টপ সিক্রেট ডেটা এখানে আছে!</p>
+        <ul>
+            <li><a href="#">ফাইল: আলফা</a></li>
+            <li><a href="#">প্রোটোকল: ওমেগা</a></li>
+            <li><a href="#">এনক্রিপশন কী</a></li>
+        </ul>
+    </div>
+
+    <div class="secret-menu-3" id="secretMenu3">
+        <span class="close-btn" onclick="closeMenu('secretMenu3')">X</span>
+        <h2>জরুরী গোপন নেভিগেশন (৪ আঙুল হোল্ড)</h2>
+        <p>জরুরী ব্যাকডোর অ্যাক্সেস!</p>
+        <ul>
+            <li><a href="#">ব্যাকডোর লগ</a></li>
+            <li><a href="#">রিসেট ডেটাবেস</a></li>
+            <li><a href="#">এমার্জেন্সি শাটডাউন</a></li>
+        </ul>
+    </div>
+
+    <div class="password-popup" id="passwordPopup">
+        <div class="popup-content">
+            <span class="close-btn" onclick="hidePopup()">X</span>
+            <h3>🔐 অ্যাক্সেস পাসওয়ার্ড দিন</h3>
+            <p id="popupMessage">মেনুটি খোলার জন্য পাসওয়ার্ড প্রয়োজন:</p>
+            <input type="password" id="passwordInput" placeholder="পাসওয়ার্ড">
+            <button onclick="checkPassword()">খুলুন</button>
+        </div>
+    </div>
+
+    <script>
+        const menu1 = document.getElementById('secretMenu1');
+        const menu2 = document.getElementById('secretMenu2');
+        const menu3 = document.getElementById('secretMenu3');
+        const popup = document.getElementById('passwordPopup');
+        const passwordInput = document.getElementById('passwordInput');
+        const popupMessage = document.getElementById('popupMessage');
+        const SWIPE_SENSITIVITY = 100;
+        const MOVEMENT_THRESHOLD = 50;
+        const HOLD_DURATION = 4000;
+
+        let startY = 0;
+        let startX = 0;
+        let initialTouchCount = 0;
+        let holdTimer = null;
+        let activeMenu = null;
+        
+        let isHolding = false;
+        let isSwiping = false;
+        let targetMenu = null;
+
+        let isAuthenticated = {
+            'menu1': false,
+            'menu2': false,
+            'menu3': false 
+        };
+
+        const PASSWORDS = {
+            'menu1': '1234',
+            'menu2': '9876',
+            'menu3': '7890'
+        };
+
+        function resetState() {
+            clearTimeout(holdTimer);
+            isHolding = false;
+            isSwiping = false;
+            initialTouchCount = 0;
+            startY = 0;
+            startX = 0;
+            targetMenu = null;
+        }
+
+        function openSecretMenu(menuId) {
+            const menu = document.getElementById(menuId === 'menu1' ? 'secretMenu1' : menuId === 'menu2' ? 'secretMenu2' : 'secretMenu3');
+            if (menu) {
+                menu.classList.add('open');
+                // একবার খুললে, আবার অ্যাক্সেস করতে হলে নতুন করে পাসওয়ার্ড দিতে হবে
+                isAuthenticated[menuId] = false; 
+                resetState();
+            }
+        }
+
+        function showPopup(menuToOpen) {
+            activeMenu = menuToOpen;
+            passwordInput.value = '';
+            popupMessage.textContent = 'মেনুটি খোলার জন্য পাসওয়ার্ড প্রয়োজন:';
+            popup.style.display = 'flex';
+            passwordInput.focus();
+            resetState();
+        }
+
+        function hidePopup() {
+            popup.style.display = 'none';
+            activeMenu = null;
+        }
+
+        function checkPassword() {
+            const enteredPassword = passwordInput.value;
+            const requiredPassword = PASSWORDS[activeMenu];
+            
+            if (enteredPassword === requiredPassword) {
+                // isAuthenticated[activeMenu] = true; // এই লাইনটি এখন অপ্রয়োজনীয়
+                hidePopup();
+                
+                // পাসওয়ার্ড সফল হলে সরাসরি মেনু ওপেন হবে
+                openSecretMenu(activeMenu); 
+
+            } else {
+                popupMessage.textContent = '❌ ভুল পাসওয়ার্ড! আবার চেষ্টা করুন:';
+                passwordInput.value = '';
+                passwordInput.focus();
+            }
+        }
+        
+        passwordInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                checkPassword();
+            }
+        });
+
+        document.addEventListener('touchstart', (e) => {
+            if (menu1.classList.contains('open') || menu2.classList.contains('open') || menu3.classList.contains('open') || popup.style.display === 'flex') {
+                resetState();
+                return;
+            }
+
+            const currentTouchCount = e.touches.length;
+            
+            if (currentTouchCount === 2 || currentTouchCount === 3 || currentTouchCount === 4) {
+                
+                resetState();
+                initialTouchCount = currentTouchCount;
+                startY = e.touches[0].clientY;
+                startX = e.touches[0].clientX;
+                
+                if (currentTouchCount === 4) {
+                    
+                    isHolding = true;
+                    holdTimer = setTimeout(() => {
+                        if (isHolding) {
+                            showPopup('menu3');
+                        }
+                    }, HOLD_DURATION);
+                }
+
+            } else {
+                resetState();
+            }
+        }, { passive: false });
+
+        document.addEventListener('touchmove', (e) => {
+            if (initialTouchCount < 2 || initialTouchCount > 4) return;
+
+            e.preventDefault();
+            const currentY = e.touches[0].clientY;
+            const currentX = e.touches[0].clientX;
+            const deltaY = startY - currentY;
+            const deltaX = startX - currentX;
+            
+            if (initialTouchCount === 4 && isHolding && (Math.abs(deltaY) > MOVEMENT_THRESHOLD || Math.abs(deltaX) > MOVEMENT_THRESHOLD)) {
+                clearTimeout(holdTimer);
+                isHolding = false;
+            }
+            
+            if ((initialTouchCount === 2 || initialTouchCount === 3) && deltaY > MOVEMENT_THRESHOLD && !isSwiping) {
+                
+                isSwiping = true;
+                targetMenu = initialTouchCount === 2 ? 'menu1' : 'menu2';
+                
+                clearTimeout(holdTimer);
+                isHolding = false;
+                
+                showPopup(targetMenu);
+            }
+        }, { passive: false });
+        
+        document.addEventListener('touchend', (e) => {
+            
+            if (holdTimer) {
+                clearTimeout(holdTimer);
+                isHolding = false;
+            }
+
+            // ৪ আঙুলের জেসচারের জন্য সরাসরি খোলার logic টি মুছে ফেলা হয়েছে
+
+            resetState();
+        });
+
+        function closeMenu(menuId) {
+            const menu = document.getElementById(menuId);
+            if (menu) {
+                menu.classList.remove('open');
+                isAuthenticated[menuId] = false;
+                resetState();
+            }
+        }
+    </script>
+</body>
+</html>
+
+    
     <style>
     body {
         height: 100vh;
@@ -578,7 +855,7 @@ async function sendMessage() {
 <head>
   <!-- Basic SEO -->
  
-  <meta name="title" content="CSM Mohasin Alam | Frontend Developer & Designer" />
+  <meta name="title" content="CSM Mohasin Alam | Frontend Developer & Designer | Portfolio" />
   <meta name="description" content="I'm CSM Mohasin Alam, a passionate Frontend Developer and Designer from Bangladesh. I build modern, responsive, and creative websites using HTML, CSS, JavaScript, and React." />
   <meta name="keywords" content="CSM Mohasin Alam, frontend developer, web developer, Bangladeshi developer, React developer, portfolio, CSM Mohasin, Mohasin Alam, UI designer, HTML CSS JS expert, web designer Bangladesh" />
   <meta name="author" content="CSM Mohasin Alam" />
@@ -631,7 +908,7 @@ async function sendMessage() {
   </script>
       </head><head><meta name="google-site-verification" content="L69fVeBJgfN9qnqiNq1PGm-UEZBSEKihckLiSSV6im8" />
 </head> <meta name="google-site-verification" content="L69fVeBJgfN9qnqiNq1PGm-UEZBSEKihckLiSSV6im8" /> <link href="https://raw.githubusercontent.com/csm-mohasin/magic-portfolio/refs/heads/main/styluue.css" rel="stylesheet">    
-<title>Hi, I’m Csm Mohasin Alam — Frontend Developer & Designer</title>
+<title>Csm Mohasin Alam — Frontend Developer & Designer | Portfolio </title>
 
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">    <link href='https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css' rel='stylesheet'/>  
 <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">  
