@@ -1,242 +1,82 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="bn">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Futuristic URL Code Viewer</title>
-    
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-dracula.min.css" rel="stylesheet" />
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/line-numbers/prism-line-numbers.min.css" rel="stylesheet" />
-    
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Share+Tech+Mono&display=swap');
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Source Code Viewer (Frontend Only)</title>
 
-        :root {
-            --bg-color: #0d1117; 
-            --accent-color: #00e676; 
-            --text-color: #e6e6e6; 
-            --border-color: #30363d; 
-            --code-bg: #161b22; 
-            --glow-color: rgba(0, 230, 118, 0.4);
-        }
-
-        body {
-            font-family: 'Share Tech Mono', monospace;
-            background-color: var(--bg-color);
-            color: var(--text-color);
-            margin: 0;
-            display: flex;
-            justify-content: center;
-            align-items: flex-start;
-            min-height: 100vh;
-            padding: 20px;
-            overflow-x: hidden;
-        }
-
-        .container {
-            background-color: #1a202c; 
-            border: 1px solid var(--border-color);
-            box-shadow: 0 0 20px var(--glow-color);
-            border-radius: 12px;
-            padding: 30px;
-            width: 90%;
-            max-width: 1200px;
-            box-sizing: border-box;
-            position: relative;
-            overflow: hidden;
-        }
-        
-        /* Grid effect - Kept in background (low z-index) */
-        .container::before {
-            content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background-image: linear-gradient(to right, var(--border-color) 1px, transparent 1px), linear-gradient(to bottom, var(--border-color) 1px, transparent 1px);
-            background-size: 40px 40px; opacity: 0.1; z-index: 0;
-            pointer-events: none; 
-        }
-
-        .title {
-            font-family: 'Orbitron', sans-serif; color: var(--accent-color);
-            text-align: center; margin-bottom: 40px; font-size: 2.8em;
-            text-shadow: 0 0 15px var(--glow-color); letter-spacing: 3px; position: relative;
-        }
-
-        .glitch { position: relative; }
-        .glitch::before, .glitch::after {
-            content: attr(data-text); position: absolute; top: 0; left: 0;
-            width: 100%; height: 100%; background: var(--bg-color); overflow: hidden;
-            clip: rect(0, 900px, 0, 0);
-        }
-        .glitch::before { left: -2px; text-shadow: 1px 0 #ff3f6f; animation: glitch-anim-1 2s infinite linear alternate-reverse; }
-        .glitch::after { left: 2px; text-shadow: -1px 0 #00f0ff; animation: glitch-anim-2 2s infinite linear alternate-reverse; }
-
-        @keyframes glitch-anim-1 { 0% { clip: rect(27px, 9999px, 83px, 0); } 50% { clip: rect(82px, 9999px, 60px, 0); } 100% { clip: rect(87px, 9999px, 79px, 0); } }
-        @keyframes glitch-anim-2 { 0% { clip: rect(9px, 9999px, 63px, 0); } 50% { clip: rect(41px, 9999px, 68px, 0); } 100% { clip: rect(65px, 9999px, 73px, 0); } }
-
-        /* Fix 1: High z-index for interactive elements */
-        .input-section { display: flex; flex-direction: column; gap: 15px; margin-bottom: 30px; z-index: 10; position: relative; } 
-
-        /* Input field for URL */
-        input[type="text"] {
-            width: 100%; padding: 15px; background-color: var(--code-bg);
-            border: 1px solid var(--border-color); border-radius: 8px;
-            color: var(--text-color); font-family: 'Share Tech Mono', monospace;
-            font-size: 1em; outline: none;
-            box-shadow: inset 0 0 8px rgba(0, 230, 118, 0.2);
-            transition: all 0.3s ease;
-            box-sizing: border-box;
-            z-index: 11; 
-        }
-        input[type="text"]:focus { border-color: var(--accent-color); box-shadow: inset 0 0 15px var(--glow-color); }
-
-        .controls { display: flex; gap: 15px; align-items: center; z-index: 11; position: relative; }
-
-        select, button {
-            padding: 10px 20px; border: none; border-radius: 6px;
-            font-family: 'Orbitron', sans-serif; font-size: 0.9em;
-            cursor: pointer; transition: all 0.3s ease;
-            text-transform: uppercase; letter-spacing: 1px; z-index: 12; position: relative;
-        }
-
-        select {
-            background-color: var(--code-bg); color: var(--accent-color);
-            border: 1px solid var(--border-color); appearance: none;
-            padding-right: 35px;
-            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%2300e676'%3E%3Cpath d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
-            background-repeat: no-repeat;
-            background-position: right 10px center;
-            background-size: 18px;
-        }
-        select:hover { border-color: var(--accent-color); box-shadow: 0 0 10px var(--glow-color); }
-
-        button {
-            background-color: var(--accent-color); color: var(--bg-color);
-            font-weight: bold; box-shadow: 0 0 10px var(--glow-color);
-        }
-        button:hover { background-color: #00ff88; box-shadow: 0 0 20px var(--glow-color); transform: translateY(-2px); }
-        button.copy-btn { background-color: var(--border-color); color: var(--text-color); box-shadow: none; }
-        button.copy-btn:hover { background-color: #4a515c; box-shadow: 0 0 10px rgba(255, 255, 255, 0.1); }
-        
-        .code-output-section {
-            position: relative; border: 1px solid var(--border-color);
-            border-radius: 8px; overflow: hidden;
-            background-color: var(--code-bg); box-shadow: 0 0 15px var(--glow-color);
-            min-height: 250px; display: flex; flex-direction: column;
-        }
-
-        .code-output-section pre {
-            margin: 0; padding: 20px; background: transparent;
-            box-sizing: border-box; font-size: 0.95em; overflow: auto;
-            width: 100%; flex-grow: 1; position: relative; z-index: 2;
-        }
-
-        /* Fix 2: Ensure pointer-events: none on effect layers */
-        .terminal-effect {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            pointer-events: none; 
-            background: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), 
-                        repeating-linear-gradient(0deg, transparent 0, transparent 1px, rgba(0,0,0,0.4) 1px, rgba(0,0,0,0.4) 2px);
-            opacity: 0.2;
-            z-index: 1; 
-        }
-        
-        /* Responsive Design */
-        @media (max-width: 768px) {
-            .container { padding: 20px; width: 95%; }
-            .title { font-size: 2em; }
-            .controls { flex-direction: column; align-items: stretch; }
-            select, button { width: 100%; margin-bottom: 10px; }
-        }
-    </style>
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        background: #f8f9fa;
+        margin: 0;
+        padding: 20px;
+    }
+    .container {
+        max-width: 900px;
+        margin: auto;
+    }
+    input {
+        width: 100%;
+        padding: 12px;
+        margin-top: 8px;
+        font-size: 16px;
+    }
+    button {
+        padding: 12px 18px;
+        margin-top: 10px;
+        cursor: pointer;
+        background: #111;
+        color: #fff;
+        border: none;
+        font-size: 16px;
+    }
+    pre {
+        margin-top: 20px;
+        padding: 15px;
+        background: #1e1e1e;
+        color: #d4d4d4;
+        white-space: pre-wrap;
+        border-radius: 6px;
+        max-height: 70vh;
+        overflow: auto;
+    }
+</style>
 </head>
 <body>
-    <div class="container">
-        <h1 class="title glitch" data-text="<URL_VIEWER>">&lt;URL_VIEWER&gt;</h1>
-        
-        <div class="input-section">
-            <input type="text" id="urlInput" placeholder="সম্পূর্ণ URL দিন (যেমন: https://www.example.com)" value="https://example.com" />
-            <div class="controls">
-                <select id="languageSelect">
-                    <option value="markup">HTML</option> 
-                    <option value="css">CSS</option>
-                    <option value="javascript">JavaScript</option>
-                </select>
-                <button onclick="viewSourceFromURL()">কোড লোড ও ভিউ করুন</button>
-                <button onclick="copyCode()" class="copy-btn">কপি</button>
-            </div>
-        </div>
 
-        <div class="code-output-section">
-            <pre class="line-numbers"><code id="codeOutput" class="language-markup">আপনার পছন্দের ওয়েবসাইটের URL দিয়ে 'কোড লোড ও ভিউ করুন' বাটনে ক্লিক করুন। পাবলিক প্রক্সির মাধ্যমে ডেটা লোড হয়, তাই কিছু সাইট বা ফায়ারওয়াল ব্লক করতে পারে।</code></pre>
-            <div class="terminal-effect"></div>
-        </div>
-    </div>
+<div class="container">
+    <h1>Source Code Viewer (Frontend Only)</h1>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/line-numbers/prism-line-numbers.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/toolbar/prism-toolbar.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/copy-to-clipboard/prism-copy-to-clipboard.min.js"></script>
+    <input type="url" id="urlInput" placeholder="https://example.com" />
+    <button onclick="fetchSource()">Show Source</button>
 
-    <script>
-        // *** URL থেকে সোর্স কোড লোড করার ফাংশন (প্রক্সি ব্যবহার করে) ***
-        async function viewSourceFromURL() {
-            const urlInput = document.getElementById('urlInput').value;
-            const codeOutput = document.getElementById('codeOutput');
-            const languageSelect = document.getElementById('languageSelect');
-            const selectedLanguage = languageSelect.value;
-            
-            if (!urlInput.startsWith('http')) {
-                codeOutput.textContent = 'ত্রুটি: অনুগ্রহ করে "http://" বা "https://" সহ একটি সম্পূর্ণ URL দিন।';
-                return;
-            }
+    <pre id="output">Output will appear here...</pre>
+</div>
 
-            codeOutput.textContent = 'কোড লোড করা হচ্ছে... (প্রক্সি সার্ভার ব্যবহার করা হচ্ছে)';
-            codeOutput.className = 'language-markup'; 
+<script>
+function fetchSource() {
+    const url = document.getElementById("urlInput").value.trim();
+    const output = document.getElementById("output");
 
-            // Public Proxy Server (পাবলিক প্রক্সি সার্ভার ব্যবহার করা হচ্ছে, এটি ব্লক হলে অন্য প্রক্সি ব্যবহার করে দেখুন)
-            const proxyUrl = 'https://api.allorigins.win/raw?url='; 
-            const finalUrl = proxyUrl + encodeURIComponent(urlInput);
+    if (!url) {
+        output.textContent = "⚠️ Please enter a valid URL.";
+        return;
+    }
 
-            try {
-                const response = await fetch(finalUrl);
-                
-                if (!response.ok) {
-                    // প্রক্সি বা টার্গেট ওয়েবসাইট ব্লক করলে এই ত্রুটি আসতে পারে
-                    codeOutput.textContent = `যোগাযোগের ত্রুটি: URL লোড করা যায়নি। স্ট্যাটাস কোড: ${response.status}. এটি প্রক্সি সার্ভার বা টার্গেট ওয়েবসাইটের ফায়ারওয়াল জনিত কারণেও হতে পারে।`;
-                    return;
-                }
+    output.textContent = "⏳ Loading...";
 
-                const sourceCode = await response.text();
-                
-                // সোর্স কোডটি <pre><code> ব্লকে সেট করা
-                codeOutput.textContent = sourceCode;
-                codeOutput.className = `language-${selectedLanguage}`;
-                
-                // কোড হাইলাইট করা
-                Prism.highlightAll(); 
-
-            } catch (error) {
-                // 'Failed to fetch' ত্রুটিটি সাধারণত প্রক্সি সার্ভারের সাথে সংযোগ বিচ্ছিন্ন হলে বা CORS/DNS সমস্যার কারণে আসে।
-                codeOutput.textContent = `যোগাযোগের ত্রুটি: Failed to fetch. নিশ্চিত করুন URL টি সঠিক এবং সার্ভারটি অ্যাক্সেসযোগ্য। (সম্ভাব্য প্রক্সি ব্লক)`;
-                console.error('Fetch Error:', error);
-            }
-        }
-
-        // কপি বাটন ফাংশন
-        function copyCode() {
-            const codeOutput = document.getElementById('codeOutput');
-            const tempTextArea = document.createElement('textarea');
-            tempTextArea.value = codeOutput.textContent;
-            document.body.appendChild(tempTextArea);
-            tempTextArea.select();
-            document.execCommand('copy');
-            document.body.removeChild(tempTextArea);
-            
-            alert('কোড কপি করা হয়েছে!'); 
-        }
-
-        document.addEventListener('DOMContentLoaded', () => {
-             console.log('URL Code Viewer Loaded. Ready to fetch.');
+    // Using AllOrigins (public CORS proxy)
+    fetch("https://api.allorigins.win/raw?url=" + encodeURIComponent(url))
+        .then(res => res.text())
+        .then(data => {
+            output.textContent = data;
+        })
+        .catch(err => {
+            output.textContent = "❌ Error fetching source.\n\n" + err;
         });
-    </script>
+}
+</script>
+
 </body>
 </html>
