@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Futuristic URL Code Viewer</title>
+    <title>Futuristic URL Code Viewer - Fixed</title>
     
     <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-dracula.min.css" rel="stylesheet" />
     <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/line-numbers/prism-line-numbers.min.css" rel="stylesheet" />
@@ -44,14 +44,14 @@
             box-sizing: border-box;
             position: relative;
             overflow: hidden;
-            z-index: 1;
         }
         
-        /* Grid and Glitch effects (CSS remains mostly same for styling) */
+        /* Grid effect - Kept in background (low z-index) */
         .container::before {
             content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             background-image: linear-gradient(to right, var(--border-color) 1px, transparent 1px), linear-gradient(to bottom, var(--border-color) 1px, transparent 1px);
             background-size: 40px 40px; opacity: 0.1; z-index: 0;
+            pointer-events: none; /* নিশ্চিত করে যাতে এটি ক্লিক ব্লক না করে */
         }
 
         .title {
@@ -72,15 +72,9 @@
         @keyframes glitch-anim-1 { 0% { clip: rect(27px, 9999px, 83px, 0); } 50% { clip: rect(82px, 9999px, 60px, 0); } 100% { clip: rect(87px, 9999px, 79px, 0); } }
         @keyframes glitch-anim-2 { 0% { clip: rect(9px, 9999px, 63px, 0); } 50% { clip: rect(41px, 9999px, 68px, 0); } 100% { clip: rect(65px, 9999px, 73px, 0); } }
 
-        .input-section { display: flex; flex-direction: column; gap: 15px; margin-bottom: 30px; }
+        .input-section { display: flex; flex-direction: column; gap: 15px; margin-bottom: 30px; **z-index: 10;** position: relative; } /* উচ্চ z-index */
 
-        /* Updated: input field for URL */
-        input[type="text"], select, button {
-            padding: 10px 20px; border: none; border-radius: 6px;
-            font-family: 'Orbitron', sans-serif; font-size: 0.9em;
-            cursor: pointer; transition: all 0.3s ease;
-            text-transform: uppercase; letter-spacing: 1px;
-        }
+        /* Input field for URL */
         input[type="text"] {
             width: 100%; padding: 15px; background-color: var(--code-bg);
             border: 1px solid var(--border-color); border-radius: 8px;
@@ -88,13 +82,21 @@
             font-size: 1em; outline: none;
             box-shadow: inset 0 0 8px rgba(0, 230, 118, 0.2);
             transition: all 0.3s ease;
-            box-sizing: border-box; /* গুরুত্বপূর্ণ: প্যাডিং যাতে সাইজ না বাড়ায় */
+            box-sizing: border-box;
+            **z-index: 11;** /* নিশ্চিত করে যাতে এটি সবকিছুর উপরে থাকে */
         }
         input[type="text"]:focus { border-color: var(--accent-color); box-shadow: inset 0 0 15px var(--glow-color); }
 
+        .controls { display: flex; gap: 15px; align-items: center; **z-index: 11;** position: relative; }
 
-        .controls { display: flex; gap: 15px; align-items: center; }
+        select, button {
+            padding: 10px 20px; border: none; border-radius: 6px;
+            font-family: 'Orbitron', sans-serif; font-size: 0.9em;
+            cursor: pointer; transition: all 0.3s ease;
+            text-transform: uppercase; letter-spacing: 1px; **z-index: 12;** position: relative; /* নিশ্চিত ফোকাসের জন্য */
+        }
 
+        /* ... Select and Button styles (Same as before) ... */
         select {
             background-color: var(--code-bg); color: var(--accent-color);
             border: 1px solid var(--border-color); appearance: none;
@@ -113,7 +115,8 @@
         button:hover { background-color: #00ff88; box-shadow: 0 0 20px var(--glow-color); transform: translateY(-2px); }
         button.copy-btn { background-color: var(--border-color); color: var(--text-color); box-shadow: none; }
         button.copy-btn:hover { background-color: #4a515c; box-shadow: 0 0 10px rgba(255, 255, 255, 0.1); }
-
+        
+        /* ... Code output section styles (Same as before) ... */
         .code-output-section {
             position: relative; border: 1px solid var(--border-color);
             border-radius: 8px; overflow: hidden;
@@ -130,11 +133,11 @@
         /* Terminal Scan Line Effect */
         .terminal-effect {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            pointer-events: none;
+            pointer-events: none; /* এটা ক্লিক ব্লক করে না */
             background: linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), 
                         repeating-linear-gradient(0deg, transparent 0, transparent 1px, rgba(0,0,0,0.4) 1px, rgba(0,0,0,0.4) 2px);
             opacity: 0.2;
-            z-index: 1;
+            z-index: 1; /* কোড আউটপুটের চেয়ে নিচে, ইনপুট অংশের চেয়েও নিচে */
         }
         
         /* Responsive Design */
@@ -190,10 +193,9 @@
 
             // লোডিং মেসেজ সেট করা
             codeOutput.textContent = 'কোড লোড করা হচ্ছে... (প্রক্সি সার্ভার ব্যবহার করা হচ্ছে)';
-            codeOutput.className = 'language-markup'; // লোডিং অবস্থায় হাইলাইট বন্ধ
+            codeOutput.className = 'language-markup'; 
 
             // পাবলিক প্রক্সি সার্ভার ব্যবহার (allorigins.win)
-            // এটি CORS সমস্যা এড়াতে সাহায্য করে
             const proxyUrl = 'https://api.allorigins.win/raw?url='; 
             const finalUrl = proxyUrl + encodeURIComponent(urlInput);
 
@@ -238,9 +240,9 @@
 
         // পৃষ্ঠা লোড হওয়ার সাথে সাথে একটি ডিফল্ট ভিউ চালু করা
         document.addEventListener('DOMContentLoaded', () => {
-             // শুধুমাত্র প্রথমবার লোড হওয়ার সময় ডিফল্ট কোড ভিউ করার প্রয়োজন নেই, 
-             // তাই শুধুমাত্র নির্দেশিকা দেখানো হচ্ছে।
              console.log('URL Code Viewer Loaded. Ready to fetch.');
+             // আপনি চাইলে এখানে স্বয়ংক্রিয়ভাবে একটি URL লোড করতে পারেন:
+             // viewSourceFromURL(); 
         });
     </script>
 </body>
