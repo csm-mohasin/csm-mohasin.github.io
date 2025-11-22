@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Futuristic Code Viewer</title>
+    <title>Futuristic URL Code Viewer</title>
     
     <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-dracula.min.css" rel="stylesheet" />
     <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/line-numbers/prism-line-numbers.min.css" rel="stylesheet" />
@@ -46,84 +46,54 @@
             overflow: hidden;
             z-index: 1;
         }
-
-        /* Background Grid Effect */
+        
+        /* Grid and Glitch effects (CSS remains mostly same for styling) */
         .container::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-image: 
-                linear-gradient(to right, var(--border-color) 1px, transparent 1px),
-                linear-gradient(to bottom, var(--border-color) 1px, transparent 1px);
-            background-size: 40px 40px;
-            opacity: 0.1;
-            z-index: 0;
+            content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background-image: linear-gradient(to right, var(--border-color) 1px, transparent 1px), linear-gradient(to bottom, var(--border-color) 1px, transparent 1px);
+            background-size: 40px 40px; opacity: 0.1; z-index: 0;
         }
 
         .title {
-            font-family: 'Orbitron', sans-serif;
-            color: var(--accent-color);
-            text-align: center;
-            margin-bottom: 40px;
-            font-size: 2.8em;
-            text-shadow: 0 0 15px var(--glow-color);
-            letter-spacing: 3px;
-            position: relative;
+            font-family: 'Orbitron', sans-serif; color: var(--accent-color);
+            text-align: center; margin-bottom: 40px; font-size: 2.8em;
+            text-shadow: 0 0 15px var(--glow-color); letter-spacing: 3px; position: relative;
         }
 
-        /* Glitch Effect for Title */
         .glitch { position: relative; }
         .glitch::before, .glitch::after {
-            content: attr(data-text);
-            position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: var(--bg-color);
-            overflow: hidden;
+            content: attr(data-text); position: absolute; top: 0; left: 0;
+            width: 100%; height: 100%; background: var(--bg-color); overflow: hidden;
             clip: rect(0, 900px, 0, 0);
         }
-        .glitch::before {
-            left: -2px; text-shadow: 1px 0 #ff3f6f;
-            animation: glitch-anim-1 2s infinite linear alternate-reverse;
-        }
-        .glitch::after {
-            left: 2px; text-shadow: -1px 0 #00f0ff;
-            animation: glitch-anim-2 2s infinite linear alternate-reverse;
-        }
+        .glitch::before { left: -2px; text-shadow: 1px 0 #ff3f6f; animation: glitch-anim-1 2s infinite linear alternate-reverse; }
+        .glitch::after { left: 2px; text-shadow: -1px 0 #00f0ff; animation: glitch-anim-2 2s infinite linear alternate-reverse; }
 
-        @keyframes glitch-anim-1 {
-            0% { clip: rect(27px, 9999px, 83px, 0); }
-            50% { clip: rect(82px, 9999px, 60px, 0); }
-            100% { clip: rect(87px, 9999px, 79px, 0); }
-        }
-        @keyframes glitch-anim-2 {
-            0% { clip: rect(9px, 9999px, 63px, 0); }
-            50% { clip: rect(41px, 9999px, 68px, 0); }
-            100% { clip: rect(65px, 9999px, 73px, 0); }
-        }
+        @keyframes glitch-anim-1 { 0% { clip: rect(27px, 9999px, 83px, 0); } 50% { clip: rect(82px, 9999px, 60px, 0); } 100% { clip: rect(87px, 9999px, 79px, 0); } }
+        @keyframes glitch-anim-2 { 0% { clip: rect(9px, 9999px, 63px, 0); } 50% { clip: rect(41px, 9999px, 68px, 0); } 100% { clip: rect(65px, 9999px, 73px, 0); } }
 
         .input-section { display: flex; flex-direction: column; gap: 15px; margin-bottom: 30px; }
 
-        textarea {
-            width: 100%; padding: 15px; background-color: var(--code-bg);
-            border: 1px solid var(--border-color); border-radius: 8px;
-            color: var(--text-color); font-family: 'Share Tech Mono', monospace;
-            font-size: 1em; resize: vertical; outline: none;
-            box-shadow: inset 0 0 8px rgba(0, 230, 118, 0.2);
-            transition: all 0.3s ease;
-        }
-        textarea:focus { border-color: var(--accent-color); box-shadow: inset 0 0 15px var(--glow-color); }
-
-        .controls { display: flex; gap: 15px; align-items: center; }
-
-        select, button {
+        /* Updated: input field for URL */
+        input[type="text"], select, button {
             padding: 10px 20px; border: none; border-radius: 6px;
             font-family: 'Orbitron', sans-serif; font-size: 0.9em;
             cursor: pointer; transition: all 0.3s ease;
             text-transform: uppercase; letter-spacing: 1px;
         }
+        input[type="text"] {
+            width: 100%; padding: 15px; background-color: var(--code-bg);
+            border: 1px solid var(--border-color); border-radius: 8px;
+            color: var(--text-color); font-family: 'Share Tech Mono', monospace;
+            font-size: 1em; outline: none;
+            box-shadow: inset 0 0 8px rgba(0, 230, 118, 0.2);
+            transition: all 0.3s ease;
+            box-sizing: border-box; /* গুরুত্বপূর্ণ: প্যাডিং যাতে সাইজ না বাড়ায় */
+        }
+        input[type="text"]:focus { border-color: var(--accent-color); box-shadow: inset 0 0 15px var(--glow-color); }
+
+
+        .controls { display: flex; gap: 15px; align-items: center; }
 
         select {
             background-color: var(--code-bg); color: var(--accent-color);
@@ -140,17 +110,9 @@
             background-color: var(--accent-color); color: var(--bg-color);
             font-weight: bold; box-shadow: 0 0 10px var(--glow-color);
         }
-        button:hover {
-            background-color: #00ff88; box-shadow: 0 0 20px var(--glow-color);
-            transform: translateY(-2px);
-        }
-        button.copy-btn {
-            background-color: var(--border-color); color: var(--text-color);
-            box-shadow: none;
-        }
-        button.copy-btn:hover {
-            background-color: #4a515c; box-shadow: 0 0 10px rgba(255, 255, 255, 0.1);
-        }
+        button:hover { background-color: #00ff88; box-shadow: 0 0 20px var(--glow-color); transform: translateY(-2px); }
+        button.copy-btn { background-color: var(--border-color); color: var(--text-color); box-shadow: none; }
+        button.copy-btn:hover { background-color: #4a515c; box-shadow: 0 0 10px rgba(255, 255, 255, 0.1); }
 
         .code-output-section {
             position: relative; border: 1px solid var(--border-color);
@@ -186,27 +148,23 @@
 </head>
 <body>
     <div class="container">
-        <h1 class="title glitch" data-text="<CODE_VIEWER>">&lt;CODE_VIEWER&gt;</h1>
+        <h1 class="title glitch" data-text="<URL_VIEWER>">&lt;URL_VIEWER&gt;</h1>
         
         <div class="input-section">
-            <textarea id="codeInput" placeholder="আপনার ফিউচারিস্টিক কোড এখানে পেস্ট করুন..." rows="10"></textarea>
+            <input type="text" id="urlInput" placeholder="সম্পূর্ণ URL দিন (যেমন: https://www.example.com)" value="https://www.google.com" />
             <div class="controls">
                 <select id="languageSelect">
-                    <option value="markup">HTML</option>
+                    <option value="markup">HTML</option> 
                     <option value="css">CSS</option>
                     <option value="javascript">JavaScript</option>
-                    <option value="python">Python</option>
-                    <option value="java">Java</option>
-                    <option value="clike">C/C++</option>
-                    <option value="php">PHP</option>
                 </select>
-                <button onclick="viewSource()">ভিউ কোড</button>
+                <button onclick="viewSourceFromURL()">কোড লোড ও ভিউ করুন</button>
                 <button onclick="copyCode()" class="copy-btn">কপি</button>
             </div>
         </div>
 
         <div class="code-output-section">
-            <pre class="line-numbers"><code id="codeOutput" class="language-markup"></code></pre>
+            <pre class="line-numbers"><code id="codeOutput" class="language-markup">আপনার পছন্দের ওয়েবসাইটের URL দিয়ে 'কোড লোড ও ভিউ করুন' বাটনে ক্লিক করুন।</code></pre>
             <div class="terminal-effect"></div>
         </div>
     </div>
@@ -217,23 +175,52 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/plugins/copy-to-clipboard/prism-copy-to-clipboard.min.js"></script>
 
     <script>
-        // এই ফাংশনটি কোড ইনপুট নিয়ে হাইলাইট করে ডিসপ্লে করবে
-        function viewSource() {
-            const inputCode = document.getElementById('codeInput').value;
+        // *** নতুন ফাংশন: URL থেকে সোর্স কোড লোড করা ***
+        async function viewSourceFromURL() {
+            const urlInput = document.getElementById('urlInput').value;
             const codeOutput = document.getElementById('codeOutput');
             const languageSelect = document.getElementById('languageSelect');
             const selectedLanguage = languageSelect.value;
+            
+            // ইনপুট ভ্যালিডেশন 
+            if (!urlInput.startsWith('http')) {
+                codeOutput.textContent = 'ত্রুটি: অনুগ্রহ করে "http://" বা "https://" সহ একটি সম্পূর্ণ URL দিন।';
+                return;
+            }
 
-            // কোডটি code ব্লকে ঢোকানো
-            codeOutput.textContent = inputCode;
+            // লোডিং মেসেজ সেট করা
+            codeOutput.textContent = 'কোড লোড করা হচ্ছে... (প্রক্সি সার্ভার ব্যবহার করা হচ্ছে)';
+            codeOutput.className = 'language-markup'; // লোডিং অবস্থায় হাইলাইট বন্ধ
 
-            // নির্বাচিত ভাষার ক্লাস যুক্ত করা
-            // Prism-এর জন্য পুরনো ক্লাস মুছে নতুন ক্লাস যোগ করা হয়
-            codeOutput.className = `language-${selectedLanguage}`;
+            // পাবলিক প্রক্সি সার্ভার ব্যবহার (allorigins.win)
+            // এটি CORS সমস্যা এড়াতে সাহায্য করে
+            const proxyUrl = 'https://api.allorigins.win/raw?url='; 
+            const finalUrl = proxyUrl + encodeURIComponent(urlInput);
 
-            // Prism.js দ্বারা কোড হাইলাইট করা
-            // যেহেতু লাইন নম্বর ব্যবহার করা হচ্ছে, তাই পুরো <pre> ব্লক আপডেট করতে হবে
-            Prism.highlightAll(); 
+            try {
+                const response = await fetch(finalUrl);
+                
+                if (!response.ok) {
+                    codeOutput.textContent = `ত্রুটি: URL লোড করা যায়নি। স্ট্যাটাস কোড: ${response.status}. অনেক সময় সার্ভার বা প্রক্সি সমস্যা করতে পারে।`;
+                    return;
+                }
+
+                const sourceCode = await response.text();
+                
+                // সোর্স কোডটি <pre><code> ব্লকে সেট করা
+                codeOutput.textContent = sourceCode;
+                
+                // নির্বাচিত ভাষার ক্লাস যুক্ত করা
+                codeOutput.className = `language-${selectedLanguage}`;
+                
+                // কোড হাইলাইট করা
+                Prism.highlightAll(); 
+
+            } catch (error) {
+                // নেটওয়ার্ক বা অন্যান্য সমস্যা
+                codeOutput.textContent = `যোগাযোগের ত্রুটি: ${error.message}. নিশ্চিত করুন URL টি সঠিক এবং সার্ভারটি অ্যাক্সেসযোগ্য।`;
+                console.error('Fetch Error:', error);
+            }
         }
 
         // কপি বাটন ফাংশন
@@ -246,40 +233,14 @@
             document.execCommand('copy');
             document.body.removeChild(tempTextArea);
             
-            // UI Feedback
             alert('কোড কপি করা হয়েছে!'); 
         }
 
-        // পৃষ্ঠা লোড হওয়ার সাথে সাথে একটি ডিফল্ট কোড দেখানোর জন্য
+        // পৃষ্ঠা লোড হওয়ার সাথে সাথে একটি ডিফল্ট ভিউ চালু করা
         document.addEventListener('DOMContentLoaded', () => {
-            // ডিফল্ট ডেমো কোড
-            document.getElementById('codeInput').value = 
-`// Activate the main system
-const systemStatus = {
-    mode: "Futuristic",
-    status: "Active",
-    version: "1.0.0-beta"
-};
-
-function initDisplay(status) {
-    console.log(\`System Mode: \${status.mode}\`);
-    if (status.status === "Active") {
-        document.getElementById('codeOutput').innerHTML = 
-            '<span>[STATUS: ONLINE] Initializing protocols...</span>';
-    }
-}
-
-// System boot sequence
-window.onload = () => {
-    initDisplay(systemStatus);
-    // Set default language and view
-    document.getElementById('languageSelect').value = 'javascript';
-    viewSource(); 
-};`;
-            
-            // ডিফল্টভাবে জাভাস্ক্রিপ্ট নির্বাচন করা
-            document.getElementById('languageSelect').value = 'javascript';
-            viewSource(); 
+             // শুধুমাত্র প্রথমবার লোড হওয়ার সময় ডিফল্ট কোড ভিউ করার প্রয়োজন নেই, 
+             // তাই শুধুমাত্র নির্দেশিকা দেখানো হচ্ছে।
+             console.log('URL Code Viewer Loaded. Ready to fetch.');
         });
     </script>
 </body>
