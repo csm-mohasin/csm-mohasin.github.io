@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pink Theme AI Assistant - Csm Mohasin Alam</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">  
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+    
+    <style>
+        /* CSS ভ্যারিয়েবল: JavaScript এই --app-height কে সেট করবে */
+        :root {
+            --primary-color: #FF1493; /* Deep Pink */
+            --ai-bg: #f7f7f8; 
+            --user-bg: #FFECF4; 
+            --text-color: #333;
+            --main-bg: #ffffff; 
+            --header-bg: #ffffff;
+            --input-area-bg: #ffffff;
+            --app-height: 100vh; /* Default value for fallback */
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Poppins', sans-serif;
+            background-color: var(--main-bg);
+            color: var(--text-color);
+            overflow: hidden;
+        }
+
+        #fullScreenChat {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            /* মোবাইল কীবোর্ড সমস্যা সমাধানের জন্য JavaScript সেট করা হাইট ব্যবহার করা হলো */
+            height: var(--app-height); 
+            
+            background-color: var(--main-bg);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            z-index: 99999;
+        }
+
+        .chat-header {
+            background-color: var(--header-bg);
+            border-bottom: 1px solid #eee;
+            color: var(--text-color);
+            padding: 15px;
+            font-weight: 600;
+            font-size: 1.1em;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        
+        .chat-header i {
+            color: var(--primary-color);
+            font-size: 1.3em;
+        }
+
+        .chat-body {
+            flex-grow: 1; 
+            padding: 20px;
+            overflow-y: auto;
+            font-size: 15px;
+            line-height: 1.6;
+            background-color: var(--main-bg);
+            /* ফিক্সড ইনপুট বারের জন্য নিচে জায়গা তৈরি করা */
+            padding-bottom: 85px; 
+        }
+        
+        /* --- মেসেজ বাবল স্টাইল: ডানদিকে ইউজার, বামদিকে বট --- */
+        .chat-body > div {
+            display: flex;
+            margin-bottom: 15px;
+            max-width: 100%;
+        }
+
+        .message-bubble {
+            padding: 10px 15px;
+            border-radius: 18px;
+            max-width: 85%;
+            word-wrap: break-word;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+        }
+
+        /* ইউজার মেসেজ (ডানদিকে) */
+        .user-message { justify-content: flex-end; }
+        .user-message .message-bubble {
+            background-color: var(--user-bg); 
+            color: var(--text-color);
+            border-bottom-right-radius: 4px;
+        }
+
+        /* বট রিপ্লাই (বামদিকে) */
+        .bot-reply { justify-content: flex-start; }
+        .bot-reply .message-bubble {
+            background-color: var(--ai-bg); 
+            color: var(--text-color);
+            border-bottom-left-radius: 4px;
+        }
+
+        .message-bubble b {
+            font-weight: 600;
+            color: var(--primary-color); 
+        }
+
+        /* টাইপিং অ্যানিমেশন */
+        .typing-animation { justify-content: flex-start; }
+        .typing-animation .message-bubble {
+            background-color: var(--ai-bg);
+            padding: 10px 18px 10px 15px;
+            color: #777;
+            font-weight: 500;
+        }
+
+        .typing-animation .dot {
+            width: 7px;
+            height: 7px;
+            background-color: var(--primary-color); 
+            border-radius: 50%;
+            margin: 0 4px;
+            display: inline-block;
+            opacity: 0;
+            animation: bounce 1.4s infinite ease-in-out;
+        }
+
+        /* --- ফিক্সড ইনপুট বার --- */
+        .chat-input {
+            position: fixed; 
+            bottom: 0;
+            left: 0;
+            width: 100%; 
+            
+            display: flex;
+            flex-shrink: 0;
+            background-color: var(--input-area-bg);
+            padding: 15px 20px;
+            box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.05);
+            box-sizing: border-box; 
+            z-index: 1000;
+        }
+        
+        .chat-input input {
+            flex: 1; border: 1px solid #ddd; border-radius: 25px; padding: 12px 20px; outline: none; font-size: 15px; margin-right: 10px; transition: border-color 0.3s, box-shadow 0.3s;
+        }
+        .chat-input input:focus {
+            border-color: var(--primary-color); box-shadow: 0 0 0 2px rgba(255, 20, 147, 0.2); 
+        }
+        .chat-input button {
+            background-color: var(--primary-color); color: white; border: none; border-radius: 25px; width: 45px; height: 45px; min-width: 45px; cursor: pointer; font-size: 16px; transition: background-color 0.3s, transform 0.1s;
+        }
+        .chat-input button:hover {
+            background-color: #d60b77; 
+        }
+    </style>
+</head>
+<body>
+
+<div id="fullScreenChat">
+  <div class="chat-header">
+    <i class="fas fa-microchip"></i> 
+    <span>AI Assistant by Csm Mohasin Alam</span>
+  </div>
+  
+  <div class="chat-body" id="chatBody">
+    <div class="bot-reply">
+        <div class="message-bubble">
+            <b>Reply:</b> ডেটা লোড হচ্ছে... অনুগ্রহ করে একটু অপেক্ষা করুন।
+        </div>
+    </div>
+  </div>
+  
+  <div class="chat-input">
+    <input type="text" id="userInput" placeholder="আপনার প্রশ্ন টাইপ করুন এবং এন্টার চাপুন..." onkeypress="if(event.key === 'Enter') sendMessage()" />
+    <button onclick="sendMessage()" title="Send Message">
+        <i class="fas fa-paper-plane"></i>
+    </button>
+  </div>
+</div>
+
+<script>
+// --- Firebase কনফিগারেশন ---
+const firebaseConfig = {
+    apiKey: "AIzaSyDUBNPpDY-toqKVF1lvxvzGmst134q1AOY",
+    authDomain: "muktoshopchatbot-60905.firebaseapp.com",
+    projectId: "muktoshopchatbot-60905",
+    storageBucket: "muktoshopchatbot-60905.firebasestorage.app",
+    messagingSenderId: "595769392691",
+    appId: "1:595769392691:web:0ea7122a9f42eeaf79ced46",
+    measurementId: "G-NPLMLXJFCC"
+};
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+
+const chatBody = document.getElementById('chatBody');
+const userInput = document.getElementById('userInput');
+
+let qaDictionary = {};
+let isQALoaded = false;
+
+// --- ১. মোবাইল কীবোর্ড সমস্যা সমাধানের ফিক্স ---
+function setAppHeight() {
+    // বর্তমান ভিউপোর্ট হাইট পরিমাপ করা (কীবোর্ড বন্ধ থাকা অবস্থায়)
+    const vh = window.innerHeight * 0.01;
+    // CSS ভ্যারিয়েবল `--app-height` সেট করা হলো
+    document.documentElement.style.setProperty('--app-height', `${window.innerHeight}px`);
+}
+
+setAppHeight(); 
+window.addEventListener('resize', setAppHeight);
+
+
+// --- ২. মেসেজ যোগ করার ফাংশন ---
+function appendMessage(sender, message) {
+    const div = document.createElement('div');
+    const bubble = document.createElement('div');
+    bubble.className = 'message-bubble';
+    
+    if (sender === 'user') {
+        div.className = 'user-message';
+        bubble.innerHTML = `<b>You:</b> ${message}`;
+    } else if (sender === 'bot') {
+        div.className = 'bot-reply';
+        bubble.innerHTML = `<b>Reply:</b> ${message}`;
+    } else if (sender === 'typing') {
+        div.className = 'typing-animation';
+        div.id = message; 
+        bubble.innerHTML = `
+            <b>Reply:</b> Typing 
+            <span class="dot"></span>
+            <span class="dot"></span>
+            <span class="dot"></span>
+        `;
+    }
+    
+    div.appendChild(bubble);
+    chatBody.appendChild(div);
+    chatBody.scrollTop = chatBody.scrollHeight;
+    return div;
+}
+
+// --- ৩. Type Reply ফাংশন (Typewriter এফেক্ট) ---
+function typeReply(element, textWithHtml) {
+    let outputText = '<b>Reply:</b> ';
+    element.innerHTML = outputText; 
+    
+    let i = 0;
+    
+    const typingInterval = setInterval(() => {
+        if (i < textWithHtml.length) {
+            let char = textWithHtml.charAt(i);
+            if (char === '<') {
+                const tagEndIndex = textWithHtml.indexOf('>', i);
+                if (tagEndIndex !== -1) {
+                    const tag = textWithHtml.substring(i, tagEndIndex + 1);
+                    outputText += tag;
+                    i = tagEndIndex + 1; 
+                } else {
+                    outputText += char;
+                    i++;
+                }
+            } else {
+                outputText += char;
+                i++;
+            }
+
+            element.innerHTML = outputText; 
+            chatBody.scrollTop = chatBody.scrollHeight; 
+        } else {
+            clearInterval(typingInterval);
+        }
+    // **পরিবর্তন এখানে:** টাইপিং গতি 30ms থেকে 60ms করা হয়েছে।
+    }, 60); 
+}
+
+// --- ৪. Firebase Data Loading ---
+async function loadQnADictionary() {
+    if (isQALoaded) return true;
+    try {
+        const qaCollection = db.collection('chatbot_qa');
+        const snapshot = await qaCollection.get();
+        snapshot.forEach(doc => {
+            const data = doc.data();
+            if (data.query && data.reply) {
+                qaDictionary[data.query.toLowerCase().trim()] = data.reply;
+            }
+        });
+        isQALoaded = true;
+        return true;
+    } catch (error) {
+        console.error("Error loading Q&A from Firebase:", error);
+        return false;
+    }
+}
+
+loadQnADictionary().then(success => {
+    const initialDiv = chatBody.querySelector('.bot-reply');
+    const initialBubble = initialDiv ? initialDiv.querySelector('.message-bubble') : null;
+    
+    if (success) {
+        if (initialBubble && initialBubble.textContent.includes('ডেটা লোড হচ্ছে')) {
+             initialBubble.innerHTML = `<b>Reply:</b> হ্যালো! আমি <b>Csm Mohasin Alam</b> এর Ai সহকারী। কিভাবে সাহায্য করতে পারি?`;
+        }
+    } else {
+        if (initialBubble) {
+            initialBubble.innerHTML = `<b>Reply:</b> ডেটাবেস লোড করা সম্ভব হয়নি। অনুগ্রহ করে ইন্টারনেট সংযোগ চেক করুন।`;
+        }
+    }
+    chatBody.scrollTop = chatBody.scrollHeight;
+});
+
+
+// --- ৫. মেসেজ পাঠানোর প্রধান ফাংশন ---
+async function sendMessage() {
+    const message = userInput.value.trim();
+    if (message === '') return;
+    
+    appendMessage('user', message);
+    userInput.value = '';
+
+    const typingMessageId = `typing-${Date.now()}`;
+    const typingDiv = appendMessage('typing', typingMessageId);
+    
+    if (!isQALoaded) {
+        await loadQnADictionary();
+    }
+
+    let reply = "দুঃখিত, আমি এই মুহূর্তে আপনার প্রশ্নের উত্তরটি ডেটাবেসে খুঁজে পাচ্ছি না। 😊";
+    const userMessageLower = message.toLowerCase();
+
+    let matched = false;
+    for (const query in qaDictionary) {
+        if (userMessageLower.includes(query)) { 
+            reply = qaDictionary[query];
+            matched = true;
+            break;
+        }
+    }
+    
+    // উত্তর দেওয়ার বিলম্ব (Delay) 300ms সেট করা আছে
+    setTimeout(() => {
+        const typingBubble = typingDiv.querySelector('.message-bubble');
+        
+        typingDiv.classList.remove('typing-animation');
+        typingDiv.classList.add('bot-reply');
+        typingDiv.removeAttribute('id'); 
+        
+        typeReply(typingBubble, reply);
+        
+    }, 300); 
+}
+</script>
+
+</body>
+</html>
