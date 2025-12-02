@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>✅ লাইভ ট্র্যাকার (ইউজার সেন্ডার)</title>
+  <title>✅ লাইভ ট্র্যাকার (ইউজার সেন্ডার) | CSM</title>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
   <style>
     body {
@@ -92,22 +92,20 @@
 
     // --- 2. Firebase Setup ---
     import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
-    import { getDatabase, ref, set, onDisconnect, serverTimestamp, remove } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-database.js";
+    import { getDatabase, ref, set, onDisconnect, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-database.js";
 
-    // **গুরুত্বপূর্ণ: অ্যাডমিন প্যানেলের সাথে মিল রেখে এই কনফিগারেশন আপডেট করুন**
-    // এটি আপনার অ্যাডমিন পেজের কনফিগারেশন (signup-d32c5)
+    // **গুরুত্বপূর্ণ: এই কনফিগারেশনটি আপনার অ্যাডমিন প্যানেলের কনফিগারেশনের সাথে একই হতে হবে**
     const YOUR_FIREBASE_CONFIG = {
         apiKey:"AIzaSyCsGBSRCHVUhXQZ5DNMEZWgQWk1gxMF1E4", 
         authDomain:"signup-d32c5.firebaseapp.com",
         projectId:"signup-d32c5",
         databaseURL:"https://signup-d32c5-default-rtdb.firebaseio.com/",
-        // অন্যান্য অপ্রয়োজনীয় ফিল্ড বাদ দিলাম
     };
 
     const app = initializeApp(YOUR_FIREBASE_CONFIG);
     const db = getDatabase(app);
 
-    // --- 3. Persistent User ID Management ---
+    // --- 3. Persistent User ID Management (ব্রাউজারে সেভ থাকবে) ---
     const STORAGE_KEY = 'tracker_user_id';
     let USER_ID = localStorage.getItem(STORAGE_KEY);
 
@@ -157,22 +155,20 @@
 
     // --- 5. Main Location Handler ---
 
-    /** Sends live location data to Firebase and updates UI. */
     async function locationSuccess(position) {
       const { latitude, longitude, speed, accuracy } = position.coords;
       const battery = await getBatteryLevel();
       const network = getNetworkType();
       const timestamp = new Date().toLocaleTimeString();
 
-      // UI Update
       updateUI(latitude, longitude, speed, battery, network, timestamp, true);
       
-      // Data structure:
+      // Data structure for Firebase:
       const locationData = {
-        // LIVE data - these will be deleted on disconnect
+        // LIVE data (will be null on disconnect)
         latitude,
         longitude,
-        speed: speed ? (speed * 3.6).toFixed(2) : "0.00", // m/s to km/h for admin panel compatibility
+        speed: speed ? (speed * 3.6).toFixed(2) : "0.00", // m/s to km/h
         accuracy: accuracy.toFixed(2) + " m",
         
         // STATIC/LAST SEEN data
@@ -181,7 +177,7 @@
         time: timestamp,
         timestamp_server: serverTimestamp(),
         
-        // LAST SEEN backups - set when online
+        // LAST SEEN backups (used when the user is offline)
         last_lat: latitude,
         last_lon: longitude,
         last_time: timestamp,
@@ -200,16 +196,20 @@
       }
     }
 
-    /** Handles Geolocation API errors. */
     function locationError(error) {
       console.error("Geolocation Error:", error);
       let errorMessage = "❌ লোকেশন অ্যাক্সেসের সমস্যা।";
-      // (Error message logic similar to previous code)
+      if (error.code === error.PERMISSION_DENIED) {
+            errorMessage = "❌ লোকেশন অ্যাক্সেসের অনুমতি দেওয়া হয়নি।";
+        } else if (error.code === error.POSITION_UNAVAILABLE) {
+            errorMessage = "❌ ডিভাইস থেকে লোকেশন ডেটা পাওয়া যাচ্ছে না।";
+        } else if (error.code === error.TIMEOUT) {
+            errorMessage = "❌ লোকেশন ডেটা পাওয়ার সময় শেষ (Timeout)।";
+        }
       
       permissionStatusEl.textContent = errorMessage;
       permissionStatusEl.classList.add('error');
       
-      // If location fails, set status to OFFLINE visually
       statusDisplayEl.textContent = 'OFFLINE (GPS Failed)';
       statusDisplayEl.className = 'value error';
     }
@@ -218,12 +218,12 @@
     function setupDisconnect() {
         // যখন অ্যাপটি বন্ধ হবে বা কানেকশন হারাবে, তখন এই ডেটাগুলি সেভ থাকবে।
         onDisconnect(userRef).set({
-            // লাইভ ফিল্ডগুলো মুছে ফেলা হবে
+            // Live fields set to null/removed
             latitude: null,
             longitude: null,
             speed: null,
             
-            // last_seen ডেটা সেভ থাকবে
+            // last_seen data is maintained
             last_lat: latEl.textContent,
             last_lon: lonEl.textContent,
             last_time: new Date().toLocaleTimeString(),
@@ -234,20 +234,28 @@
     }
 
 
-    // --- 7. Initialization ---
+    // --- 7. Initialization (পারমিশন চাওয়ার লজিক) ---
     window.onload = () => {
       if ("geolocation" in navigator) {
         permissionStatusEl.textContent = "লোকেশন অ্যাক্সেসের জন্য অনুরোধ করা হচ্ছে...";
         
-        // 7.1 Set up onDisconnect handler
-        setupDisconnect();
-        
-        // 7.2 Start continuous position tracking
-        navigator.geolocation.watchPosition(locationSuccess, locationError, {
-          enableHighAccuracy: true,
-          maximumAge: 0, 
-          timeout: 15000 
-        });
+        // প্রথমে getCurrentPosition ব্যবহার করে পারমিশন চাওয়া
+        navigator.geolocation.getCurrentPosition(
+          () => {
+            permissionStatusEl.textContent = "✅ অনুমতি দেওয়া হয়েছে! লাইভ ট্র্যাকিং শুরু হচ্ছে...";
+            setupDisconnect(); // ডিসকানেক্ট হ্যান্ডলার সেট করা
+
+            // অনুমতি পেলে watchPosition দিয়ে লাইভ ট্র্যাকিং শুরু করা হলো
+            navigator.geolocation.watchPosition(locationSuccess, locationError, {
+              enableHighAccuracy: true,
+              maximumAge: 0, 
+              timeout: 15000 
+            });
+          },
+          // পারমিশন না পেলে বা প্রথম ডেটা না পেলে error হ্যান্ডেলারে যাবে
+          locationError, 
+          { enableHighAccuracy: true }
+        );
       } else {
         permissionStatusEl.textContent = "❌ আপনার ডিভাইসে Geolocation সাপোর্ট করে না।";
         permissionStatusEl.classList.add('error');
