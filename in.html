@@ -3,10 +3,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>User Live Location Sender</title>
+  <title>User Live Location Sender | বাংলা ট্র্যাকার</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
   <style>
     body {
-      font-family: "Poppins", sans-serif;
+      font-family: 'Poppins', sans-serif;
       background: #0a0a0a;
       color: #fff;
       text-align: center;
@@ -15,48 +16,77 @@
     h1 {
       color: #00ffd5;
       margin-bottom: 10px;
+      font-weight: 700;
     }
-    .status {
+    .status-container {
       background: #111;
-      border-radius: 10px;
-      padding: 15px;
-      margin-top: 15px;
-      box-shadow: 0 0 10px #00ffd5;
+      border-radius: 12px;
+      padding: 20px;
+      margin-top: 20px;
+      box-shadow: 0 0 15px rgba(0, 255, 213, 0.4); /* Neon Glow */
+      max-width: 350px;
+      margin-left: auto;
+      margin-right: auto;
+      text-align: left;
     }
-    button {
-      background: #00ffd5;
-      border: none;
-      padding: 10px 20px;
-      color: #000;
-      border-radius: 8px;
-      font-weight: bold;
-      cursor: pointer;
-      transition: 0.3s;
+    .status-item {
+        display: flex;
+        justify-content: space-between;
+        padding: 5px 0;
+        border-bottom: 1px dashed #333;
     }
-    button:hover {
-      background: #00bfa5;
+    .status-item:last-child {
+        border-bottom: none;
+    }
+    .label {
+        color: #00ffd5;
+        font-weight: 600;
+    }
+    .value {
+        color: #fff;
+    }
+    #permission-status {
+        font-weight: 600;
+        color: #f39c12; /* Warning color */
+    }
+    .error {
+        color: #e74c3c !important;
+    }
+    .success {
+        color: #2ecc71 !important;
     }
   </style>
 </head>
 <body>
-  <h1>📍 Live Location Sender</h1>
-  <p id="permission-status">Checking location permission...</p>
-  <div class="status">
-    <p><b>Latitude:</b> <span id="lat">-</span></p>
-    <p><b>Longitude:</b> <span id="lon">-</span></p>
-    <p><b>Speed:</b> <span id="speed">-</span></p>
-    <p><b>Network:</b> <span id="net">-</span></p>
-    <p><b>Battery:</b> <span id="bat">-</span></p>
-    <p><b>Last Updated:</b> <span id="time">-</span></p>
+  <h1>🛰️ লাইভ লোকেশন ট্র্যাকার</h1>
+  <p id="permission-status">লোকেশন পারমিশন চেক করা হচ্ছে...</p>
+  
+  <div class="status-container">
+    <div class="status-item"><span class="label">Latitude:</span> <span class="value" id="lat">-</span></div>
+    <div class="status-item"><span class="label">Longitude:</span> <span class="value" id="lon">-</span></div>
+    <div class="status-item"><span class="label">Speed:</span> <span class="value" id="speed">-</span></div>
+    <div class="status-item"><span class="label">Network:</span> <span class="value" id="net">-</span></div>
+    <div class="status-item"><span class="label">Battery:</span> <span class="value" id="bat">-</span></div>
+    <div class="status-item"><span class="label">Last Updated:</span> <span class="value" id="time">-</span></div>
   </div>
 
   <script type="module">
-    // ✅ Firebase setup
+    // --- 1. DOM Element Caching ---
+    const permissionStatusEl = document.getElementById("permission-status");
+    const latEl = document.getElementById("lat");
+    const lonEl = document.getElementById("lon");
+    const speedEl = document.getElementById("speed");
+    const netEl = document.getElementById("net");
+    const batEl = document.getElementById("bat");
+    const timeEl = document.getElementById("time");
+
+    // --- 2. Firebase Setup (Replace with your actual configuration) ---
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-app.js";
     import { getDatabase, ref, set } from "https://www.gstatic.com/firebasejs/11.0.1/firebase-database.js";
 
-    const firebaseConfig = {
-      apiKey: "AIzaSyBQZaW4yRirnA40-NTa7TXT3CXVnBRvPRA",
+    // **ATTENTION:** Please replace these placeholder values with your OWN Firebase project's credentials.
+    const YOUR_FIREBASE_CONFIG = {
+      apiKey: "AIzaSyBQZaW4yRirnA40-NTa7TXT3CXVnBRvPRA", 
       authDomain: "live-tracker-setup.firebaseapp.com",
       databaseURL: "https://live-tracker-setup-default-rtdb.firebaseio.com",
       projectId: "live-tracker-setup",
@@ -65,79 +95,119 @@
       appId: "1:278209268043:web:73c8a8a5dc996f68c5b34e"
     };
 
-    const app = initializeApp(firebaseConfig);
+    const app = initializeApp(YOUR_FIREBASE_CONFIG);
     const db = getDatabase(app);
 
-    // ✅ Helper Functions
+    // Change this unique identifier for each user
+    const USER_ID = "User-01-Device"; 
+
+    // --- 3. Helper Functions ---
+    
+    /** Fetches the battery level. */
     async function getBatteryLevel() {
       try {
-        const battery = await navigator.getBattery();
-        return (battery.level * 100).toFixed(0) + "%";
-      } catch {
+        if ('getBattery' in navigator) {
+            const battery = await navigator.getBattery();
+            return (battery.level * 100).toFixed(0) + "%";
+        }
+        return "N/A";
+      } catch (e) {
         return "N/A";
       }
     }
 
+    /** Determines the network type. */
     function getNetworkType() {
       try {
         const net = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
         return net ? net.effectiveType.toUpperCase() : "UNKNOWN";
-      } catch {
+      } catch (e) {
         return "UNKNOWN";
       }
     }
 
-    // ✅ Send location to Firebase
-    async function sendLocation(position) {
+    /** Updates the UI with the latest data. */
+    function updateUI(latitude, longitude, speed, battery, network, timestamp) {
+        latEl.textContent = latitude.toFixed(6);
+        lonEl.textContent = longitude.toFixed(6);
+        speedEl.textContent = speed ? speed.toFixed(2) + " m/s" : "0.00 m/s";
+        netEl.textContent = network;
+        batEl.textContent = battery;
+        timeEl.textContent = timestamp;
+    }
+
+    // --- 4. Main Location Handler ---
+
+    /** Sends location data to Firebase and updates UI. */
+    async function locationSuccess(position) {
       const { latitude, longitude, speed } = position.coords;
       const battery = await getBatteryLevel();
       const network = getNetworkType();
       const timestamp = new Date().toLocaleTimeString();
 
-      document.getElementById("lat").textContent = latitude.toFixed(6);
-      document.getElementById("lon").textContent = longitude.toFixed(6);
-      document.getElementById("speed").textContent = speed ? speed.toFixed(2) + " m/s" : "0.00 m/s";
-      document.getElementById("net").textContent = network;
-      document.getElementById("bat").textContent = battery;
-      document.getElementById("time").textContent = timestamp;
-
-      // Change USER_ID for each user (unique identifier)
-      const USER_ID = "User-01";
-
-      await set(ref(db, "users/" + USER_ID), {
-        latitude,
-        longitude,
-        speed,
-        battery,
-        network,
-        time: timestamp
-      });
+      // Update UI first
+      updateUI(latitude, longitude, speed, battery, network, timestamp);
+      
+      // Then send to Firebase
+      try {
+        await set(ref(db, "users/" + USER_ID), {
+          latitude,
+          longitude,
+          speed,
+          battery,
+          network,
+          time: timestamp,
+          accuracy: position.coords.accuracy.toFixed(2) + " m"
+        });
+        permissionStatusEl.textContent = `✅ ডেটা পাঠানো হচ্ছে (${timestamp})`;
+        permissionStatusEl.classList.remove('error');
+        permissionStatusEl.classList.add('success');
+      } catch (e) {
+        console.error("Firebase Send Error:", e);
+        permissionStatusEl.textContent = "⚠️ Firebase-এ ডেটা পাঠাতে সমস্যা হচ্ছে। (কনসোল দেখুন)";
+        permissionStatusEl.classList.add('error');
+      }
     }
 
-    function handleError(error) {
-      console.error(error);
-      document.getElementById("permission-status").textContent =
-        "❌ Location permission denied or unavailable.";
+    /** Handles Geolocation API errors. */
+    function locationError(error) {
+      console.error("Geolocation Error:", error);
+      let errorMessage = "❌ লোকেশন পারমিশন অস্বীকার করা হয়েছে বা ডেটা পাওয়া যায়নি।";
+      if (error.code === error.PERMISSION_DENIED) {
+          errorMessage = "❌ লোকেশন অ্যাক্সেসের অনুমতি দেওয়া হয়নি।";
+      } else if (error.code === error.POSITION_UNAVAILABLE) {
+          errorMessage = "❌ ডিভাইস থেকে লোকেশন ডেটা পাওয়া যাচ্ছে না।";
+      } else if (error.code === error.TIMEOUT) {
+          errorMessage = "❌ লোকেশন ডেটা পাওয়ার সময় শেষ (Timeout)।";
+      }
+      permissionStatusEl.textContent = errorMessage;
+      permissionStatusEl.classList.remove('success');
+      permissionStatusEl.classList.add('error');
     }
 
-    // ✅ Request location permission automatically
+    // --- 5. Initialization ---
     window.onload = () => {
       if ("geolocation" in navigator) {
-        document.getElementById("permission-status").textContent = "Requesting location access...";
+        permissionStatusEl.textContent = "লোকেশন অ্যাক্সেসের জন্য অনুরোধ করা হচ্ছে...";
+        
+        // Request an initial position to check permission
         navigator.geolocation.getCurrentPosition(
           () => {
-            document.getElementById("permission-status").textContent = "✅ Permission granted! Sending location...";
-            navigator.geolocation.watchPosition(sendLocation, handleError, {
+            permissionStatusEl.textContent = "✅ অনুমতি দেওয়া হয়েছে! লাইভ ট্র্যাকিং শুরু হচ্ছে...";
+            
+            // Start watching position continuously
+            navigator.geolocation.watchPosition(locationSuccess, locationError, {
               enableHighAccuracy: true,
-              maximumAge: 0,
-              timeout: 10000
+              maximumAge: 0, 
+              timeout: 15000 // Increased timeout for better stability
             });
           },
-          handleError,
+          locationError, // Handles the permission denial directly
           { enableHighAccuracy: true }
         );
       } else {
-        document.getElementById("permission-status").textContent = "❌ Geolocation not supported on this device.";
+        permissionStatusEl.textContent = "❌ আপনার ডিভাইসে Geolocation সাপোর্ট করে না।";
+        permissionStatusEl.classList.add('error');
       }
     };
   </script>
