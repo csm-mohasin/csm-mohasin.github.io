@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Live Editor // Terminal HACK</title>
+    <title>Single Pane Live Editor // Terminal HACK</title>
     <style>
         /* Base styles for a terminal look */
         body {
@@ -36,7 +36,7 @@
             animation: flicker 0.1s infinite alternate;
         }
 
-        /* Main layout: 50% for code, 50% for output */
+        /* Main layout: 50% for code, 50% for output, using Flexbox */
         .container {
             display: flex;
             height: 100vh;
@@ -66,21 +66,20 @@
         }
 
         /* Textarea styles for code input */
-        textarea {
+        #fullCode {
             flex-grow: 1;
             resize: none;
-            padding: 8px;
+            padding: 10px;
             border: 1px solid #00ff00;
             background-color: #111;
             color: #00ff00;
             font-family: 'Consolas', 'monospace';
-            font-size: 13px;
-            margin-bottom: 10px;
+            font-size: 14px;
             box-sizing: border-box;
             outline: none;
             transition: border-color 0.2s;
         }
-        textarea:focus {
+        #fullCode:focus {
             border-color: #00ffff; /* Highlight border on focus */
             box-shadow: 0 0 5px rgba(0, 255, 255, 0.7);
         }
@@ -123,13 +122,9 @@
     <div class="container">
         <div class="code-area">
             
-            <h2>[CODE INPUT] // Terminal 01</h2>
-            <textarea id="htmlCode" placeholder=""><h1>Hello Terminal!</h1></textarea>
-
-            <textarea id="cssCode" placeholder="/* CSS/Style Code */">body { background: black; color: white; }</textarea>
-
-            <textarea id="jsCode" placeholder="// JavaScript/Logic Code (Optional)"></textarea>
-
+            <h2>[CODE INPUT] // Single HTML Document</h2>
+            <textarea id="fullCode" placeholder=""></textarea>
+            
         </div>
         
         <iframe class="output-area" id="outputFrame"></iframe>
@@ -137,51 +132,50 @@
     </div>
 
     <script>
-        const htmlCode = document.getElementById('htmlCode');
-        const cssCode = document.getElementById('cssCode');
-        const jsCode = document.getElementById('jsCode');
+        const fullCode = document.getElementById('fullCode');
         const outputFrame = document.getElementById('outputFrame');
+
+        // Initial default code
+        const defaultCode = `
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Live Preview</title>
+    <style>
+        body { background: #333; color: #00ff00; font-family: monospace; }
+        h1 { border-bottom: 2px solid #00ff00; padding-bottom: 5px; }
+    </style>
+</head>
+<body>
+    <h1>SYSTEM BOOT SUCCESSFUL</h1>
+    <p id="output">Welcome to the Single Pane Editor.</p>
+    <script>
+        // Use console.log for debugging, or write output to the DOM
+        let counter = 0;
+        setInterval(() => {
+            counter++;
+            const el = document.getElementById('output');
+            if (el) el.textContent = 'Output update: ' + counter;
+        }, 1000);
+    <\/script>
+</body>
+</html>
+        `;
+        fullCode.value = defaultCode.trim(); // Set default code on load
 
         // Function to update the iframe output
         function updateOutput() {
-            const html = htmlCode.value;
-            const css = cssCode.value;
-            const js = jsCode.value;
-
-            // Construct the complete HTML document structure
-            const documentContent = `
-                <!DOCTYPE html>
-                <html>
-                <head>
-                    <title>Live Preview</title>
-                    <style>
-                        ${css}
-                    </style>
-                </head>
-                <body>
-                    ${html}
-                    <script>
-                        // JS code is wrapped in a try/catch to display errors in the console
-                        try {
-                            ${js}
-                        } catch (e) {
-                            console.error("JavaScript Execution Error:", e);
-                        }
-                    </script>
-                </body>
-                </html>
-            `;
-
+            const code = fullCode.value;
+            
             // Write the constructed document into the iframe
-            outputFrame.srcdoc = documentContent;
+            // srcdoc safely loads content provided as a string
+            outputFrame.srcdoc = code;
         }
 
-        // Add event listeners to update output whenever user types
-        htmlCode.addEventListener('input', updateOutput);
-        cssCode.addEventListener('input', updateOutput);
-        jsCode.addEventListener('input', updateOutput);
-
-        // Initial update with a default welcome code
+        // Add event listener to update output whenever user types
+        fullCode.addEventListener('input', updateOutput);
+        
+        // Initial update when the page loads
         updateOutput(); 
     </script>
 </body>
