@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Link Extractor // Hacker Terminal</title>
+    <style>
+        /* Base styles for a terminal look */
+        body {
+            background-color: #1a1a1a; /* Dark background */
+            color: #00ff00; /* Green text for terminal feel */
+            font-family: 'Hack', 'Fira Code', 'Cascadia Code', 'Consolas', 'monospace'; /* Monospaced font */
+            padding: 20px;
+            margin: 0;
+            line-height: 1.5;
+            overflow-x: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+        }
+
+        /* Container for the terminal window */
+        .terminal {
+            width: 90%;
+            max-width: 900px;
+            background-color: #000000; /* Pure black inside terminal */
+            border: 2px solid #00ff00; /* Green border */
+            box-shadow: 0 0 15px rgba(0, 255, 0, 0.7); /* Green glow */
+            border-radius: 8px;
+            padding: 25px;
+            box-sizing: border-box;
+            position: relative;
+            animation: flicker 0.1s infinite alternate; /* Subtle flicker effect */
+            margin-top: 50px; /* Space from top */
+        }
+
+        /* Header like a terminal prompt */
+        h1 {
+            color: #00ff00;
+            margin-top: 0;
+            margin-bottom: 20px;
+            font-size: 1.8em;
+            text-align: left;
+            border-bottom: 1px dashed #00ff00;
+            padding-bottom: 10px;
+        }
+
+        /* Prompt style for input */
+        .prompt {
+            color: #00ff00;
+            margin-right: 8px;
+        }
+
+        /* Input form and elements */
+        #inputForm {
+            display: flex;
+            margin-bottom: 20px;
+            align-items: center;
+        }
+
+        #urlInput {
+            flex-grow: 1;
+            background-color: #1a1a1a; /* Darker input background */
+            border: 1px solid #00ff00; /* Green border */
+            color: #00ff00;
+            padding: 10px;
+            font-size: 1em;
+            border-radius: 4px;
+            margin-right: 10px;
+            outline: none; /* Remove default outline */
+            box-shadow: inset 0 0 5px rgba(0, 255, 0, 0.5); /* Inner glow */
+        }
+        #urlInput::placeholder {
+            color: rgba(0, 255, 0, 0.7); /* Lighter green placeholder */
+        }
+
+        #submitBtn {
+            background-color: #0056b3; /* Dark blue, can be changed to green */
+            background-color: #008000; /* Darker green button */
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1em;
+            box-shadow: 0 0 8px rgba(0, 255, 0, 0.5); /* Green button glow */
+            transition: background-color 0.3s ease;
+        }
+        #submitBtn:hover {
+            background-color: #00cc00; /* Brighter green on hover */
+            box-shadow: 0 0 12px rgba(0, 255, 0, 0.9);
+        }
+        #submitBtn:disabled {
+            background-color: #333;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+
+        /* Status and error messages */
+        .status-line {
+            padding: 8px;
+            border-left: 3px solid #00ff00;
+            margin-bottom: 15px;
+            white-space: pre-wrap; /* Preserve whitespace and breaks */
+        }
+        .loading {
+            color: #00ff00;
+            animation: blink 1s infinite; /* Blinking effect */
+        }
+        .error {
+            color: #ff0000; /* Red for errors */
+            border-left-color: #ff0000;
+        }
+
+        /* Results area */
+        #resultsTable {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        #resultsTable th, #resultsTable td {
+            border: 1px dashed #00ff00; /* Dashed green border for table */
+            padding: 8px;
+            text-align: left;
+            word-break: break-all; /* Ensure long URLs wrap */
+        }
+        #resultsTable th {
+            background-color: rgba(0, 255, 0, 0.1); /* Slightly lighter green for headers */
+            color: #00ff00;
+        }
+        #resultsTable td {
+            color: #00ff00;
+        }
+        #resultsTable a {
+            color: #00ffff; /* Cyan for links */
+            text-decoration: none;
+        }
+        #resultsTable a:hover {
+            text-decoration: underline;
+        }
+        
+        /* Blinking cursor effect for prompt */
+        .blinking-cursor {
+            font-weight: 100;
+            animation: blink-caret .75s step-end infinite;
+        }
+
+        /* Keyframe animations */
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0; }
+        }
+        @keyframes blink-caret {
+            from, to { border-color: transparent }
+            50% { border-color: #00ff00; }
+        }
+        @keyframes flicker {
+            0% { opacity: 1; }
+            50% { opacity: 0.98; }
+            100% { opacity: 1; }
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 600px) {
+            .terminal {
+                padding: 15px;
+            }
+            h1 {
+                font-size: 1.5em;
+            }
+            #inputForm {
+                flex-direction: column;
+            }
+            #urlInput {
+                margin-right: 0;
+                margin-bottom: 10px;
+                border-radius: 4px;
+            }
+            #submitBtn {
+                width: 100%;
+                border-radius: 4px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="terminal">
+        <h1><span class="prompt"></span> [INIT] Link Extractor v1.0 <span class="blinking-cursor">_</span></h1>
+        <div class="status-line">
+            <span class="prompt">>></span> Enter target URL to scan for anchor links:
+        </div>
+        <form id="inputForm">
+            <span class="prompt">$</span> <input type="url" id="urlInput" placeholder="https://example.com" required>
+            <button type="submit" id="submitBtn">EXECUTE</button>
+        </form>
+
+        <div id="statusMessage" class="status-line loading" style="display: none;">
+            <span class="prompt">>></span> Scanning target. Please stand by...
+        </div>
+        <div id="errorMessage" class="status-line error" style="display: none;">
+            <span class="prompt">!!</span> ERROR: 
+        </div>
+        
+        <div class="status-line">
+            <span class="prompt">>></span> Results:
+        </div>
+        <table id="resultsTable">
+            <thead>
+                <tr>
+                    <th>Anchor Text</th>
+                    <th>Link URL</th>
+                </tr>
+            </thead>
+            <tbody id="resultsBody">
+                <tr><td colspan="2"><span class="prompt">>></span> Waiting for input...</td></tr>
+            </tbody>
+        </table>
+        <div class="status-line" style="margin-top: 20px;"><span class="prompt">>></span> Operation complete.</div>
+    </div>
+
+    <script>
+        // *** আপনার Worker URL টি এখানে অবশ্যই দিন ***
+        const WORKER_URL = "https://late-dawn-6462.csmmohasinalam.workers.dev/"; 
+
+        const form = document.getElementById('inputForm');
+        const urlInput = document.getElementById('urlInput');
+        const resultsBody = document.getElementById('resultsBody');
+        const statusMessage = document.getElementById('statusMessage');
+        const errorMessage = document.getElementById('errorMessage');
+        const submitBtn = document.getElementById('submitBtn');
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const targetUrl = urlInput.value;
+            
+            // UI পরিষ্কার করা এবং লোডিং দেখানো
+            resultsBody.innerHTML = `<tr><td colspan="2"><span class="prompt">>></span> Processing...</td></tr>`;
+            errorMessage.style.display = 'none';
+            statusMessage.style.display = 'block';
+            submitBtn.disabled = true;
+
+            try {
+                // Worker-কে কল করা
+                const workerCallUrl = `${WORKER_URL}?target=${encodeURIComponent(targetUrl)}`;
+                const response = await fetch(workerCallUrl);
+                const data = await response.json();
+
+                if (response.status !== 200) {
+                     // Worker থেকে যদি error (যেমন 403/500) আসে
+                    errorMessage.querySelector('span:last-child').textContent = `ERROR: Failed to fetch data. Status: ${response.status}. Message: ${data.error || 'Unknown error'}. Check URL or try another.`;
+                    errorMessage.style.display = 'block';
+                    return;
+                }
+
+                if (data.status === 'success' && data.links) {
+                    // সফল হলে টেবিল তৈরি করা
+                    if (data.links.length === 0) {
+                        resultsBody.innerHTML = `<tr><td colspan="2"><span class="prompt">>></span> No links found on this page.</td></tr>`;
+                    } else {
+                        resultsBody.innerHTML = ''; // Clear processing message
+                        data.links.forEach(item => {
+                            const row = resultsBody.insertRow();
+                            const anchorCell = row.insertCell(0);
+                            const linkCell = row.insertCell(1);
+                            
+                            anchorCell.textContent = item.anchorText || "[Image Link]";
+                            linkCell.innerHTML = `<a href="${item.link}" target="_blank">${item.link}</a>`;
+                        });
+                    }
+                } else if (data.error) {
+                    // এরর মেসেজ দেখানো
+                    errorMessage.querySelector('span:last-child').textContent = `ERROR: Worker responded with an error: ${data.error}`;
+                    errorMessage.style.display = 'block';
+                }
+            } catch (error) {
+                errorMessage.querySelector('span:last-child').textContent = `ERROR: Network issue or Worker is unreachable. Details: ${error.message}`;
+                errorMessage.style.display = 'block';
+            } finally {
+                statusMessage.style.display = 'none';
+                submitBtn.disabled = false;
+            }
+        });
+    </script>
+</body>
+</html>
