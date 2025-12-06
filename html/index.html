@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Live Editor // Terminal HACK</title>
+    <style>
+        /* Base styles for a terminal look */
+        body {
+            background-color: #1a1a1a;
+            color: #00ff00; /* Green text for terminal feel */
+            font-family: 'Hack', 'Fira Code', 'Consolas', 'monospace';
+            margin: 0;
+            padding: 0;
+            line-height: 1.4;
+            overflow: hidden; /* Prevent scroll on body */
+        }
+        
+        /* Flicker effect for the whole body */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1000;
+            background: repeating-linear-gradient(
+                0deg,
+                rgba(0, 0, 0, 0.1),
+                rgba(0, 0, 0, 0.2) 1px,
+                transparent 1px,
+                transparent 2px
+            );
+            animation: flicker 0.1s infinite alternate;
+        }
+
+        /* Main layout: 50% for code, 50% for output */
+        .container {
+            display: flex;
+            height: 100vh;
+            padding: 10px;
+            box-sizing: border-box;
+            gap: 10px; /* Space between code and output */
+        }
+        
+        /* Code area styles */
+        .code-area {
+            display: flex;
+            flex-direction: column;
+            width: 50%;
+            background-color: #000000;
+            border: 1px solid #00ff00;
+            box-shadow: 0 0 10px rgba(0, 255, 0, 0.5);
+            padding: 10px;
+            box-sizing: border-box;
+        }
+        .code-area h2 {
+            color: #00ffff; /* Cyan for section titles */
+            margin-top: 0;
+            margin-bottom: 10px;
+            font-size: 1.1em;
+            border-bottom: 1px dashed #00ff00;
+            padding-bottom: 5px;
+        }
+
+        /* Textarea styles for code input */
+        textarea {
+            flex-grow: 1;
+            resize: none;
+            padding: 8px;
+            border: 1px solid #00ff00;
+            background-color: #111;
+            color: #00ff00;
+            font-family: 'Consolas', 'monospace';
+            font-size: 13px;
+            margin-bottom: 10px;
+            box-sizing: border-box;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        textarea:focus {
+            border-color: #00ffff; /* Highlight border on focus */
+            box-shadow: 0 0 5px rgba(0, 255, 255, 0.7);
+        }
+
+        /* Output area styles (IFrame) */
+        .output-area {
+            width: 50%;
+            background-color: white;
+            border: 2px solid #00ff00;
+            box-shadow: 0 0 10px rgba(0, 255, 0, 0.5);
+            margin: 0;
+        }
+        
+        /* Keyframe animations */
+        @keyframes flicker {
+            0% { opacity: 1; }
+            50% { opacity: 0.98; }
+            100% { opacity: 1; }
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column;
+                height: auto;
+                padding: 5px;
+            }
+            .code-area, .output-area {
+                width: 100%;
+                height: 50vh; 
+            }
+            .output-area {
+                height: 40vh; /* Shorter output on mobile */
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="code-area">
+            
+            <h2>[CODE INPUT] // Terminal 01</h2>
+            <textarea id="htmlCode" placeholder=""><h1>Hello Terminal!</h1></textarea>
+
+            <textarea id="cssCode" placeholder="/* CSS/Style Code */">body { background: black; color: white; }</textarea>
+
+            <textarea id="jsCode" placeholder="// JavaScript/Logic Code (Optional)"></textarea>
+
+        </div>
+        
+        <iframe class="output-area" id="outputFrame"></iframe>
+
+    </div>
+
+    <script>
+        const htmlCode = document.getElementById('htmlCode');
+        const cssCode = document.getElementById('cssCode');
+        const jsCode = document.getElementById('jsCode');
+        const outputFrame = document.getElementById('outputFrame');
+
+        // Function to update the iframe output
+        function updateOutput() {
+            const html = htmlCode.value;
+            const css = cssCode.value;
+            const js = jsCode.value;
+
+            // Construct the complete HTML document structure
+            const documentContent = `
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <title>Live Preview</title>
+                    <style>
+                        ${css}
+                    </style>
+                </head>
+                <body>
+                    ${html}
+                    <script>
+                        // JS code is wrapped in a try/catch to display errors in the console
+                        try {
+                            ${js}
+                        } catch (e) {
+                            console.error("JavaScript Execution Error:", e);
+                        }
+                    </script>
+                </body>
+                </html>
+            `;
+
+            // Write the constructed document into the iframe
+            outputFrame.srcdoc = documentContent;
+        }
+
+        // Add event listeners to update output whenever user types
+        htmlCode.addEventListener('input', updateOutput);
+        cssCode.addEventListener('input', updateOutput);
+        jsCode.addEventListener('input', updateOutput);
+
+        // Initial update with a default welcome code
+        updateOutput(); 
+    </script>
+</body>
+</html>
