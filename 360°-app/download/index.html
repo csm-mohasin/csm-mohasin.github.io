@@ -3,24 +3,17 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Pulse AI – Full Page Card</title>
+<title>Pulse AI – Final</title>
 
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;600;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
 <style>
-@property --current-color {
-  syntax: '<color>';
-  initial-value: #00ffcc;
-  inherits: true;
-}
-
 :root{
-  --current-color:#00ffcc;
-  --glass:rgba(255,255,255,.04);
-  --overlay:rgba(0,0,0,.95);
+  --c:#00ffcc;
+  --glass:rgba(255,255,255,.05);
+  --overlay:rgba(0,0,0,.9);
 }
-
 *{margin:0;padding:0;box-sizing:border-box}
 
 body{
@@ -28,75 +21,47 @@ body{
   background:#020205;
   font-family:'Plus Jakarta Sans',sans-serif;
   color:#fff;
-  animation:syncColors 8s infinite alternate ease-in-out;
-  overflow-x:hidden;
 }
 
-@keyframes syncColors{
-  0%{--current-color:#00ffcc}
-  20%{--current-color:#0088ff}
-  40%{--current-color:#7000ff}
-  60%{--current-color:#ff00de}
-  80%{--current-color:#ffd700}
-  100%{--current-color:#00ffcc}
-}
-
-/* background glow */
-.bg-glow{
-  position:fixed;
-  inset:0;
-  filter:blur(140px);
-  opacity:.25;
-  z-index:0;
-}
+/* glow */
+.bg-glow{position:fixed;inset:0;pointer-events:none}
 .bg-glow span{
-  position:absolute;
-  width:520px;height:520px;
-  background:var(--current-color);
+  width:380px;height:380px;
+  background:var(--c);
   border-radius:50%;
-  animation:move 12s infinite alternate;
-}
-@keyframes move{
-  0%{top:-10%;left:-10%}
-  100%{top:70%;left:80%}
+  filter:blur(120px);
+  opacity:.22;
+  position:absolute;
+  transition:background 3s ease-in-out;
 }
 
-/* MAIN CARD */
+/* card */
 .main{
-  position:relative;
-  min-height:calc(100vh - 40px);
   margin:20px;
-  padding:55px 25px 35px;
-
+  padding:55px 22px 35px;
   background:var(--glass);
-  backdrop-filter:blur(40px);
-
-  border:1.5px solid var(--current-color);
+  backdrop-filter:blur(30px);
+  border:1.5px solid var(--c);
   border-radius:32px;
-
-  box-shadow:
-    0 0 0 1px rgba(255,255,255,0.05),
-    0 30px 90px rgba(0,0,0,0.8),
-    0 0 35px rgba(0,255,200,0.25);
-
-  z-index:2;
+  box-shadow:0 25px 70px rgba(0,0,0,.75);
 }
 
 /* share button */
 .share-btn{
   position:absolute;
-  top:25px;right:25px;
+  top:22px;right:22px;
   width:42px;height:42px;
   border-radius:12px;
   display:flex;
   align-items:center;
   justify-content:center;
-  background:rgba(255,255,255,.05);
+  background:rgba(255,255,255,.06);
   border:1px solid rgba(255,255,255,.15);
   cursor:pointer;
+  transition:.25s;
 }
 .share-btn:hover{
-  background:var(--current-color);
+  background:var(--c);
   color:#000;
 }
 
@@ -105,27 +70,12 @@ body{
   width:90px;height:90px;
   margin:0 auto 25px;
   border-radius:50%;
-  box-shadow:0 0 25px var(--current-color);
-  position:relative;
+  box-shadow:0 0 20px var(--c);
 }
-.logo img{
-  width:100%;height:100%;
-  border-radius:50%;
-  object-fit:cover;
-}
-.logo::after{
-  content:'';
-  position:absolute;
-  inset:-10px;
-  border:2px dashed var(--current-color);
-  border-radius:50%;
-  animation:spin 6s linear infinite;
-}
-@keyframes spin{100%{transform:rotate(360deg)}}
+.logo img{width:100%;height:100%;border-radius:50%}
 
-/* text */
 h1{text-align:center;font-size:26px;font-weight:800}
-.dev{text-align:center;font-size:12px;color:var(--current-color);margin-bottom:25px}
+.dev{text-align:center;font-size:12px;color:var(--c);margin-bottom:22px}
 
 /* info */
 .info{
@@ -138,49 +88,50 @@ h1{text-align:center;font-size:26px;font-weight:800}
   margin-bottom:25px;
   text-align:center;
 }
-.info b{font-size:14px}
-.info span{font-size:10px;opacity:.6}
 
-/* slider */
-.slider{
+/* preview */
+.preview-main{
+  height:380px;
+  border-radius:22px;
   overflow:hidden;
-  margin-bottom:30px;
+  border:1px solid rgba(255,255,255,.12);
 }
-.track{
+.preview-main img{width:100%;height:100%;object-fit:cover}
+.preview-thumbs{
   display:flex;
-  gap:14px;
-  transition:.6s cubic-bezier(.23,1,.32,1);
+  gap:10px;
+  margin-top:12px;
+  overflow-x:auto;
 }
-.slide{
-  min-width:220px;
-  height:360px;
-}
-.slide img{
-  width:100%;height:100%;
+.preview-thumbs img{
+  width:70px;height:120px;
   object-fit:cover;
-  border-radius:20px;
+  border-radius:12px;
+  opacity:.45;
   cursor:pointer;
+  border:2px solid transparent;
+}
+.preview-thumbs img.active{
+  opacity:1;
+  border-color:var(--c);
 }
 
-/* install button */
-.install{
-  position:sticky;
-  bottom:20px;
-}
+/* install */
+.install{position:sticky;bottom:20px;margin-top:25px}
 .install button{
   width:100%;
   padding:16px;
   border-radius:16px;
   border:1px solid rgba(255,255,255,.15);
-  background:rgba(255,255,255,.05);
+  background:rgba(255,255,255,.06);
   color:#fff;
   font-weight:800;
-  cursor:pointer;
+  transition:.35s;
 }
 .install button:hover{
-  background:var(--current-color);
+  background:linear-gradient(135deg,var(--c),#fff);
   color:#000;
-  box-shadow:0 0 25px var(--current-color);
+  box-shadow:0 0 22px var(--c);
 }
 
 /* viewer */
@@ -196,32 +147,59 @@ h1{text-align:center;font-size:26px;font-weight:800}
 .viewer.active{display:flex}
 .viewer img{
   max-width:90%;
-  max-height:80vh;
+  max-height:85vh;
   border-radius:24px;
-  border:1px solid var(--current-color);
+  border:1px solid var(--c);
 }
-.nav{
-  position:absolute;
-  top:50%;
-  transform:translateY(-50%);
-  font-size:40px;
-  cursor:pointer;
-}
-.prev{left:20px}
-.next{right:20px}
 .close{
   position:absolute;
-  top:20px;right:25px;
-  font-size:35px;
+  top:18px;right:22px;
+  font-size:34px;
   cursor:pointer;
 }
 
-/* mobile */
-@media(max-width:600px){
-  .main{
-    margin:12px;
-    border-radius:26px;
-  }
+/* === SHARE SHEET === */
+.share-sheet{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.7);
+  display:none;
+  align-items:flex-end;
+  justify-content:center;
+  z-index:1000;
+}
+.share-sheet.active{display:flex}
+.share-box{
+  width:100%;
+  max-width:420px;
+  background:#0b0b12;
+  border-radius:22px 22px 0 0;
+  padding:20px;
+  animation:slideUp .35s ease;
+}
+@keyframes slideUp{
+  from{transform:translateY(100%)}
+}
+.share-box h3{
+  text-align:center;
+  margin-bottom:15px;
+}
+.share-grid{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:14px;
+}
+.share-item{
+  padding:14px;
+  background:rgba(255,255,255,.06);
+  border-radius:14px;
+  text-align:center;
+  cursor:pointer;
+  transition:.25s;
+}
+.share-item:hover{
+  background:var(--c);
+  color:#000;
 }
 </style>
 </head>
@@ -232,29 +210,27 @@ h1{text-align:center;font-size:26px;font-weight:800}
 
 <div class="main">
 
-<div class="share-btn"><i class="fas fa-share-nodes"></i></div>
+<div class="share-btn" onclick="openShare()">
+<i class="fas fa-share-nodes"></i>
+</div>
 
 <div class="logo">
-  <img src="https://mohasin-alam.github.io/Picsart_25-12-23_09-02-14-346.jpg">
+<img src="https://mohasin-alam.github.io/Picsart_25-12-23_09-02-14-346.jpg">
 </div>
 
 <h1>PULSE AI</h1>
 <div class="dev">Nexus Labs Engineering</div>
 
 <div class="info">
-  <div><b>4.8 ★</b><span>Reviews</span></div>
-  <div><b>24 MB</b><span>Size</span></div>
-  <div><b>1M+</b><span>Downloads</span></div>
+<div><b>4.8 ★</b><span>Reviews</span></div>
+<div><b>24 MB</b><span>Size</span></div>
+<div><b>1M+</b><span>Downloads</span></div>
 </div>
 
-<div class="slider">
-  <div class="track" id="track">
-    <div class="slide"><img src="https://images.pexels.com/photos/3184465/pexels-photo-3184465.jpeg"></div>
-    <div class="slide"><img src="https://images.pexels.com/photos/607812/pexels-photo-607812.jpeg"></div>
-    <div class="slide"><img src="https://images.pexels.com/photos/1092644/pexels-photo-1092644.jpeg"></div>
-    <div class="slide"><img src="https://images.pexels.com/photos/1181671/pexels-photo-1181671.jpeg"></div>
-  </div>
+<div class="preview-main">
+<img id="mainPreview">
 </div>
+<div class="preview-thumbs" id="thumbs"></div>
 
 <div class="install">
 <button onclick="location.href='https://www.dropbox.com/scl/fi/787qu2n3pc4f069wl5ivf/360-Photo-Sphere-Camera_1.1.1.apk?dl=1'">
@@ -264,40 +240,76 @@ h1{text-align:center;font-size:26px;font-weight:800}
 
 </div>
 
-<!-- viewer -->
-<div class="viewer" id="viewer">
-  <div class="close" onclick="closeV()">×</div>
-  <div class="nav prev" onclick="nav(-1)">‹</div>
-  <img id="vimg">
-  <div class="nav next" onclick="nav(1)">›</div>
+<!-- SHARE SHEET -->
+<div class="share-sheet" id="shareSheet" onclick="closeShare(event)">
+  <div class="share-box">
+    <h3>Share App</h3>
+    <div class="share-grid">
+      <div class="share-item" onclick="nativeShare()"><i class="fas fa-share"></i></div>
+      <div class="share-item" onclick="copyLink()"><i class="fas fa-link"></i></div>
+      <div class="share-item" onclick="open('https://facebook.com/sharer/sharer.php?u='+location.href)">
+        <i class="fab fa-facebook-f"></i>
+      </div>
+      <div class="share-item" onclick="open('https://wa.me/?text='+location.href)">
+        <i class="fab fa-whatsapp"></i>
+      </div>
+    </div>
+  </div>
 </div>
 
 <script>
-const imgs=[...document.querySelectorAll('.slide img')];
-const viewer=document.getElementById('viewer');
-const vimg=document.getElementById('vimg');
-let i=0;
+/* preview */
+const shots=[
+'https://images.pexels.com/photos/3184465/pexels-photo-3184465.jpeg',
+'https://images.pexels.com/photos/607812/pexels-photo-607812.jpeg',
+'https://images.pexels.com/photos/1092644/pexels-photo-1092644.jpeg',
+'https://images.pexels.com/photos/1181671/pexels-photo-1181671.jpeg'
+];
+const main=document.getElementById('mainPreview');
+const thumbs=document.getElementById('thumbs');
+let index=0;
 
-imgs.forEach((img,idx)=>img.onclick=()=>{i=idx;openV()});
-
-function openV(){
-  viewer.classList.add('active');
-  vimg.src=imgs[i].src;
+function render(){
+  main.src=shots[index];
+  [...thumbs.children].forEach((t,i)=>t.classList.toggle('active',i===index));
 }
-function closeV(){viewer.classList.remove('active')}
-function nav(d){
-  i=(i+d+imgs.length)%imgs.length;
-  vimg.src=imgs[i].src;
-}
+shots.forEach((s,i)=>{
+  const img=document.createElement('img');
+  img.src=s;
+  img.onclick=()=>{index=i;render()};
+  thumbs.appendChild(img);
+});
+render();
 
-let pos=0;
+/* cinematic color */
+const colors=['#00ffcc','#0088ff','#6a00ff','#ff00cc','#ffb700'];
+let ci=0;
 setInterval(()=>{
-  pos=(pos+1)%(imgs.length-1);
-  document.getElementById('track').style.transform=
-  `translateX(-${pos*(imgs[0].parentElement.offsetWidth+14)}px)`;
-},3000);
+  document.documentElement.style.setProperty('--c',colors[ci]);
+  ci=(ci+1)%colors.length;
+},4500);
 
-viewer.onclick=e=>{if(e.target===viewer)closeV()}
+/* SHARE LOGIC */
+function openShare(){
+  document.getElementById('shareSheet').classList.add('active');
+}
+function closeShare(e){
+  if(e.target.id==='shareSheet')
+    document.getElementById('shareSheet').classList.remove('active');
+}
+function nativeShare(){
+  if(navigator.share){
+    navigator.share({
+      title:'Pulse AI',
+      text:'Check out Pulse AI App',
+      url:location.href
+    });
+  }
+}
+function copyLink(){
+  navigator.clipboard.writeText(location.href);
+  alert('Link Copied!');
+}
 </script>
 
 </body>
