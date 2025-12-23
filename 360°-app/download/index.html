@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Pulse AI – Final</title>
+<title>Pulse AI</title>
 
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;600;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -12,8 +12,9 @@
 :root{
   --c:#00ffcc;
   --glass:rgba(255,255,255,.05);
-  --overlay:rgba(0,0,0,.9);
+  --overlay:rgba(0,0,0,.95);
 }
+
 *{margin:0;padding:0;box-sizing:border-box}
 
 body{
@@ -21,44 +22,59 @@ body{
   background:#020205;
   font-family:'Plus Jakarta Sans',sans-serif;
   color:#fff;
+  overflow-x:hidden;
 }
 
-/* glow */
-.bg-glow{position:fixed;inset:0;pointer-events:none}
+/* smooth transitions */
+*{
+  transition:
+    background .8s ease,
+    color .8s ease,
+    border-color .8s ease,
+    box-shadow .8s ease;
+}
+
+/* background glow */
+.bg-glow{
+  position:fixed;
+  inset:0;
+  filter:blur(140px);
+  opacity:.25;
+  z-index:0;
+}
 .bg-glow span{
-  width:380px;height:380px;
+  position:absolute;
+  width:520px;height:520px;
   background:var(--c);
   border-radius:50%;
-  filter:blur(120px);
-  opacity:.22;
-  position:absolute;
-  transition:background 3s ease-in-out;
 }
 
-/* card */
+/* main card */
 .main{
+  position:relative;
+  min-height:calc(100vh - 40px);
   margin:20px;
-  padding:55px 22px 35px;
+  padding:55px 25px 35px;
   background:var(--glass);
-  backdrop-filter:blur(30px);
+  backdrop-filter:blur(40px);
   border:1.5px solid var(--c);
   border-radius:32px;
-  box-shadow:0 25px 70px rgba(0,0,0,.75);
+  box-shadow:0 30px 90px rgba(0,0,0,.8);
+  z-index:2;
 }
 
 /* share button */
 .share-btn{
   position:absolute;
-  top:22px;right:22px;
+  top:25px;right:25px;
   width:42px;height:42px;
   border-radius:12px;
   display:flex;
   align-items:center;
   justify-content:center;
-  background:rgba(255,255,255,.06);
+  background:rgba(255,255,255,.08);
   border:1px solid rgba(255,255,255,.15);
   cursor:pointer;
-  transition:.25s;
 }
 .share-btn:hover{
   background:var(--c);
@@ -70,12 +86,17 @@ body{
   width:90px;height:90px;
   margin:0 auto 25px;
   border-radius:50%;
-  box-shadow:0 0 20px var(--c);
+  box-shadow:0 0 25px var(--c);
 }
-.logo img{width:100%;height:100%;border-radius:50%}
+.logo img{
+  width:100%;height:100%;
+  border-radius:50%;
+  object-fit:cover;
+}
 
+/* text */
 h1{text-align:center;font-size:26px;font-weight:800}
-.dev{text-align:center;font-size:12px;color:var(--c);margin-bottom:22px}
+.dev{text-align:center;font-size:12px;color:var(--c);margin-bottom:25px}
 
 /* info */
 .info{
@@ -88,36 +109,34 @@ h1{text-align:center;font-size:26px;font-weight:800}
   margin-bottom:25px;
   text-align:center;
 }
+.info b{font-size:14px}
+.info span{font-size:10px;opacity:.6}
 
-/* preview */
-.preview-main{
-  height:380px;
-  border-radius:22px;
-  overflow:hidden;
-  border:1px solid rgba(255,255,255,.12);
-}
-.preview-main img{width:100%;height:100%;object-fit:cover}
-.preview-thumbs{
+/* screenshots */
+.slider{
   display:flex;
-  gap:10px;
-  margin-top:12px;
+  gap:14px;
   overflow-x:auto;
+  margin-bottom:30px;
+  scroll-snap-type:x mandatory;
 }
-.preview-thumbs img{
-  width:70px;height:120px;
+.slide{
+  min-width:220px;
+  height:360px;
+  scroll-snap-align:start;
+}
+.slide img{
+  width:100%;height:100%;
   object-fit:cover;
-  border-radius:12px;
-  opacity:.45;
+  border-radius:20px;
   cursor:pointer;
-  border:2px solid transparent;
-}
-.preview-thumbs img.active{
-  opacity:1;
-  border-color:var(--c);
 }
 
-/* install */
-.install{position:sticky;bottom:20px;margin-top:25px}
+/* install button */
+.install{
+  position:sticky;
+  bottom:20px;
+}
 .install button{
   width:100%;
   padding:16px;
@@ -126,12 +145,15 @@ h1{text-align:center;font-size:26px;font-weight:800}
   background:rgba(255,255,255,.06);
   color:#fff;
   font-weight:800;
-  transition:.35s;
+  cursor:pointer;
 }
 .install button:hover{
-  background:linear-gradient(135deg,var(--c),#fff);
+  background:var(--c);
   color:#000;
   box-shadow:0 0 22px var(--c);
+}
+.install button:active{
+  transform:scale(.98);
 }
 
 /* viewer */
@@ -147,59 +169,58 @@ h1{text-align:center;font-size:26px;font-weight:800}
 .viewer.active{display:flex}
 .viewer img{
   max-width:90%;
-  max-height:85vh;
+  max-height:80vh;
   border-radius:24px;
   border:1px solid var(--c);
 }
 .close{
   position:absolute;
-  top:18px;right:22px;
-  font-size:34px;
+  top:20px;right:25px;
+  font-size:35px;
   cursor:pointer;
 }
 
-/* === SHARE SHEET === */
+/* share sheet */
 .share-sheet{
   position:fixed;
   inset:0;
   background:rgba(0,0,0,.7);
   display:none;
   align-items:flex-end;
-  justify-content:center;
   z-index:1000;
 }
 .share-sheet.active{display:flex}
 .share-box{
   width:100%;
-  max-width:420px;
-  background:#0b0b12;
-  border-radius:22px 22px 0 0;
-  padding:20px;
-  animation:slideUp .35s ease;
+  background:#0b0b0f;
+  border-radius:24px 24px 0 0;
+  padding:25px;
 }
-@keyframes slideUp{
-  from{transform:translateY(100%)}
-}
-.share-box h3{
-  text-align:center;
-  margin-bottom:15px;
-}
+.share-box h3{text-align:center;margin-bottom:20px}
 .share-grid{
   display:grid;
   grid-template-columns:repeat(4,1fr);
-  gap:14px;
+  gap:15px;
 }
 .share-item{
-  padding:14px;
-  background:rgba(255,255,255,.06);
+  background:rgba(255,255,255,.08);
   border-radius:14px;
+  padding:15px 0;
   text-align:center;
   cursor:pointer;
-  transition:.25s;
 }
+.share-item i{
+  font-size:22px;
+  margin-bottom:6px;
+}
+.share-item small{font-size:11px;opacity:.7}
 .share-item:hover{
   background:var(--c);
   color:#000;
+}
+
+@media(max-width:600px){
+  .main{margin:12px}
 }
 </style>
 </head>
@@ -211,7 +232,7 @@ h1{text-align:center;font-size:26px;font-weight:800}
 <div class="main">
 
 <div class="share-btn" onclick="openShare()">
-<i class="fas fa-share-nodes"></i>
+  <i class="fas fa-share-nodes"></i>
 </div>
 
 <div class="logo">
@@ -222,15 +243,16 @@ h1{text-align:center;font-size:26px;font-weight:800}
 <div class="dev">Nexus Labs Engineering</div>
 
 <div class="info">
-<div><b>4.8 ★</b><span>Reviews</span></div>
-<div><b>24 MB</b><span>Size</span></div>
-<div><b>1M+</b><span>Downloads</span></div>
+  <div><b>4.8 ★</b><span>Reviews</span></div>
+  <div><b>24 MB</b><span>Size</span></div>
+  <div><b>1M+</b><span>Downloads</span></div>
 </div>
 
-<div class="preview-main">
-<img id="mainPreview">
+<div class="slider">
+  <div class="slide"><img src="https://images.pexels.com/photos/3184465/pexels-photo-3184465.jpeg"></div>
+  <div class="slide"><img src="https://images.pexels.com/photos/607812/pexels-photo-607812.jpeg"></div>
+  <div class="slide"><img src="https://images.pexels.com/photos/1092644/pexels-photo-1092644.jpeg"></div>
 </div>
-<div class="preview-thumbs" id="thumbs"></div>
 
 <div class="install">
 <button onclick="location.href='https://www.dropbox.com/scl/fi/787qu2n3pc4f069wl5ivf/360-Photo-Sphere-Camera_1.1.1.apk?dl=1'">
@@ -240,75 +262,58 @@ h1{text-align:center;font-size:26px;font-weight:800}
 
 </div>
 
+<!-- IMAGE VIEWER -->
+<div class="viewer" id="viewer" onclick="closeV(event)">
+  <div class="close">×</div>
+  <img id="vimg">
+</div>
+
 <!-- SHARE SHEET -->
 <div class="share-sheet" id="shareSheet" onclick="closeShare(event)">
   <div class="share-box">
     <h3>Share App</h3>
     <div class="share-grid">
-      <div class="share-item" onclick="nativeShare()"><i class="fas fa-share"></i></div>
-      <div class="share-item" onclick="copyLink()"><i class="fas fa-link"></i></div>
-      <div class="share-item" onclick="open('https://facebook.com/sharer/sharer.php?u='+location.href)">
-        <i class="fab fa-facebook-f"></i>
-      </div>
-      <div class="share-item" onclick="open('https://wa.me/?text='+location.href)">
-        <i class="fab fa-whatsapp"></i>
-      </div>
+      <div class="share-item" onclick="nativeShare()"><i class="fas fa-share"></i><small>System</small></div>
+      <div class="share-item" onclick="copyLink()"><i class="fas fa-link"></i><small>Copy</small></div>
+      <div class="share-item" onclick="shareFacebook()"><i class="fab fa-facebook-f"></i><small>Facebook</small></div>
+      <div class="share-item" onclick="shareMessenger()"><i class="fab fa-facebook-messenger"></i><small>Messenger</small></div>
+      <div class="share-item" onclick="shareWhatsApp()"><i class="fab fa-whatsapp"></i><small>WhatsApp</small></div>
     </div>
   </div>
 </div>
 
 <script>
-/* preview */
-const shots=[
-'https://images.pexels.com/photos/3184465/pexels-photo-3184465.jpeg',
-'https://images.pexels.com/photos/607812/pexels-photo-607812.jpeg',
-'https://images.pexels.com/photos/1092644/pexels-photo-1092644.jpeg',
-'https://images.pexels.com/photos/1181671/pexels-photo-1181671.jpeg'
-];
-const main=document.getElementById('mainPreview');
-const thumbs=document.getElementById('thumbs');
-let index=0;
-
-function render(){
-  main.src=shots[index];
-  [...thumbs.children].forEach((t,i)=>t.classList.toggle('active',i===index));
-}
-shots.forEach((s,i)=>{
-  const img=document.createElement('img');
-  img.src=s;
-  img.onclick=()=>{index=i;render()};
-  thumbs.appendChild(img);
-});
-render();
-
-/* cinematic color */
+/* cinematic color fade */
 const colors=['#00ffcc','#0088ff','#6a00ff','#ff00cc','#ffb700'];
 let ci=0;
 setInterval(()=>{
   document.documentElement.style.setProperty('--c',colors[ci]);
   ci=(ci+1)%colors.length;
-},4500);
+},4200);
 
-/* SHARE LOGIC */
-function openShare(){
-  document.getElementById('shareSheet').classList.add('active');
-}
-function closeShare(e){
-  if(e.target.id==='shareSheet')
-    document.getElementById('shareSheet').classList.remove('active');
-}
+/* image viewer */
+const imgs=document.querySelectorAll('.slide img');
+const viewer=document.getElementById('viewer');
+const vimg=document.getElementById('vimg');
+imgs.forEach(img=>img.onclick=()=>{viewer.classList.add('active');vimg.src=img.src});
+function closeV(e){if(e.target.id==='viewer')viewer.classList.remove('active')}
+
+/* share */
+const shareURL=encodeURIComponent(location.href);
+function openShare(){document.getElementById('shareSheet').classList.add('active')}
+function closeShare(e){if(e.target.id==='shareSheet')e.target.classList.remove('active')}
 function nativeShare(){
   if(navigator.share){
-    navigator.share({
-      title:'Pulse AI',
-      text:'Check out Pulse AI App',
-      url:location.href
-    });
+    navigator.share({title:'Pulse AI',url:location.href});
   }
 }
-function copyLink(){
-  navigator.clipboard.writeText(location.href);
-  alert('Link Copied!');
+function copyLink(){navigator.clipboard.writeText(location.href);alert('Link copied')}
+function shareFacebook(){window.open(`https://www.facebook.com/sharer/sharer.php?u=${shareURL}`,'_blank')}
+function shareMessenger(){
+  window.open(`https://www.facebook.com/dialog/send?link=${shareURL}&app_id=5303202981&redirect_uri=${shareURL}`,'_blank')
+}
+function shareWhatsApp(){
+  window.open(`https://wa.me/?text=Check%20out%20this%20app%20${shareURL}`,'_blank')
 }
 </script>
 
