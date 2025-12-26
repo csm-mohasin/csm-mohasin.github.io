@@ -1,0 +1,101 @@
+<style>
+    body {
+        font-family: Saira, sans-serif;
+        background-color: #1a1a25;
+        color: white;
+        margin: 0;
+        padding: 5px;
+    }
+
+    /* Main Flex Container */
+    .container {
+        display: flex;
+        flex-direction: row; /* Desktop o Mobile ubhoy khetrei side-by-side */
+        max-width: 100%;
+        margin: 10px auto;
+        gap: 8px; /* Gap ektu komano hoyeche mobile-er jonno */
+        align-items: flex-start;
+    }
+
+    /* Left Side Thumbnail Bar */
+    .thumbnail-bar {
+        display: flex;
+        flex-direction: column; /* Lomba-lombi menu */
+        gap: 6px;
+        width: 80px; /* Mobile-e width kom thakbe */
+        flex-shrink: 0;
+        /* Mobile-e jodi onek chobi thake tobe scroll hobe */
+        max-height: 90vh; 
+        overflow-y: auto;
+    }
+
+    .thumbnail-bar img {
+        width: 100%;
+        height: 60px; /* Mobile thumbnail size */
+        object-fit: cover;
+        border: 2px solid #DDD;
+        cursor: pointer;
+        padding: 2px;
+        background-color: #FFF;
+        transition: 0.2s;
+    }
+
+    /* Preview Image Box */
+    .preview-box {
+        flex-grow: 1;
+    }
+
+    .preview-box img {
+        width: 100%;
+        height: auto;
+        border: 2px solid #FFF;
+        background-color: #FFF;
+        padding: 2px;
+        display: block;
+    }
+
+    /* --- Desktop View-er jonno Size ektu boro kora hoyeche --- */
+    @media (min-width: 768px) {
+        .container {
+            gap: 20px;
+            padding: 20px;
+        }
+        .thumbnail-bar {
+            width: 150px; /* Desktop-e menu boro hobe */
+        }
+        .thumbnail-bar img {
+            height: 100px;
+        }
+    }
+</style>
+
+<section class="container">
+    <div class="thumbnail-bar">
+        <img src="https://i.imgur.com/m53cViy.jpg" onclick="updatePreview(this.src)" />
+        <img src="https://i.imgur.com/19oKQIA.jpg" onclick="updatePreview(this.src)" />
+        <img src="https://i.imgur.com/OZyEMKe.jpg" onclick="updatePreview(this.src)" />
+        <img src="https://i.imgur.com/9SzlqYe.jpg" onclick="updatePreview(this.src)" />
+        <img src="https://i.imgur.com/TuKrHyB.jpg" onclick="updatePreview(this.src)" />
+        <img src="https://i.imgur.com/7mDQ8es.jpg" onclick="updatePreview(this.src)" />
+    </div>
+
+    <div class="preview-box">
+        <img id="main-display" src="https://i.imgur.com/m53cViy.jpg" alt="Preview" />
+    </div>
+</section>
+
+<script>
+    function updatePreview(source) {
+        document.getElementById("main-display").src = source;
+    }
+
+    // Desktop hover effect
+    const allThumbs = document.querySelectorAll(".thumbnail-bar img");
+    allThumbs.forEach(img => {
+        img.onmouseover = function() {
+            if (window.innerWidth > 768) { // Sudhu desktop-e hover kaj korbe
+                updatePreview(this.src);
+            }
+        };
+    });
+</script>
