@@ -1,11 +1,14 @@
 <style>
 :root {
-  --card-height: 300px;
+  /* Height barale width automatic bere jabe ratio onujayi */
+  --card-height: 500px; 
   --card-width: calc(var(--card-height) / 1.5);
 }
+
 * {
   box-sizing: border-box;
 }
+
 body {
   width: 100vw;
   height: 100vh;
@@ -14,7 +17,9 @@ body {
   justify-content: center;
   align-items: center;
   background: #191c29;
+  overflow-x: hidden; /* Screen er baire jate na jay */
 }
+
 .card {
   width: var(--card-width);
   height: var(--card-height);
@@ -24,7 +29,7 @@ body {
   align-items: flex-end;
   padding: 0 36px;
   perspective: 2500px;
-  margin: 0 50px;
+  margin: 0 60px; /* Card er majhe gap barano hoyeche */
 }
 
 .cover-image {
@@ -43,8 +48,6 @@ body {
 .card:hover .wrapper {
   transform: perspective(900px) translateY(-5%) rotateX(25deg) translateZ(0);
   box-shadow: 2px 35px 32px -8px rgba(0, 0, 0, 0.75);
-  -webkit-box-shadow: 2px 35px 32px -8px rgba(0, 0, 0, 0.75);
-  -moz-box-shadow: 2px 35px 32px -8px rgba(0, 0, 0, 0.75);
 }
 
 .wrapper::before,
@@ -57,6 +60,7 @@ body {
   position: absolute;
   left: 0;
 }
+
 .wrapper::before {
   top: 0;
   height: 100%;
@@ -67,6 +71,7 @@ body {
     rgba(12, 13, 19) 97%
   );
 }
+
 .wrapper::after {
   bottom: 0;
   opacity: 1;
@@ -86,10 +91,12 @@ body {
 .card:hover .wrapper::after {
   height: 120px;
 }
+
 .title {
   width: 100%;
   transition: transform 0.5s;
 }
+
 .card:hover .title {
   transform: translate3d(0%, -50px, 100px);
 }
@@ -106,23 +113,20 @@ body {
   opacity: 1;
   transform: translate3d(0%, -30%, 100px);
 }
-
 </style>
 
-
-  <div class="card">
-    <div class="wrapper">
-      <img src="https://ggayane.github.io/css-experiments/cards/dark_rider-cover.jpg" class="cover-image" />
-    </div>
-    <img src="https://ggayane.github.io/css-experiments/cards/dark_rider-title.png" class="title" />
-    <img src="https://ggayane.github.io/css-experiments/cards/dark_rider-character.webp" class="character" />
+<div class="card">
+  <div class="wrapper">
+    <img src="https://ggayane.github.io/css-experiments/cards/dark_rider-cover.jpg" class="cover-image" />
   </div>
-</a>
+  <img src="https://ggayane.github.io/css-experiments/cards/dark_rider-title.png" class="title" />
+  <img src="https://ggayane.github.io/css-experiments/cards/dark_rider-character.webp" class="character" />
+</div>
 
-  <div class="card">
-    <div class="wrapper">
-      <img src="https://ggayane.github.io/css-experiments/cards/force_mage-cover.jpg" class="cover-image" />
-    </div>
-    <img src="https://ggayane.github.io/css-experiments/cards/force_mage-title.png" class="title" />
-    <img src="https://ggayane.github.io/css-experiments/cards/force_mage-character.webp" class="character" />
+<div class="card">
+  <div class="wrapper">
+    <img src="https://ggayane.github.io/css-experiments/cards/force_mage-cover.jpg" class="cover-image" />
   </div>
+  <img src="https://ggayane.github.io/css-experiments/cards/force_mage-title.png" class="title" />
+  <img src="https://ggayane.github.io/css-experiments/cards/force_mage-character.webp" class="character" />
+</div>
