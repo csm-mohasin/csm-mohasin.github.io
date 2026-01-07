@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>CSM | Neural Mobile Editor</title>
     <style>
         :root {
@@ -17,12 +17,13 @@
             background: var(--bg-dark);
             color: #fff;
             font-family: 'Fira Code', monospace;
-            height: 100vh;
+            height: 100dvh; 
+            width: 100vw;
             overflow: hidden;
             touch-action: none;
         }
 
-        .main-container { display: flex; flex-direction: column; height: 100vh; }
+        .main-container { display: flex; flex-direction: column; height: 100dvh; }
 
         .header {
             background: var(--panel-bg);
@@ -35,16 +36,36 @@
         }
 
         .logo { color: var(--neon-cyan); font-weight: bold; font-size: 0.9rem; letter-spacing: 1px; }
-        .dev-tag { font-size: 0.7rem; color: #888; }
-        .dev-tag span { color: var(--neon-green); }
 
-        .workspace {
-            display: flex;
-            flex: 1;
-            position: relative;
-            background: #000;
-            overflow: hidden;
+        #searchPopup {
+            position: fixed;
+            top: 70px;
+            left: 5%;
+            width: 90%;
+            background: #1a1a1a;
+            border: 1px solid var(--neon-cyan);
+            padding: 15px;
+            z-index: 100;
+            display: none;
+            border-radius: 8px;
+            box-sizing: border-box;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.8);
         }
+
+        .popup-input {
+            width: 100%;
+            background: #000;
+            border: 1px solid #444;
+            color: #fff;
+            padding: 8px;
+            margin-bottom: 10px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            box-sizing: border-box;
+            outline: none;
+        }
+
+        .workspace { display: flex; flex: 1; position: relative; background: #000; overflow: hidden; }
 
         .panel-editor {
             width: 50%;
@@ -52,31 +73,7 @@
             flex-direction: column;
             background: var(--panel-bg);
             min-width: 0;
-        }
-
-        /* --- FIXED SYMBOL BAR --- */
-        .symbol-bar {
-            background: #1a1a1a;
-            display: flex;
-            gap: 8px;
-            padding: 10px 5px;
-            overflow-x: auto;
-            border-top: 1px solid var(--neon-cyan);
-            flex-shrink: 0; /* Eta fixed thakbe, textarea-r jonno niche jabe na */
-            scrollbar-width: none;
-        }
-        .symbol-bar::-webkit-scrollbar { display: none; }
-        
-        .sym-btn {
-            background: #252525;
-            color: var(--neon-cyan);
-            border: 1px solid #444;
-            padding: 8px 15px;
-            border-radius: 4px;
-            font-size: 1rem;
-            cursor: pointer;
-            flex-shrink: 0;
-            touch-action: manipulation;
+            position: relative;
         }
 
         .panel-preview {
@@ -93,23 +90,57 @@
             font-size: 0.65rem;
             color: var(--neon-cyan);
             border-bottom: 1px solid #333;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        #editor-wrapper {
+            position: relative;
+            flex: 1;
+            overflow: hidden;
         }
 
         textarea {
-            flex: 1;
-            background: #0c0c0c;
-            border: none;
-            color: #d4d4d4;
+            width: 100%; height: 100%;
             padding: 10px;
             font-size: 13px;
-            resize: none;
-            outline: none;
             line-height: 1.4;
-            width: 100%;
+            font-family: 'Fira Code', monospace;
             box-sizing: border-box;
+            border: none;
+            outline: none;
+            white-space: pre;
+            background: #0c0c0c;
+            color: #d4d4d4;
+            caret-color: #fff;
+            resize: none;
         }
 
         iframe { flex: 1; border: none; background: #fff; }
+
+        .symbol-bar {
+            background: #1a1a1a;
+            display: flex;
+            gap: 5px;
+            padding: 8px 5px;
+            overflow-x: auto;
+            border-top: 1px solid #333;
+            flex-shrink: 0;
+            scrollbar-width: none;
+            padding-bottom: env(safe-area-inset-bottom, 8px);
+        }
+        .symbol-bar::-webkit-scrollbar { display: none; }
+        
+        .sym-btn {
+            background: #252525;
+            color: var(--neon-cyan);
+            border: 1px solid #444;
+            padding: 5px 12px;
+            border-radius: 3px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            flex-shrink: 0;
+        }
 
         #resizer {
             width: 15px;
@@ -123,7 +154,6 @@
             z-index: 10;
             touch-action: none;
         }
-
         #resizer::after { content: "⋮"; color: var(--neon-cyan); font-weight: bold; }
 
         .btn {
@@ -134,28 +164,64 @@
             font-size: 0.6rem;
             cursor: pointer;
             border-radius: 3px;
+            margin-left: 5px;
         }
+
+        #fileInput { display: none; }
+        #colorPicker { width: 0; height: 0; border: none; padding: 0; visibility: hidden; position: absolute; }
+        
+        .light-mode #previewSide .panel-header { background: #ddd; color: #000; }
+        .light-mode textarea { background: #f5f5f5; color: #333; caret-color: #000; }
 
         .resizing iframe { pointer-events: none; }
     </style>
 </head>
 <body>
 
+<input type="file" id="fileInput" accept=".html,.css,.js">
+<input type="color" id="colorPicker">
+
+<div id="searchPopup">
+    <input type="text" id="findInput" class="popup-input" placeholder="Find text..." oninput="resetSearchIndex()">
+    <div style="display: flex; gap: 5px; margin-bottom: 10px;">
+        <button class="btn" style="flex: 1;" onclick="findNext(false)">PREV</button>
+        <button class="btn" style="flex: 1;" onclick="findNext(true)">NEXT</button>
+    </div>
+    <input type="text" id="replaceInput" class="popup-input" placeholder="Replace with...">
+    <label style="font-size: 0.7rem; color: #888; display: flex; align-items: center; gap: 5px; margin-bottom: 10px;">
+        <input type="checkbox" id="caseSensitive"> Case Sensitive
+    </label>
+    <div style="display: flex; gap: 5px;">
+        <button class="btn" style="flex: 1;" onclick="doReplace()">REPLACE</button>
+        <button class="btn" style="flex: 1;" onclick="togglePopup()">CLOSE</button>
+    </div>
+</div>
+
 <div class="main-container">
     <div class="header">
-        <div class="logo">CSM_LAB_V2.2</div>
-        <div style="display: flex; align-items: center; gap: 10px;">
+        <div class="logo">CSM_LAB_V2.5</div>
+        <div style="display: flex; align-items: center; gap: 3px;">
+            <button class="btn" onclick="undo()">⟲</button>
+            <button class="btn" onclick="redo()">⟳</button>
+            <button class="btn" onclick="togglePopup()">🔍</button>
+            <button class="btn" onclick="openFile()">📂</button>
+            <button class="btn" onclick="toggleTheme()">🌓</button>
+            <button class="btn" onclick="pickColor()">🎨</button>
             <button class="btn" onclick="downloadCode()">SAVE</button>
-            <div class="dev-tag">DEV: <span>CSM MOHASIN ALAM</span></div>
         </div>
     </div>
 
     <div class="workspace" id="container">
         <div class="panel-editor" id="editorSide">
-            <div class="panel-header">EDITOR_NODE</div>
+            <div class="panel-header">
+                <span>EDITOR_NODE</span>
+                <span id="save-indicator" style="color: var(--neon-green); font-size: 0.5rem; display: none;">● SAVED</span>
+            </div>
             
-            <textarea id="codeInput" spellcheck="false" placeholder="Start typing..."></textarea>
-
+            <div id="editor-wrapper">
+                <textarea id="codeInput" spellcheck="false"></textarea>
+            </div>
+            
             <div class="symbol-bar">
                 <button class="sym-btn" onclick="insertChar('<')">&lt;</button>
                 <button class="sym-btn" onclick="insertChar('>')">&gt;</button>
@@ -167,9 +233,6 @@
                 <button class="sym-btn" onclick="insertChar('(')">(</button>
                 <button class="sym-btn" onclick="insertChar(')')">)</button>
                 <button class="sym-btn" onclick="insertChar(';')">;</button>
-                <button class="sym-btn" onclick="insertChar(':')">:</button>
-                <button class="sym-btn" onclick="insertChar('[')">[</button>
-                <button class="sym-btn" onclick="insertChar(']')">]</button>
             </div>
         </div>
 
@@ -188,67 +251,161 @@
     const editorSide = document.getElementById('editorSide');
     const resizer = document.getElementById('resizer');
     const container = document.getElementById('container');
+    const searchPopup = document.getElementById('searchPopup');
 
-    // Default Starter Code
-    codeInput.value = `<!DOCTYPE html>\n<html>\n<head>\n<style>\n  body { background: #111; color: #00f2ff; text-align: center; font-family: sans-serif; padding-top: 20%; }\n  h2 { color: #39ff14; text-shadow: 0 0 10px #39ff14; }\n</style>\n</head>\n<body>\n  <h2>CSM NEURAL MOBILE</h2>\n  <p>Symbol bar is fixed at the bottom!</p>\n</body>\n</html>`;
+    // Auto-Close Tags
+    codeInput.addEventListener('keydown', (e) => {
+        if (e.key === '>') {
+            const pos = codeInput.selectionStart;
+            const text = codeInput.value;
+            const lastTagMatch = text.substring(0, pos).match(/<([a-z1-6]+)$[^\/]*$/i);
+            if (lastTagMatch) {
+                const tagName = lastTagMatch[1];
+                setTimeout(() => {
+                    const currentPos = codeInput.selectionStart;
+                    codeInput.value = text.substring(0, currentPos) + `</${tagName}>` + text.substring(currentPos);
+                    codeInput.selectionStart = codeInput.selectionEnd = currentPos;
+                }, 10);
+            }
+        }
+    });
 
-    function updatePreview() {
-        const previewDocument = livePreview.contentDocument || livePreview.contentWindow.document;
-        previewDocument.open();
-        previewDocument.write(codeInput.value);
-        previewDocument.close();
+    function toggleTheme() { document.body.classList.toggle('light-mode'); }
+
+    function openFile() { document.getElementById('fileInput').click(); }
+    document.getElementById('fileInput').addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        const reader = new FileReader();
+        reader.onload = function(e) { codeInput.value = e.target.result; updatePreview(); };
+        reader.readAsText(file);
+    });
+
+    function pickColor() { document.getElementById('colorPicker').click(); }
+    document.getElementById('colorPicker').addEventListener('input', (e) => { insertChar(e.target.value); });
+
+    function autoSave() {
+        localStorage.setItem('csm_autosave_v2', codeInput.value);
+        const indicator = document.getElementById('save-indicator');
+        indicator.style.display = 'inline';
+        setTimeout(() => indicator.style.display = 'none', 1500);
+    }
+
+    let history = [localStorage.getItem('csm_autosave_v2') || ""];
+    let historyIndex = 0;
+    if(history[0]) codeInput.value = history[0];
+
+    function saveToHistory() {
+        if (codeInput.value === history[historyIndex]) return;
+        history = history.slice(0, historyIndex + 1);
+        history.push(codeInput.value);
+        if (history.length > 30) history.shift(); else historyIndex++;
+        autoSave();
+    }
+
+    function undo() { if (historyIndex > 0) { historyIndex--; codeInput.value = history[historyIndex]; updatePreview(false); } }
+    function redo() { if (historyIndex < history.length - 1) { historyIndex++; codeInput.value = history[historyIndex]; updatePreview(false); } }
+
+    let searchMatches = [];
+    let currentMatchIndex = -1;
+    function resetSearchIndex() { searchMatches = []; currentMatchIndex = -1; }
+    function togglePopup() { searchPopup.style.display = (searchPopup.style.display === 'block') ? 'none' : 'block'; }
+    
+    function findNext(forward = true) {
+        const f = document.getElementById('findInput').value;
+        if (!f) return;
+        const text = codeInput.value;
+        const regex = new RegExp(f.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), document.getElementById('caseSensitive').checked ? 'g' : 'gi');
+        if (searchMatches.length === 0) {
+            let match;
+            while ((match = regex.exec(text)) !== null) searchMatches.push({ index: match.index, length: f.length });
+        }
+        if (searchMatches.length === 0) return;
+        currentMatchIndex = forward ? (currentMatchIndex + 1) % searchMatches.length : (currentMatchIndex - 1 + searchMatches.length) % searchMatches.length;
+        const m = searchMatches[currentMatchIndex];
+        codeInput.focus();
+        codeInput.setSelectionRange(m.index, m.index + m.length);
+    }
+
+    function doReplace() {
+        const f = document.getElementById('findInput').value;
+        const r = document.getElementById('replaceInput').value;
+        if (!f) return;
+        const regex = new RegExp(f.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi');
+        codeInput.value = codeInput.value.replace(regex, r);
+        updatePreview();
     }
 
     function insertChar(char) {
         const start = codeInput.selectionStart;
         const end = codeInput.selectionEnd;
-        const text = codeInput.value;
-        codeInput.value = text.substring(0, start) + char + text.substring(end);
+        codeInput.value = codeInput.value.substring(0, start) + char + codeInput.value.substring(end);
         codeInput.focus();
         codeInput.selectionStart = codeInput.selectionEnd = start + char.length;
         updatePreview();
     }
 
-    codeInput.addEventListener('input', updatePreview);
-    window.onload = updatePreview;
-
-    // Resizer Logic
-    let isDragging = false;
-    function startResize() { isDragging = true; document.body.classList.add('resizing'); }
-    function stopResize() { isDragging = false; document.body.classList.remove('resizing'); }
-
-    function performResize(e) {
-        if (!isDragging) return;
-        let clientX = e.touches ? e.touches[0].clientX : e.clientX;
-        let containerWidth = container.clientWidth;
-        let percentage = (clientX / containerWidth) * 100;
-
-        if (percentage < 10) {
-            editorSide.style.width = '0%';
-            editorSide.style.display = 'none';
-        } else if (percentage > 90) {
-            editorSide.style.width = '100%';
-        } else {
-            editorSide.style.display = 'flex';
-            editorSide.style.width = percentage + '%';
-        }
+    function updatePreview(shouldSave = true) {
+        const doc = livePreview.contentDocument || livePreview.contentWindow.document;
+        doc.open();
+        doc.write(codeInput.value);
+        doc.close();
+        if (shouldSave) saveToHistory();
     }
 
+    codeInput.addEventListener('input', () => {
+        clearTimeout(window.typeTimer);
+        window.typeTimer = setTimeout(() => updatePreview(true), 800);
+        updatePreview(false);
+    });
+
+    if(!codeInput.value) {
+        codeInput.value = `<!DOCTYPE html>\n<html>\n<head>\n<style>\n  body { background: #111; color: #00f2ff; text-align: center; padding-top: 50px; font-family: sans-serif; }\n</style>\n</head>\n<body>\n  <h2>CSM V2.5 READY</h2>\n  <p>Syntax Highlighting Disabled</p>\n</body>\n</html>`;
+    }
+
+    window.onload = () => updatePreview(false);
+
+    let isResizing = false;
+    const startResize = (e) => {
+        isResizing = true;
+        document.body.style.cursor = 'col-resize';
+        document.body.classList.add('resizing');
+    };
+    const stopResize = () => {
+        isResizing = false;
+        document.body.style.cursor = 'default';
+        document.body.classList.remove('resizing');
+    };
+    const onResize = (e) => {
+        if (!isResizing) return;
+        let clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        let containerRect = container.getBoundingClientRect();
+        let offset = clientX - containerRect.left;
+        let percentage = (offset / containerRect.width) * 100;
+        if (percentage >= 0 && percentage <= 100) {
+            if (percentage < 5) {
+                editorSide.style.width = '0%';
+                editorSide.style.display = 'none';
+            } else {
+                editorSide.style.display = 'flex';
+                editorSide.style.width = `${percentage}%`;
+            }
+        }
+    };
+
     resizer.addEventListener('mousedown', startResize);
-    document.addEventListener('mousemove', performResize);
+    resizer.addEventListener('touchstart', startResize, { passive: true });
+    document.addEventListener('mousemove', onResize);
+    document.addEventListener('touchmove', onResize, { passive: false });
     document.addEventListener('mouseup', stopResize);
-    resizer.addEventListener('touchstart', startResize);
-    document.addEventListener('touchmove', performResize);
     document.addEventListener('touchend', stopResize);
 
     function downloadCode() {
         const blob = new Blob([codeInput.value], { type: "text/html" });
         const a = document.createElement("a");
         a.href = URL.createObjectURL(blob);
-        a.download = "csm_mobile_project.html";
+        a.download = "csm_project.html";
         a.click();
     }
 </script>
-
 </body>
 </html>
