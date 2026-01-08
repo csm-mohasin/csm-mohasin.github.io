@@ -203,6 +203,7 @@
         <div style="display: flex; align-items: center; gap: 3px;">
             <button class="btn" onclick="undo()">⟲</button>
             <button class="btn" onclick="redo()">⟳</button>
+            <button class="btn" onclick="toggleWrap()" id="wrapBtn" title="Toggle Word Wrap">W</button>
             <button class="btn" onclick="togglePopup()">🔍</button>
             <button class="btn" onclick="openFile()">📂</button>
             <button class="btn" onclick="toggleTheme()">🌓</button>
@@ -219,7 +220,7 @@
             </div>
             
             <div id="editor-wrapper">
-                <textarea id="codeInput" spellcheck="false"></textarea>
+                <textarea id="codeInput" spellcheck="false" style="white-space: pre;"></textarea>
             </div>
             
             <div class="symbol-bar">
@@ -252,6 +253,19 @@
     const resizer = document.getElementById('resizer');
     const container = document.getElementById('container');
     const searchPopup = document.getElementById('searchPopup');
+
+    function toggleWrap() {
+        const wrapBtn = document.getElementById('wrapBtn');
+        if (codeInput.style.whiteSpace === 'pre-wrap') {
+            codeInput.style.whiteSpace = 'pre';
+            wrapBtn.style.color = 'var(--neon-cyan)';
+            wrapBtn.style.borderColor = 'var(--neon-cyan)';
+        } else {
+            codeInput.style.whiteSpace = 'pre-wrap';
+            wrapBtn.style.color = 'var(--neon-green)';
+            wrapBtn.style.borderColor = 'var(--neon-green)';
+        }
+    }
 
     // Auto-Close Tags
     codeInput.addEventListener('keydown', (e) => {
