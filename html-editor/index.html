@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>CSM | Neural Pro V3.1</title>
+    <title>CSM | Neural Pro V3.1 Optimized</title>
     <style>
         :root {
             --neon-cyan: #00f2ff;
@@ -34,7 +34,6 @@
 
         .logo { color: var(--neon-cyan); font-weight: bold; font-size: 0.75rem; letter-spacing: 1px; }
 
-        /* Draggable Popup */
         #searchPopup {
             position: fixed;
             top: 100px; left: 50%;
@@ -64,26 +63,24 @@
         }
 
         .workspace { display: flex; flex: 1; position: relative; background: #000; overflow: hidden; }
-
         .panel-editor { width: 50%; display: flex; flex-direction: column; background: var(--panel-bg); position: relative; }
         .panel-preview { flex: 1; display: flex; flex-direction: column; background: #fff; }
 
         #editor-wrapper { position: relative; flex: 1; overflow: hidden; }
 
-        /* Fixed Overlay Logic */
+        /* Performance Fix: Highlight layer off by default */
         #highlight-layer {
             position: absolute; top: 0; left: 0;
             width: 100%; height: 100%;
             padding: 10px; box-sizing: border-box;
             pointer-events: none; 
-            color: #d4d4d4; /* Default color when not searching */
             white-space: pre-wrap; word-wrap: break-word;
             font-size: 13px; line-height: 1.4; font-family: 'Fira Code', monospace;
             z-index: 1;
+            display: none; /* Only show when searching */
         }
 
-        /* Highlight classes */
-        .search-match { background: rgba(255, 255, 0, 0.4); color: #000; border-radius: 2px; }
+        .search-match { background: rgba(255, 255, 0, 0.6); color: #000; border-radius: 2px; }
 
         textarea {
             width: 100%; height: 100%;
@@ -96,10 +93,9 @@
             caret-color: var(--neon-cyan);
         }
 
-        /* Hide textarea text when searching to show highlights clearly */
-        .searching textarea {
-            color: transparent;
-        }
+        /* When searching, make textarea text transparent */
+        .searching textarea { color: transparent; }
+        .searching #highlight-layer { display: block; }
 
         iframe { flex: 1; border: none; background: #fff; width: 100%; }
 
@@ -119,10 +115,7 @@
             max-height: 140px; overflow-y: auto; display: none; z-index: 10001;
             border-radius: 4px; min-width: 130px;
         }
-        .suggestion-item {
-            padding: 8px 10px; font-size: 11px; color: #ccc;
-            border-bottom: 1px solid #222;
-        }
+        .suggestion-item { padding: 8px 10px; font-size: 11px; color: #ccc; border-bottom: 1px solid #222; }
         .suggestion-item.active { background: var(--neon-cyan); color: #000; }
 
         #resizer {
@@ -140,10 +133,7 @@
         .btn-active { border-color: var(--neon-green); color: var(--neon-green); }
         .resizing iframe { pointer-events: none; }
         
-        .option-row {
-            display: flex; align-items: center; gap: 5px; 
-            font-size: 0.6rem; color: var(--neon-cyan); margin-bottom: 8px;
-        }
+        .option-row { display: flex; align-items: center; gap: 5px; font-size: 0.6rem; color: var(--neon-cyan); margin-bottom: 8px; }
     </style>
 </head>
 <body>
@@ -152,7 +142,7 @@
 <input type="color" id="colorPicker" style="visibility:hidden; position:absolute;">
 
 <div id="searchPopup">
-    <div class="popup-header" id="popupHeader">DRAG TO MOVE • SEARCH_UNIT</div>
+    <div class="popup-header" id="popupHeader">DRAG • SEARCH_UNIT</div>
     <input type="text" id="findInput" class="popup-input" placeholder="Find..." oninput="applyHackerHighlight()">
     <div class="option-row">
         <input type="checkbox" id="caseSensitive" onchange="applyHackerHighlight()"> 
@@ -221,21 +211,63 @@
 
     let history = [""];
     let historyStep = 0;
+    let previewTimeout;
 
     function saveState() {
         if (codeInput.value === history[historyStep]) return;
         history = history.slice(0, historyStep + 1);
         history.push(codeInput.value);
-        if (history.length > 50) history.shift(); else historyStep++;
+        if (history.length > 30) history.shift(); else historyStep++;
     }
 
     function undo() { if (historyStep > 0) { historyStep--; codeInput.value = history[historyStep]; updatePreview(false); } }
     function redo() { if (historyStep < history.length - 1) { historyStep++; codeInput.value = history[historyStep]; updatePreview(false); } }
 
-    // Dragging Logic
+    // Optimization: Debounced Preview update
+    function handleInput() {
+        clearTimeout(previewTimeout);
+        previewTimeout = setTimeout(() => {
+            updatePreview(true);
+        }, 500); // Wait 500ms after typing stops
+    }
+
+    function updatePreview(save = true) {
+        const doc = livePreview.contentDocument;
+        doc.open(); doc.write(codeInput.value); doc.close();
+        if (save) saveState();
+    }
+
+    function applyHackerHighlight() {
+        const find = document.getElementById('findInput').value;
+        if (!find || find.length < 2) { 
+            editorWrapper.classList.remove('searching');
+            highlightLayer.innerHTML = ""; 
+            return; 
+        }
+
+        editorWrapper.classList.add('searching');
+        const text = codeInput.value;
+        const isCase = document.getElementById('caseSensitive').checked;
+        const flags = isCase ? 'g' : 'gi';
+        
+        // Performance fix: Escape HTML only when needed
+        const escapedText = text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+        const regex = new RegExp(find.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), flags);
+        
+        highlightLayer.innerHTML = escapedText.replace(regex, m => `<span class="search-match">${m}</span>`);
+        syncScroll();
+    }
+
+    function syncScroll() { 
+        if (editorWrapper.classList.contains('searching')) {
+            highlightLayer.scrollTop = codeInput.scrollTop; 
+            highlightLayer.scrollLeft = codeInput.scrollLeft; 
+        }
+    }
+
+    // Modal Drag
     let isDragging = false, offset = [0, 0];
-    const pHeader = document.getElementById('popupHeader');
-    pHeader.addEventListener('touchstart', (e) => {
+    document.getElementById('popupHeader').addEventListener('touchstart', (e) => {
         isDragging = true;
         const t = e.touches[0];
         offset = [searchPopup.offsetLeft - t.clientX, searchPopup.offsetTop - t.clientY];
@@ -249,112 +281,12 @@
     });
     document.addEventListener('touchend', () => isDragging = false);
 
-    const htmlTags = ['div', 'span', 'p', 'h1', 'a', 'img', 'button', 'input', 'ul', 'li', 'script', 'style'];
-    const htmlAttrs = ['class', 'id', 'src', 'href', 'style', 'type', 'placeholder'];
-
-    function handleInput() {
-        const val = codeInput.value;
-        const pos = codeInput.selectionStart;
-        const textBefore = val.substring(0, pos);
-
-        // Auto Close Tag
-        if (event && event.data === '>') {
-            const m = textBefore.match(/<(\w+)>$/);
-            if (m && !['img','br','hr','input'].includes(m[1].toLowerCase())) {
-                codeInput.value = val.substring(0, pos) + `</${m[1]}>` + val.substring(pos);
-                codeInput.selectionStart = codeInput.selectionEnd = pos;
-            }
-        }
-
-        const tagM = textBefore.match(/<(\w*)$/);
-        const attrM = textBefore.match(/<(\w+)\s+([\w-]*)$/);
-
-        if (attrM) showBox(htmlAttrs.filter(a => a.startsWith(attrM[2])), attrM[2], 'attr');
-        else if (tagM) showBox(htmlTags.filter(t => t.startsWith(tagM[1])), tagM[1], 'tag');
-        else suggestionBox.style.display = 'none';
-
-        updatePreview(true);
-    }
-
-    function showBox(list, word, mode) {
-        if (list.length === 0) { suggestionBox.style.display = 'none'; return; }
-        suggestionBox.innerHTML = '';
-        suggestionBox.style.display = 'block';
-        measurer.textContent = codeInput.value.substring(0, codeInput.selectionStart);
-        const span = document.createElement('span'); span.textContent = '|'; measurer.appendChild(span);
-        const r = span.getBoundingClientRect();
-        suggestionBox.style.left = r.left + 'px';
-        suggestionBox.style.top = (r.top + 20) + 'px';
-
-        list.forEach(item => {
-            const div = document.createElement('div');
-            div.className = 'suggestion-item';
-            div.innerHTML = `${item} <span style="font-size:8px; opacity:0.4">${mode.toUpperCase()}</span>`;
-            div.onclick = () => {
-                const p = codeInput.selectionStart;
-                const before = codeInput.value.substring(0, p - word.length);
-                const after = codeInput.value.substring(p);
-                if (mode === 'tag') {
-                    codeInput.value = before + item + "></" + item + ">" + after;
-                    codeInput.selectionStart = codeInput.selectionEnd = before.length + item.length + 1;
-                } else {
-                    codeInput.value = before + item + '=""' + after;
-                    codeInput.selectionStart = codeInput.selectionEnd = before.length + item.length + 2;
-                }
-                suggestionBox.style.display = 'none'; codeInput.focus(); updatePreview(true);
-            };
-            suggestionBox.appendChild(div);
-        });
-    }
-
-    function updatePreview(save = true) {
-        const doc = livePreview.contentDocument;
-        doc.open(); doc.write(codeInput.value); doc.close();
-        applyHackerHighlight();
-        if (save) saveState();
-    }
-
-    function applyHackerHighlight() {
-        const find = document.getElementById('findInput').value;
-        const text = codeInput.value;
-        
-        if (!find) { 
+    function togglePopup() { 
+        const isVisible = searchPopup.style.display === 'block';
+        searchPopup.style.display = isVisible ? 'none' : 'block'; 
+        if (isVisible) {
             editorWrapper.classList.remove('searching');
-            highlightLayer.innerHTML = ""; 
-            return; 
-        }
-
-        editorWrapper.classList.add('searching');
-        const isCase = document.getElementById('caseSensitive').checked;
-        const flags = isCase ? 'g' : 'gi';
-        const regex = new RegExp(find.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), flags);
-        
-        // Escape HTML for highlight layer display
-        const escapedText = text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-        const highlighted = escapedText.replace(new RegExp(find.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), flags), m => `<span class="search-match">${m}</span>`);
-        
-        highlightLayer.innerHTML = highlighted;
-        syncScroll();
-    }
-
-    function findNext() {
-        const find = document.getElementById('findInput').value;
-        if (!find) return;
-        const text = codeInput.value;
-        const isCase = document.getElementById('caseSensitive').checked;
-        const searchText = isCase ? text : text.toLowerCase();
-        const searchFind = isCase ? find : find.toLowerCase();
-        
-        let startPos = codeInput.selectionEnd;
-        let nextIdx = searchText.indexOf(searchFind, startPos);
-        if (nextIdx === -1) nextIdx = searchText.indexOf(searchFind, 0);
-        
-        if (nextIdx !== -1) {
-            codeInput.focus();
-            codeInput.setSelectionRange(nextIdx, nextIdx + find.length);
-            const lineHeight = 18.2;
-            const lines = text.substring(0, nextIdx).split('\n').length;
-            codeInput.scrollTop = (lines - 5) * lineHeight;
+            highlightLayer.innerHTML = "";
         }
     }
 
@@ -365,42 +297,39 @@
         document.getElementById('wrapBtn').classList.toggle('btn-active');
     }
 
-    function pickColor() { document.getElementById('colorPicker').click(); }
-    document.getElementById('colorPicker').oninput = (e) => insertChar(e.target.value);
-
-    function syncScroll() { 
-        highlightLayer.scrollTop = codeInput.scrollTop; 
-        highlightLayer.scrollLeft = codeInput.scrollLeft; 
-    }
-
     function insertChar(c) {
         const s = codeInput.selectionStart, e = codeInput.selectionEnd;
         codeInput.value = codeInput.value.substring(0, s) + c + codeInput.value.substring(e);
         codeInput.selectionStart = codeInput.selectionEnd = s + c.length;
-        codeInput.focus(); updatePreview(true);
+        codeInput.focus(); handleInput();
     }
 
-    function togglePopup() { 
-        const isVisible = searchPopup.style.display === 'block';
-        searchPopup.style.display = isVisible ? 'none' : 'block'; 
-        if (isVisible) {
-            editorWrapper.classList.remove('searching');
-            highlightLayer.innerHTML = "";
+    function findNext() {
+        const find = document.getElementById('findInput').value;
+        if (!find) return;
+        const text = codeInput.value;
+        const isCase = document.getElementById('caseSensitive').checked;
+        const searchText = isCase ? text : text.toLowerCase();
+        const searchFind = isCase ? find : find.toLowerCase();
+        let nextIdx = searchText.indexOf(searchFind, codeInput.selectionEnd);
+        if (nextIdx === -1) nextIdx = searchText.indexOf(searchFind, 0);
+        if (nextIdx !== -1) {
+            codeInput.focus();
+            codeInput.setSelectionRange(nextIdx, nextIdx + find.length);
         }
     }
 
     function doReplace() {
         const f = document.getElementById('findInput').value;
         const r = document.getElementById('replaceInput').value;
-        if(f) { 
-            const isCase = document.getElementById('caseSensitive').checked;
-            const flags = isCase ? 'g' : 'gi';
-            const regex = new RegExp(f.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), flags);
+        if(f) {
+            const regex = new RegExp(f.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g');
             codeInput.value = codeInput.value.replace(regex, r);
-            updatePreview(true); 
+            updatePreview(true);
         }
     }
 
+    // Resizer logic
     let resizing = false;
     resizer.addEventListener('touchstart', () => { resizing = true; document.body.classList.add('resizing'); });
     document.addEventListener('touchmove', (e) => {
