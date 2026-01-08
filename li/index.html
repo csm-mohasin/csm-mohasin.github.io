@@ -3,284 +3,287 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Link Extractor // Hacker Terminal</title>
+    <title>CSM | Neural Scrapper & History</title>
     <style>
-        /* Base styles for a terminal look */
-        body {
-            background-color: #1a1a1a; /* Dark background */
-            color: #00ff00; /* Green text for terminal feel */
-            font-family: 'Hack', 'Fira Code', 'Cascadia Code', 'Consolas', 'monospace'; /* Monospaced font */
-            padding: 20px;
-            margin: 0;
-            line-height: 1.5;
+        :root {
+            --neon-cyan: #00f2ff;
+            --neon-green: #39ff14;
+            --bg-dark: #050505;
+            --panel-bg: rgba(10, 10, 10, 0.9);
+            --glow: 0 0 10px rgba(0, 242, 255, 0.5);
+        }
+
+        body, html {
+            margin: 0; padding: 0;
+            background: var(--bg-dark);
+            color: #fff;
+            font-family: 'Segoe UI', 'Courier New', monospace;
             overflow-x: hidden;
-            display: flex;
-            justify-content: center;
-            align-items: flex-start;
-            min-height: 100vh;
         }
 
-        /* Container for the terminal window */
-        .terminal {
-            width: 90%;
-            max-width: 900px;
-            background-color: #000000; /* Pure black inside terminal */
-            border: 2px solid #00ff00; /* Green border */
-            box-shadow: 0 0 15px rgba(0, 255, 0, 0.7); /* Green glow */
-            border-radius: 8px;
-            padding: 25px;
-            box-sizing: border-box;
-            position: relative;
-            animation: flicker 0.1s infinite alternate; /* Subtle flicker effect */
-            margin-top: 50px; /* Space from top */
+        #matrix { position: fixed; top: 0; left: 0; z-index: -1; opacity: 0.15; }
+
+        .main-wrapper {
+            display: flex; flex-direction: column;
+            align-items: center; min-height: 100vh;
+            padding: 40px 20px; box-sizing: border-box;
         }
 
-        /* Header like a terminal prompt */
-        h1 {
-            color: #00ff00;
-            margin-top: 0;
+        .terminal-box {
+            width: 100%; max-width: 1100px;
+            background: var(--panel-bg);
+            border: 1px solid var(--neon-cyan);
+            border-radius: 15px;
+            box-shadow: var(--glow);
+            backdrop-filter: blur(8px);
+            overflow: hidden;
             margin-bottom: 20px;
-            font-size: 1.8em;
-            text-align: left;
-            border-bottom: 1px dashed #00ff00;
-            padding-bottom: 10px;
         }
 
-        /* Prompt style for input */
-        .prompt {
-            color: #00ff00;
-            margin-right: 8px;
+        .header {
+            padding: 15px 25px;
+            background: rgba(0, 242, 255, 0.1);
+            border-bottom: 1px solid var(--neon-cyan);
+            display: flex; justify-content: space-between; align-items: center;
         }
 
-        /* Input form and elements */
-        #inputForm {
-            display: flex;
-            margin-bottom: 20px;
-            align-items: center;
+        .title { color: var(--neon-cyan); font-weight: bold; letter-spacing: 2px; }
+
+        .body-content { padding: 25px; }
+
+        .input-group {
+            display: flex; gap: 10px; margin-bottom: 20px;
+            background: rgba(255, 255, 255, 0.03);
+            padding: 15px; border-radius: 10px;
+            border: 1px solid rgba(0, 242, 255, 0.2);
         }
 
-        #urlInput {
-            flex-grow: 1;
-            background-color: #1a1a1a; /* Darker input background */
-            border: 1px solid #00ff00; /* Green border */
-            color: #00ff00;
-            padding: 10px;
-            font-size: 1em;
-            border-radius: 4px;
-            margin-right: 10px;
-            outline: none; /* Remove default outline */
-            box-shadow: inset 0 0 5px rgba(0, 255, 0, 0.5); /* Inner glow */
-        }
-        #urlInput::placeholder {
-            color: rgba(0, 255, 0, 0.7); /* Lighter green placeholder */
+        input { flex: 1; background: transparent; border: none; color: var(--neon-green); outline: none; font-size: 1rem; }
+
+        button {
+            background: transparent; border: 1px solid var(--neon-cyan);
+            color: var(--neon-cyan); padding: 8px 20px;
+            cursor: pointer; border-radius: 5px; transition: 0.3s;
         }
 
-        #submitBtn {
-            background-color: #0056b3; /* Dark blue, can be changed to green */
-            background-color: #008000; /* Darker green button */
-            color: white;
-            border: none;
-            padding: 10px 15px;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 1em;
-            box-shadow: 0 0 8px rgba(0, 255, 0, 0.5); /* Green button glow */
-            transition: background-color 0.3s ease;
-        }
-        #submitBtn:hover {
-            background-color: #00cc00; /* Brighter green on hover */
-            box-shadow: 0 0 12px rgba(0, 255, 0, 0.9);
-        }
-        #submitBtn:disabled {
-            background-color: #333;
-            cursor: not-allowed;
-            box-shadow: none;
+        button:hover { background: var(--neon-cyan); color: #000; box-shadow: 0 0 15px var(--neon-cyan); }
+
+        .tabs { display: flex; gap: 10px; margin-bottom: 15px; }
+        .tab-btn { padding: 5px 15px; font-size: 0.8rem; border: 1px solid rgba(0, 242, 255, 0.3); color: #888; border-radius: 3px; cursor: pointer; }
+        .tab-btn.active { color: var(--neon-cyan); border-color: var(--neon-cyan); background: rgba(0, 242, 255, 0.1); }
+
+        #console {
+            height: 120px; overflow-y: auto;
+            background: rgba(0, 0, 0, 0.4);
+            padding: 10px; border-radius: 5px;
+            font-size: 0.85rem; border-left: 3px solid var(--neon-cyan);
+            margin-bottom: 20px; scroll-behavior: smooth;
         }
 
-        /* Status and error messages */
-        .status-line {
-            padding: 8px;
-            border-left: 3px solid #00ff00;
-            margin-bottom: 15px;
-            white-space: pre-wrap; /* Preserve whitespace and breaks */
-        }
-        .loading {
-            color: #00ff00;
-            animation: blink 1s infinite; /* Blinking effect */
-        }
-        .error {
-            color: #ff0000; /* Red for errors */
-            border-left-color: #ff0000;
-        }
-
-        /* Results area */
-        #resultsTable {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 20px;
-        }
-        #resultsTable th, #resultsTable td {
-            border: 1px dashed #00ff00; /* Dashed green border for table */
-            padding: 8px;
-            text-align: left;
-            word-break: break-all; /* Ensure long URLs wrap */
-        }
-        #resultsTable th {
-            background-color: rgba(0, 255, 0, 0.1); /* Slightly lighter green for headers */
-            color: #00ff00;
-        }
-        #resultsTable td {
-            color: #00ff00;
-        }
-        #resultsTable a {
-            color: #00ffff; /* Cyan for links */
-            text-decoration: none;
-        }
-        #resultsTable a:hover {
-            text-decoration: underline;
-        }
+        .table-container { max-height: 450px; overflow-y: auto; }
+        table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+        th { background: rgba(0, 242, 255, 0.1); color: var(--neon-cyan); padding: 12px; text-align: left; position: sticky; top: 0; z-index: 10; }
+        td { padding: 10px; border-bottom: 1px solid rgba(255, 255, 255, 0.05); }
         
-        /* Blinking cursor effect for prompt */
-        .blinking-cursor {
-            font-weight: 100;
-            animation: blink-caret .75s step-end infinite;
+        /* Row Animation */
+        .row-animate {
+            animation: fadeIn 0.5s ease forwards;
+            opacity: 0;
         }
 
-        /* Keyframe animations */
-        @keyframes blink {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0; }
-        }
-        @keyframes blink-caret {
-            from, to { border-color: transparent }
-            50% { border-color: #00ff00; }
-        }
-        @keyframes flicker {
-            0% { opacity: 1; }
-            50% { opacity: 0.98; }
-            100% { opacity: 1; }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
-        /* Responsive adjustments */
-        @media (max-width: 600px) {
-            .terminal {
-                padding: 15px;
-            }
-            h1 {
-                font-size: 1.5em;
-            }
-            #inputForm {
-                flex-direction: column;
-            }
-            #urlInput {
-                margin-right: 0;
-                margin-bottom: 10px;
-                border-radius: 4px;
-            }
-            #submitBtn {
-                width: 100%;
-                border-radius: 4px;
-            }
-        }
+        a { color: var(--neon-green); text-decoration: none; }
+        a:hover { text-decoration: underline; }
+
+        .footer { text-align: center; padding: 20px; width: 100%; border-top: 1px dashed rgba(0, 242, 255, 0.2); }
+        .dev-name { color: var(--neon-cyan); text-decoration: none; font-weight: bold; letter-spacing: 2px; }
+
+        .delete-btn { color: #ff3e3e; cursor: pointer; float: right; font-weight: bold; }
     </style>
 </head>
 <body>
-    <div class="terminal">
-        <h1><span class="prompt"></span> [INIT] Link Extractor v1.0 <span class="blinking-cursor">_</span></h1>
-        <div class="status-line">
-            <span class="prompt">>></span> Enter target URL to scan for anchor links:
-        </div>
-        <form id="inputForm">
-            <span class="prompt">$</span> <input type="url" id="urlInput" placeholder="https://example.com" required>
-            <button type="submit" id="submitBtn">EXECUTE</button>
-        </form>
 
-        <div id="statusMessage" class="status-line loading" style="display: none;">
-            <span class="prompt">>></span> Scanning target. Please stand by...
+    <canvas id="matrix"></canvas>
+
+    <div class="main-wrapper">
+        <div class="terminal-box">
+            <div class="header">
+                <div class="title">CSM NEURAL SCANNER V4.0</div>
+                <div id="clock">00:00:00</div>
+            </div>
+
+            <div class="body-content">
+                <form id="scanForm">
+                    <div class="input-group">
+                        <input type="url" id="urlInp" placeholder="Enter target (e.g., https://mohasin.is-a.dev)" required>
+                        <button type="submit" id="submitBtn">START_DECODING</button>
+                    </div>
+                </form>
+
+                <div class="tabs">
+                    <div class="tab-btn active" id="liveTab" onclick="switchView('live')">LIVE_DECODE</div>
+                    <div class="tab-btn" id="histTab" onclick="switchView('history')">ARCHIVE_LOGS</div>
+                </div>
+
+                <div id="console">
+                    <div style="color: #666;">[SYSTEM] Kernel loaded... Awaiting target acquisition.</div>
+                </div>
+
+                <div class="table-container" id="liveView">
+                    <table>
+                        <thead>
+                            <tr><th>IDENTIFIER</th><th>MAPPED_TARGET</th></tr>
+                        </thead>
+                        <tbody id="resBody">
+                            <tr><td colspan="2" style="text-align:center; color:#444;">No data in buffer</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="table-container" id="historyView" style="display:none;">
+                    <table>
+                        <thead>
+                            <tr><th>DATETIME</th><th>DOMAIN_NODE</th><th>OBJECTS</th></tr>
+                        </thead>
+                        <tbody id="historyBody"></tbody>
+                    </table>
+                </div>
+            </div>
         </div>
-        <div id="errorMessage" class="status-line error" style="display: none;">
-            <span class="prompt">!!</span> ERROR: 
+
+        <div class="footer">
+            <div style="color: #888; font-size: 0.8rem;">Core Intelligence Developed By</div>
+            <a href="#" class="dev-name">CSM MOHASIN ALAM</a>
         </div>
-        
-        <div class="status-line">
-            <span class="prompt">>></span> Results:
-        </div>
-        <table id="resultsTable">
-            <thead>
-                <tr>
-                    <th>Anchor Text</th>
-                    <th>Link URL</th>
-                </tr>
-            </thead>
-            <tbody id="resultsBody">
-                <tr><td colspan="2"><span class="prompt">>></span> Waiting for input...</td></tr>
-            </tbody>
-        </table>
-        <div class="status-line" style="margin-top: 20px;"><span class="prompt">>></span> Operation complete.</div>
     </div>
 
     <script>
-        // *** আপনার Worker URL টি এখানে অবশ্যই দিন ***
-        const WORKER_URL = "https://late-dawn-6462.csmmohasinalam.workers.dev/"; 
+        const WORKER_URL = "https://late-dawn-6462.csmmohasinalam.workers.dev/";
+        let scanHistory = JSON.parse(localStorage.getItem('csm_history')) || [];
 
-        const form = document.getElementById('inputForm');
-        const urlInput = document.getElementById('urlInput');
-        const resultsBody = document.getElementById('resultsBody');
-        const statusMessage = document.getElementById('statusMessage');
-        const errorMessage = document.getElementById('errorMessage');
-        const submitBtn = document.getElementById('submitBtn');
-
-        form.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const targetUrl = urlInput.value;
+        // Helper: Log with typing effect
+        async function log(text, type = 'info') {
+            const colors = { info: '#00f2ff', success: '#39ff14', error: '#ff3e3e' };
+            const div = document.createElement('div');
+            div.style.color = colors[type];
+            div.style.marginBottom = "5px";
+            div.innerHTML = `[${new Date().toLocaleTimeString()}] `;
+            document.getElementById('console').appendChild(div);
             
-            // UI পরিষ্কার করা এবং লোডিং দেখানো
-            resultsBody.innerHTML = `<tr><td colspan="2"><span class="prompt">>></span> Processing...</td></tr>`;
-            errorMessage.style.display = 'none';
-            statusMessage.style.display = 'block';
-            submitBtn.disabled = true;
+            const messageSpan = document.createElement('span');
+            div.appendChild(messageSpan);
 
+            for (let i = 0; i < text.length; i++) {
+                messageSpan.textContent += text.charAt(i);
+                await new Promise(r => setTimeout(r, 10)); // Typing speed for console
+            }
+            document.getElementById('console').scrollTop = document.getElementById('console').scrollHeight;
+        }
+
+        async function renderLinksAnimated(links, baseUrl) {
+            const body = document.getElementById('resBody');
+            body.innerHTML = '';
+            
+            for (let i = 0; i < links.length; i++) {
+                const item = links[i];
+                let absolute = item.link;
+                try { absolute = new URL(item.link, baseUrl).href; } catch(e) {}
+                
+                const tr = document.createElement('tr');
+                tr.className = 'row-animate';
+                tr.innerHTML = `
+                    <td>${item.anchorText || '[HIDDEN_NODE]'}</td>
+                    <td><a href="${absolute}" target="_blank">${absolute}</a></td>
+                `;
+                body.appendChild(tr);
+                
+                // Delay between each row to create "typing/streaming" effect
+                await new Promise(r => setTimeout(r, 40)); 
+            }
+        }
+
+        function saveToHistory(url, count) {
+            const entry = { id: Date.now(), time: new Date().toLocaleString(), url: url, count: count };
+            scanHistory.unshift(entry);
+            if(scanHistory.length > 15) scanHistory.pop();
+            localStorage.setItem('csm_history', JSON.stringify(scanHistory));
+            renderHistory();
+        }
+
+        function renderHistory() {
+            const body = document.getElementById('historyBody');
+            body.innerHTML = scanHistory.map(item => `
+                <tr class="row-animate">
+                    <td>${item.time}</td>
+                    <td>${item.url}</td>
+                    <td>${item.count} <span class="delete-btn" onclick="deleteHistory(${item.id})">✖</span></td>
+                </tr>
+            `).join('');
+        }
+
+        function deleteHistory(id) {
+            scanHistory = scanHistory.filter(i => i.id !== id);
+            localStorage.setItem('csm_history', JSON.stringify(scanHistory));
+            renderHistory();
+        }
+
+        function switchView(view) {
+            document.getElementById('liveTab').classList.toggle('active', view === 'live');
+            document.getElementById('histTab').classList.toggle('active', view === 'history');
+            document.getElementById('liveView').style.display = view === 'live' ? 'block' : 'none';
+            document.getElementById('historyView').style.display = view === 'history' ? 'block' : 'none';
+        }
+
+        document.getElementById('scanForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const url = document.getElementById('urlInp').value;
+            const btn = document.getElementById('submitBtn');
+            
+            btn.disabled = true;
+            switchView('live');
+            document.getElementById('resBody').innerHTML = '<tr><td colspan="2" style="text-align:center;">ACQUIRING DATA...</td></tr>';
+            
+            await log(`Establishing link to neural node: ${url}...`);
+            
             try {
-                // Worker-কে কল করা
-                const workerCallUrl = `${WORKER_URL}?target=${encodeURIComponent(targetUrl)}`;
-                const response = await fetch(workerCallUrl);
-                const data = await response.json();
+                const res = await fetch(`${WORKER_URL}?target=${encodeURIComponent(url)}`);
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.error);
 
-                if (response.status !== 200) {
-                     // Worker থেকে যদি error (যেমন 403/500) আসে
-                    errorMessage.querySelector('span:last-child').textContent = `ERROR: Failed to fetch data. Status: ${response.status}. Message: ${data.error || 'Unknown error'}. Check URL or try another.`;
-                    errorMessage.style.display = 'block';
-                    return;
-                }
+                await log(`Injection successful. Found ${data.links.length} objects. Decoding strings...`, 'success');
+                saveToHistory(url, data.links.length);
+                await renderLinksAnimated(data.links, url);
+                await log(`Display complete. Buffer flushed.`, 'info');
 
-                if (data.status === 'success' && data.links) {
-                    // সফল হলে টেবিল তৈরি করা
-                    if (data.links.length === 0) {
-                        resultsBody.innerHTML = `<tr><td colspan="2"><span class="prompt">>></span> No links found on this page.</td></tr>`;
-                    } else {
-                        resultsBody.innerHTML = ''; // Clear processing message
-                        data.links.forEach(item => {
-                            const row = resultsBody.insertRow();
-                            const anchorCell = row.insertCell(0);
-                            const linkCell = row.insertCell(1);
-                            
-                            anchorCell.textContent = item.anchorText || "[Image Link]";
-                            linkCell.innerHTML = `<a href="${item.link}" target="_blank">${item.link}</a>`;
-                        });
-                    }
-                } else if (data.error) {
-                    // এরর মেসেজ দেখানো
-                    errorMessage.querySelector('span:last-child').textContent = `ERROR: Worker responded with an error: ${data.error}`;
-                    errorMessage.style.display = 'block';
-                }
-            } catch (error) {
-                errorMessage.querySelector('span:last-child').textContent = `ERROR: Network issue or Worker is unreachable. Details: ${error.message}`;
-                errorMessage.style.display = 'block';
+            } catch (err) {
+                await log(`CRITICAL FAILURE: ${err.message}`, 'error');
             } finally {
-                statusMessage.style.display = 'none';
-                submitBtn.disabled = false;
+                btn.disabled = false;
             }
         });
+
+        // Matrix & Time Init
+        renderHistory();
+        setInterval(() => document.getElementById('clock').innerText = new Date().toLocaleTimeString(), 1000);
+        
+        const canvas = document.getElementById('matrix');
+        const ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+        const drops = Array(Math.floor(canvas.width/16)).fill(1);
+        function draw() {
+            ctx.fillStyle = "rgba(0,0,0,0.08)"; ctx.fillRect(0,0,canvas.width,canvas.height);
+            ctx.fillStyle = "#00f2ff"; ctx.font = "15px monospace";
+            drops.forEach((y, i) => {
+                ctx.fillText(String.fromCharCode(Math.random()*128), i*16, y*16);
+                if(y*16 > canvas.height && Math.random() > 0.975) drops[i] = 0;
+                drops[i]++;
+            });
+        }
+        setInterval(draw, 50);
     </script>
 </body>
 </html>
