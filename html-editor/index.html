@@ -3,13 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>CSM | Neural Mobile Editor</title>
+    <title>CSM | Neural Pro V3.1</title>
     <style>
         :root {
             --neon-cyan: #00f2ff;
             --neon-green: #39ff14;
             --bg-dark: #080808;
             --panel-bg: #121212;
+            --hacker-glow: rgba(0, 242, 255, 0.3);
         }
 
         body, html {
@@ -17,230 +18,191 @@
             background: var(--bg-dark);
             color: #fff;
             font-family: 'Fira Code', monospace;
-            height: 100dvh; 
-            width: 100vw;
-            overflow: hidden;
-            touch-action: none;
+            height: 100dvh; width: 100vw;
+            overflow: hidden; touch-action: none;
         }
 
         .main-container { display: flex; flex-direction: column; height: 100dvh; }
 
         .header {
             background: var(--panel-bg);
-            padding: 10px 15px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+            padding: 8px 12px;
+            display: flex; justify-content: space-between; align-items: center;
             border-bottom: 2px solid var(--neon-cyan);
             z-index: 20;
         }
 
-        .logo { color: var(--neon-cyan); font-weight: bold; font-size: 0.9rem; letter-spacing: 1px; }
+        .logo { color: var(--neon-cyan); font-weight: bold; font-size: 0.75rem; letter-spacing: 1px; }
 
+        /* Draggable Popup */
         #searchPopup {
             position: fixed;
-            top: 70px;
-            left: 5%;
-            width: 90%;
-            background: #1a1a1a;
-            border: 1px solid var(--neon-cyan);
-            padding: 15px;
-            z-index: 100;
+            top: 100px; left: 50%;
+            transform: translateX(-50%);
+            width: 260px;
+            background: rgba(18, 18, 18, 0.98);
+            border: 2px solid var(--neon-cyan);
+            padding: 12px;
+            z-index: 10005;
             display: none;
-            border-radius: 8px;
-            box-sizing: border-box;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+            border-radius: 10px;
+            box-shadow: 0 0 20px var(--hacker-glow);
+            touch-action: none;
+        }
+
+        .popup-header {
+            font-size: 0.5rem; color: var(--neon-cyan);
+            margin-bottom: 8px; text-align: center;
+            cursor: move; padding: 4px; border-bottom: 1px solid #333;
         }
 
         .popup-input {
-            width: 100%;
-            background: #000;
-            border: 1px solid #444;
-            color: #fff;
-            padding: 8px;
-            margin-bottom: 10px;
-            border-radius: 4px;
-            font-size: 0.8rem;
-            box-sizing: border-box;
-            outline: none;
+            width: 100%; background: #000;
+            border: 1px solid #333; color: var(--neon-cyan);
+            padding: 6px; margin-bottom: 6px;
+            border-radius: 4px; font-size: 0.7rem; box-sizing: border-box;
         }
 
         .workspace { display: flex; flex: 1; position: relative; background: #000; overflow: hidden; }
 
-        .panel-editor {
-            width: 50%;
-            display: flex;
-            flex-direction: column;
-            background: var(--panel-bg);
-            min-width: 0;
-            position: relative;
+        .panel-editor { width: 50%; display: flex; flex-direction: column; background: var(--panel-bg); position: relative; }
+        .panel-preview { flex: 1; display: flex; flex-direction: column; background: #fff; }
+
+        #editor-wrapper { position: relative; flex: 1; overflow: hidden; }
+
+        /* Fixed Overlay Logic */
+        #highlight-layer {
+            position: absolute; top: 0; left: 0;
+            width: 100%; height: 100%;
+            padding: 10px; box-sizing: border-box;
+            pointer-events: none; 
+            color: #d4d4d4; /* Default color when not searching */
+            white-space: pre-wrap; word-wrap: break-word;
+            font-size: 13px; line-height: 1.4; font-family: 'Fira Code', monospace;
+            z-index: 1;
         }
 
-        .panel-preview {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            background: #fff;
-            min-width: 0;
-        }
-
-        .panel-header {
-            background: #1a1a1a;
-            padding: 5px 10px;
-            font-size: 0.65rem;
-            color: var(--neon-cyan);
-            border-bottom: 1px solid #333;
-            display: flex;
-            justify-content: space-between;
-        }
-
-        #editor-wrapper {
-            position: relative;
-            flex: 1;
-            overflow: hidden;
-        }
+        /* Highlight classes */
+        .search-match { background: rgba(255, 255, 0, 0.4); color: #000; border-radius: 2px; }
 
         textarea {
             width: 100%; height: 100%;
-            padding: 10px;
-            font-size: 13px;
-            line-height: 1.4;
+            padding: 10px; font-size: 13px; line-height: 1.4;
             font-family: 'Fira Code', monospace;
-            box-sizing: border-box;
-            border: none;
-            outline: none;
-            white-space: pre;
-            background: #0c0c0c;
+            background: transparent; 
             color: #d4d4d4;
-            caret-color: #fff;
-            resize: none;
+            border: none; outline: none; resize: none;
+            position: relative; z-index: 2;
+            caret-color: var(--neon-cyan);
         }
 
-        iframe { flex: 1; border: none; background: #fff; }
+        /* Hide textarea text when searching to show highlights clearly */
+        .searching textarea {
+            color: transparent;
+        }
 
+        iframe { flex: 1; border: none; background: #fff; width: 100%; }
+
+        /* Symbol Bar */
         .symbol-bar {
-            background: #1a1a1a;
-            display: flex;
-            gap: 5px;
-            padding: 8px 5px;
-            overflow-x: auto;
-            border-top: 1px solid #333;
-            flex-shrink: 0;
-            scrollbar-width: none;
-            padding-bottom: env(safe-area-inset-bottom, 8px);
+            background: #1a1a1a; display: flex; gap: 4px; padding: 6px;
+            overflow-x: auto; border-top: 1px solid #333; scrollbar-width: none;
         }
-        .symbol-bar::-webkit-scrollbar { display: none; }
-        
         .sym-btn {
-            background: #252525;
-            color: var(--neon-cyan);
-            border: 1px solid #444;
-            padding: 5px 12px;
-            border-radius: 3px;
-            font-size: 0.8rem;
-            cursor: pointer;
-            flex-shrink: 0;
+            background: #252525; color: var(--neon-cyan);
+            border: 1px solid #444; padding: 6px 11px;
+            border-radius: 3px; font-size: 0.75rem; flex-shrink: 0;
         }
+
+        #suggestion-box {
+            position: fixed; background: #1a1a1a; border: 1px solid var(--neon-cyan);
+            max-height: 140px; overflow-y: auto; display: none; z-index: 10001;
+            border-radius: 4px; min-width: 130px;
+        }
+        .suggestion-item {
+            padding: 8px 10px; font-size: 11px; color: #ccc;
+            border-bottom: 1px solid #222;
+        }
+        .suggestion-item.active { background: var(--neon-cyan); color: #000; }
 
         #resizer {
-            width: 15px;
-            cursor: col-resize;
-            background: #222;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-left: 1px solid #444;
-            border-right: 1px solid #444;
-            z-index: 10;
-            touch-action: none;
+            width: 15px; cursor: col-resize; background: #1a1a1a;
+            display: flex; align-items: center; justify-content: center;
+            border-left: 1px solid #333; z-index: 10; touch-action: none;
         }
-        #resizer::after { content: "⋮"; color: var(--neon-cyan); font-weight: bold; }
+        #resizer::after { content: "⋮"; color: var(--neon-cyan); }
 
         .btn {
-            background: transparent;
-            border: 1px solid var(--neon-cyan);
-            color: var(--neon-cyan);
-            padding: 3px 8px;
-            font-size: 0.6rem;
-            cursor: pointer;
-            border-radius: 3px;
-            margin-left: 5px;
+            background: transparent; border: 1px solid var(--neon-cyan);
+            color: var(--neon-cyan); padding: 4px 8px; font-size: 0.6rem;
+            cursor: pointer; border-radius: 3px;
         }
-
-        #fileInput { display: none; }
-        #colorPicker { width: 0; height: 0; border: none; padding: 0; visibility: hidden; position: absolute; }
-        
-        .light-mode #previewSide .panel-header { background: #ddd; color: #000; }
-        .light-mode textarea { background: #f5f5f5; color: #333; caret-color: #000; }
-
+        .btn-active { border-color: var(--neon-green); color: var(--neon-green); }
         .resizing iframe { pointer-events: none; }
+        
+        .option-row {
+            display: flex; align-items: center; gap: 5px; 
+            font-size: 0.6rem; color: var(--neon-cyan); margin-bottom: 8px;
+        }
     </style>
 </head>
 <body>
 
-<input type="file" id="fileInput" accept=".html,.css,.js">
-<input type="color" id="colorPicker">
+<input type="file" id="fileInput" accept=".html,.css,.js" style="display:none">
+<input type="color" id="colorPicker" style="visibility:hidden; position:absolute;">
 
 <div id="searchPopup">
-    <input type="text" id="findInput" class="popup-input" placeholder="Find text..." oninput="resetSearchIndex()">
-    <div style="display: flex; gap: 5px; margin-bottom: 10px;">
-        <button class="btn" style="flex: 1;" onclick="findNext(false)">PREV</button>
-        <button class="btn" style="flex: 1;" onclick="findNext(true)">NEXT</button>
+    <div class="popup-header" id="popupHeader">DRAG TO MOVE • SEARCH_UNIT</div>
+    <input type="text" id="findInput" class="popup-input" placeholder="Find..." oninput="applyHackerHighlight()">
+    <div class="option-row">
+        <input type="checkbox" id="caseSensitive" onchange="applyHackerHighlight()"> 
+        <label for="caseSensitive">Case Sensitive</label>
     </div>
     <input type="text" id="replaceInput" class="popup-input" placeholder="Replace with...">
-    <label style="font-size: 0.7rem; color: #888; display: flex; align-items: center; gap: 5px; margin-bottom: 10px;">
-        <input type="checkbox" id="caseSensitive"> Case Sensitive
-    </label>
-    <div style="display: flex; gap: 5px;">
-        <button class="btn" style="flex: 1;" onclick="doReplace()">REPLACE</button>
-        <button class="btn" style="flex: 1;" onclick="togglePopup()">CLOSE</button>
+    <div style="display: flex; gap: 4px; flex-wrap: wrap;">
+        <button class="btn" style="flex:1" onclick="findNext()">NEXT</button>
+        <button class="btn" style="flex:1" onclick="doReplace()">REPLACE</button>
+        <button class="btn" style="width:100%; border-color:#ff4444; color:#ff4444; margin-top:4px;" onclick="togglePopup()">CLOSE</button>
     </div>
 </div>
 
+<div id="suggestion-box"></div>
+<div id="cursor-measurer" style="position:absolute; visibility:hidden; white-space:pre-wrap; font-family:'Fira Code'; font-size:13px;"></div>
+
 <div class="main-container">
     <div class="header">
-        <div class="logo">CSM_LAB_V2.5</div>
-        <div style="display: flex; align-items: center; gap: 3px;">
+        <div class="logo">CSM_V3.1_PRO</div>
+        <div style="display: flex; gap: 4px;">
             <button class="btn" onclick="undo()">⟲</button>
             <button class="btn" onclick="redo()">⟳</button>
-            <button class="btn" onclick="toggleWrap()" id="wrapBtn" title="Toggle Word Wrap">W</button>
+            <button class="btn btn-active" id="wrapBtn" onclick="toggleWrap()">W</button>
             <button class="btn" onclick="togglePopup()">🔍</button>
-            <button class="btn" onclick="openFile()">📂</button>
-            <button class="btn" onclick="toggleTheme()">🌓</button>
             <button class="btn" onclick="pickColor()">🎨</button>
+            <button class="btn" onclick="openFile()">📂</button>
             <button class="btn" onclick="downloadCode()">SAVE</button>
         </div>
     </div>
 
     <div class="workspace" id="container">
         <div class="panel-editor" id="editorSide">
-            <div class="panel-header">
-                <span>EDITOR_NODE</span>
-                <span id="save-indicator" style="color: var(--neon-green); font-size: 0.5rem; display: none;">● SAVED</span>
-            </div>
-            
             <div id="editor-wrapper">
-                <textarea id="codeInput" spellcheck="false" style="white-space: pre;"></textarea>
+                <div id="highlight-layer"></div>
+                <textarea id="codeInput" spellcheck="false" style="white-space: pre-wrap;" onscroll="syncScroll()" oninput="handleInput()"></textarea>
             </div>
-            
             <div class="symbol-bar">
                 <button class="sym-btn" onclick="insertChar('<')">&lt;</button>
                 <button class="sym-btn" onclick="insertChar('>')">&gt;</button>
                 <button class="sym-btn" onclick="insertChar('/')">/</button>
                 <button class="sym-btn" onclick="insertChar('=')">=</button>
                 <button class="sym-btn" onclick="insertChar('\"')">"</button>
+                <button class="sym-btn" onclick="insertChar(' ')">SP</button>
                 <button class="sym-btn" onclick="insertChar('{')">{</button>
                 <button class="sym-btn" onclick="insertChar('}')">}</button>
-                <button class="sym-btn" onclick="insertChar('(')">(</button>
-                <button class="sym-btn" onclick="insertChar(')')">)</button>
                 <button class="sym-btn" onclick="insertChar(';')">;</button>
             </div>
         </div>
-
         <div id="resizer"></div>
-
         <div class="panel-preview" id="previewSide">
-            <div class="panel-header" style="background: #f0f0f0; color: #333;">RENDER_NODE</div>
             <iframe id="livePreview"></iframe>
         </div>
     </div>
@@ -248,178 +210,220 @@
 
 <script>
     const codeInput = document.getElementById('codeInput');
+    const highlightLayer = document.getElementById('highlight-layer');
     const livePreview = document.getElementById('livePreview');
     const editorSide = document.getElementById('editorSide');
     const resizer = document.getElementById('resizer');
-    const container = document.getElementById('container');
     const searchPopup = document.getElementById('searchPopup');
+    const suggestionBox = document.getElementById('suggestion-box');
+    const measurer = document.getElementById('cursor-measurer');
+    const editorWrapper = document.getElementById('editor-wrapper');
 
-    function toggleWrap() {
-        const wrapBtn = document.getElementById('wrapBtn');
-        if (codeInput.style.whiteSpace === 'pre-wrap') {
-            codeInput.style.whiteSpace = 'pre';
-            wrapBtn.style.color = 'var(--neon-cyan)';
-            wrapBtn.style.borderColor = 'var(--neon-cyan)';
-        } else {
-            codeInput.style.whiteSpace = 'pre-wrap';
-            wrapBtn.style.color = 'var(--neon-green)';
-            wrapBtn.style.borderColor = 'var(--neon-green)';
-        }
+    let history = [""];
+    let historyStep = 0;
+
+    function saveState() {
+        if (codeInput.value === history[historyStep]) return;
+        history = history.slice(0, historyStep + 1);
+        history.push(codeInput.value);
+        if (history.length > 50) history.shift(); else historyStep++;
     }
 
-    // Auto-Close Tags
-    codeInput.addEventListener('keydown', (e) => {
-        if (e.key === '>') {
-            const pos = codeInput.selectionStart;
-            const text = codeInput.value;
-            const lastTagMatch = text.substring(0, pos).match(/<([a-z1-6]+)$[^\/]*$/i);
-            if (lastTagMatch) {
-                const tagName = lastTagMatch[1];
-                setTimeout(() => {
-                    const currentPos = codeInput.selectionStart;
-                    codeInput.value = text.substring(0, currentPos) + `</${tagName}>` + text.substring(currentPos);
-                    codeInput.selectionStart = codeInput.selectionEnd = currentPos;
-                }, 10);
+    function undo() { if (historyStep > 0) { historyStep--; codeInput.value = history[historyStep]; updatePreview(false); } }
+    function redo() { if (historyStep < history.length - 1) { historyStep++; codeInput.value = history[historyStep]; updatePreview(false); } }
+
+    // Dragging Logic
+    let isDragging = false, offset = [0, 0];
+    const pHeader = document.getElementById('popupHeader');
+    pHeader.addEventListener('touchstart', (e) => {
+        isDragging = true;
+        const t = e.touches[0];
+        offset = [searchPopup.offsetLeft - t.clientX, searchPopup.offsetTop - t.clientY];
+    });
+    document.addEventListener('touchmove', (e) => {
+        if (!isDragging) return;
+        const t = e.touches[0];
+        searchPopup.style.left = (t.clientX + offset[0]) + 'px';
+        searchPopup.style.top = (t.clientY + offset[1]) + 'px';
+        searchPopup.style.transform = 'none';
+    });
+    document.addEventListener('touchend', () => isDragging = false);
+
+    const htmlTags = ['div', 'span', 'p', 'h1', 'a', 'img', 'button', 'input', 'ul', 'li', 'script', 'style'];
+    const htmlAttrs = ['class', 'id', 'src', 'href', 'style', 'type', 'placeholder'];
+
+    function handleInput() {
+        const val = codeInput.value;
+        const pos = codeInput.selectionStart;
+        const textBefore = val.substring(0, pos);
+
+        // Auto Close Tag
+        if (event && event.data === '>') {
+            const m = textBefore.match(/<(\w+)>$/);
+            if (m && !['img','br','hr','input'].includes(m[1].toLowerCase())) {
+                codeInput.value = val.substring(0, pos) + `</${m[1]}>` + val.substring(pos);
+                codeInput.selectionStart = codeInput.selectionEnd = pos;
             }
         }
-    });
 
-    function toggleTheme() { document.body.classList.toggle('light-mode'); }
+        const tagM = textBefore.match(/<(\w*)$/);
+        const attrM = textBefore.match(/<(\w+)\s+([\w-]*)$/);
 
-    function openFile() { document.getElementById('fileInput').click(); }
-    document.getElementById('fileInput').addEventListener('change', function(e) {
-        const file = e.target.files[0];
-        const reader = new FileReader();
-        reader.onload = function(e) { codeInput.value = e.target.result; updatePreview(); };
-        reader.readAsText(file);
-    });
+        if (attrM) showBox(htmlAttrs.filter(a => a.startsWith(attrM[2])), attrM[2], 'attr');
+        else if (tagM) showBox(htmlTags.filter(t => t.startsWith(tagM[1])), tagM[1], 'tag');
+        else suggestionBox.style.display = 'none';
+
+        updatePreview(true);
+    }
+
+    function showBox(list, word, mode) {
+        if (list.length === 0) { suggestionBox.style.display = 'none'; return; }
+        suggestionBox.innerHTML = '';
+        suggestionBox.style.display = 'block';
+        measurer.textContent = codeInput.value.substring(0, codeInput.selectionStart);
+        const span = document.createElement('span'); span.textContent = '|'; measurer.appendChild(span);
+        const r = span.getBoundingClientRect();
+        suggestionBox.style.left = r.left + 'px';
+        suggestionBox.style.top = (r.top + 20) + 'px';
+
+        list.forEach(item => {
+            const div = document.createElement('div');
+            div.className = 'suggestion-item';
+            div.innerHTML = `${item} <span style="font-size:8px; opacity:0.4">${mode.toUpperCase()}</span>`;
+            div.onclick = () => {
+                const p = codeInput.selectionStart;
+                const before = codeInput.value.substring(0, p - word.length);
+                const after = codeInput.value.substring(p);
+                if (mode === 'tag') {
+                    codeInput.value = before + item + "></" + item + ">" + after;
+                    codeInput.selectionStart = codeInput.selectionEnd = before.length + item.length + 1;
+                } else {
+                    codeInput.value = before + item + '=""' + after;
+                    codeInput.selectionStart = codeInput.selectionEnd = before.length + item.length + 2;
+                }
+                suggestionBox.style.display = 'none'; codeInput.focus(); updatePreview(true);
+            };
+            suggestionBox.appendChild(div);
+        });
+    }
+
+    function updatePreview(save = true) {
+        const doc = livePreview.contentDocument;
+        doc.open(); doc.write(codeInput.value); doc.close();
+        applyHackerHighlight();
+        if (save) saveState();
+    }
+
+    function applyHackerHighlight() {
+        const find = document.getElementById('findInput').value;
+        const text = codeInput.value;
+        
+        if (!find) { 
+            editorWrapper.classList.remove('searching');
+            highlightLayer.innerHTML = ""; 
+            return; 
+        }
+
+        editorWrapper.classList.add('searching');
+        const isCase = document.getElementById('caseSensitive').checked;
+        const flags = isCase ? 'g' : 'gi';
+        const regex = new RegExp(find.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), flags);
+        
+        // Escape HTML for highlight layer display
+        const escapedText = text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+        const highlighted = escapedText.replace(new RegExp(find.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), flags), m => `<span class="search-match">${m}</span>`);
+        
+        highlightLayer.innerHTML = highlighted;
+        syncScroll();
+    }
+
+    function findNext() {
+        const find = document.getElementById('findInput').value;
+        if (!find) return;
+        const text = codeInput.value;
+        const isCase = document.getElementById('caseSensitive').checked;
+        const searchText = isCase ? text : text.toLowerCase();
+        const searchFind = isCase ? find : find.toLowerCase();
+        
+        let startPos = codeInput.selectionEnd;
+        let nextIdx = searchText.indexOf(searchFind, startPos);
+        if (nextIdx === -1) nextIdx = searchText.indexOf(searchFind, 0);
+        
+        if (nextIdx !== -1) {
+            codeInput.focus();
+            codeInput.setSelectionRange(nextIdx, nextIdx + find.length);
+            const lineHeight = 18.2;
+            const lines = text.substring(0, nextIdx).split('\n').length;
+            codeInput.scrollTop = (lines - 5) * lineHeight;
+        }
+    }
+
+    function toggleWrap() {
+        const isWrapped = codeInput.style.whiteSpace === 'pre-wrap';
+        codeInput.style.whiteSpace = isWrapped ? 'pre' : 'pre-wrap';
+        highlightLayer.style.whiteSpace = isWrapped ? 'pre' : 'pre-wrap';
+        document.getElementById('wrapBtn').classList.toggle('btn-active');
+    }
 
     function pickColor() { document.getElementById('colorPicker').click(); }
-    document.getElementById('colorPicker').addEventListener('input', (e) => { insertChar(e.target.value); });
+    document.getElementById('colorPicker').oninput = (e) => insertChar(e.target.value);
 
-    function autoSave() {
-        localStorage.setItem('csm_autosave_v2', codeInput.value);
-        const indicator = document.getElementById('save-indicator');
-        indicator.style.display = 'inline';
-        setTimeout(() => indicator.style.display = 'none', 1500);
+    function syncScroll() { 
+        highlightLayer.scrollTop = codeInput.scrollTop; 
+        highlightLayer.scrollLeft = codeInput.scrollLeft; 
     }
 
-    let history = [localStorage.getItem('csm_autosave_v2') || ""];
-    let historyIndex = 0;
-    if(history[0]) codeInput.value = history[0];
-
-    function saveToHistory() {
-        if (codeInput.value === history[historyIndex]) return;
-        history = history.slice(0, historyIndex + 1);
-        history.push(codeInput.value);
-        if (history.length > 30) history.shift(); else historyIndex++;
-        autoSave();
+    function insertChar(c) {
+        const s = codeInput.selectionStart, e = codeInput.selectionEnd;
+        codeInput.value = codeInput.value.substring(0, s) + c + codeInput.value.substring(e);
+        codeInput.selectionStart = codeInput.selectionEnd = s + c.length;
+        codeInput.focus(); updatePreview(true);
     }
 
-    function undo() { if (historyIndex > 0) { historyIndex--; codeInput.value = history[historyIndex]; updatePreview(false); } }
-    function redo() { if (historyIndex < history.length - 1) { historyIndex++; codeInput.value = history[historyIndex]; updatePreview(false); } }
-
-    let searchMatches = [];
-    let currentMatchIndex = -1;
-    function resetSearchIndex() { searchMatches = []; currentMatchIndex = -1; }
-    function togglePopup() { searchPopup.style.display = (searchPopup.style.display === 'block') ? 'none' : 'block'; }
-    
-    function findNext(forward = true) {
-        const f = document.getElementById('findInput').value;
-        if (!f) return;
-        const text = codeInput.value;
-        const regex = new RegExp(f.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), document.getElementById('caseSensitive').checked ? 'g' : 'gi');
-        if (searchMatches.length === 0) {
-            let match;
-            while ((match = regex.exec(text)) !== null) searchMatches.push({ index: match.index, length: f.length });
+    function togglePopup() { 
+        const isVisible = searchPopup.style.display === 'block';
+        searchPopup.style.display = isVisible ? 'none' : 'block'; 
+        if (isVisible) {
+            editorWrapper.classList.remove('searching');
+            highlightLayer.innerHTML = "";
         }
-        if (searchMatches.length === 0) return;
-        currentMatchIndex = forward ? (currentMatchIndex + 1) % searchMatches.length : (currentMatchIndex - 1 + searchMatches.length) % searchMatches.length;
-        const m = searchMatches[currentMatchIndex];
-        codeInput.focus();
-        codeInput.setSelectionRange(m.index, m.index + m.length);
     }
 
     function doReplace() {
         const f = document.getElementById('findInput').value;
         const r = document.getElementById('replaceInput').value;
-        if (!f) return;
-        const regex = new RegExp(f.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi');
-        codeInput.value = codeInput.value.replace(regex, r);
-        updatePreview();
+        if(f) { 
+            const isCase = document.getElementById('caseSensitive').checked;
+            const flags = isCase ? 'g' : 'gi';
+            const regex = new RegExp(f.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), flags);
+            codeInput.value = codeInput.value.replace(regex, r);
+            updatePreview(true); 
+        }
     }
 
-    function insertChar(char) {
-        const start = codeInput.selectionStart;
-        const end = codeInput.selectionEnd;
-        codeInput.value = codeInput.value.substring(0, start) + char + codeInput.value.substring(end);
-        codeInput.focus();
-        codeInput.selectionStart = codeInput.selectionEnd = start + char.length;
-        updatePreview();
-    }
-
-    function updatePreview(shouldSave = true) {
-        const doc = livePreview.contentDocument || livePreview.contentWindow.document;
-        doc.open();
-        doc.write(codeInput.value);
-        doc.close();
-        if (shouldSave) saveToHistory();
-    }
-
-    codeInput.addEventListener('input', () => {
-        clearTimeout(window.typeTimer);
-        window.typeTimer = setTimeout(() => updatePreview(true), 800);
-        updatePreview(false);
+    let resizing = false;
+    resizer.addEventListener('touchstart', () => { resizing = true; document.body.classList.add('resizing'); });
+    document.addEventListener('touchmove', (e) => {
+        if (!resizing) return;
+        let x = e.touches[0].clientX;
+        let p = (x / window.innerWidth) * 100;
+        if (p > 5 && p < 95) editorSide.style.width = p + '%';
     });
+    document.addEventListener('touchend', () => { resizing = false; document.body.classList.remove('resizing'); });
 
-    if(!codeInput.value) {
-        codeInput.value = `<!DOCTYPE html>\n<html>\n<head>\n<style>\n  body { background: #111; color: #00f2ff; text-align: center; padding-top: 50px; font-family: sans-serif; }\n</style>\n</head>\n<body>\n  <h2>CSM V2.5 READY</h2>\n  <p>Syntax Highlighting Disabled</p>\n</body>\n</html>`;
+    function openFile() { document.getElementById('fileInput').click(); }
+    document.getElementById('fileInput').onchange = (e) => {
+        const reader = new FileReader();
+        reader.onload = (ev) => { codeInput.value = ev.target.result; updatePreview(true); };
+        reader.readAsText(e.target.files[0]);
+    };
+    function downloadCode() {
+        const blob = new Blob([codeInput.value], {type: 'text/html'});
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob); a.download = 'project.html'; a.click();
     }
 
     window.onload = () => updatePreview(false);
-
-    let isResizing = false;
-    const startResize = (e) => {
-        isResizing = true;
-        document.body.style.cursor = 'col-resize';
-        document.body.classList.add('resizing');
-    };
-    const stopResize = () => {
-        isResizing = false;
-        document.body.style.cursor = 'default';
-        document.body.classList.remove('resizing');
-    };
-    const onResize = (e) => {
-        if (!isResizing) return;
-        let clientX = e.touches ? e.touches[0].clientX : e.clientX;
-        let containerRect = container.getBoundingClientRect();
-        let offset = clientX - containerRect.left;
-        let percentage = (offset / containerRect.width) * 100;
-        if (percentage >= 0 && percentage <= 100) {
-            if (percentage < 5) {
-                editorSide.style.width = '0%';
-                editorSide.style.display = 'none';
-            } else {
-                editorSide.style.display = 'flex';
-                editorSide.style.width = `${percentage}%`;
-            }
-        }
-    };
-
-    resizer.addEventListener('mousedown', startResize);
-    resizer.addEventListener('touchstart', startResize, { passive: true });
-    document.addEventListener('mousemove', onResize);
-    document.addEventListener('touchmove', onResize, { passive: false });
-    document.addEventListener('mouseup', stopResize);
-    document.addEventListener('touchend', stopResize);
-
-    function downloadCode() {
-        const blob = new Blob([codeInput.value], { type: "text/html" });
-        const a = document.createElement("a");
-        a.href = URL.createObjectURL(blob);
-        a.download = "csm_project.html";
-        a.click();
-    }
 </script>
 </body>
 </html>
