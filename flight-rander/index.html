@@ -3,190 +3,165 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Live Flight Map | Csm Mohasin Alam</title>
+    <title>Live Sky Radar | CSM Mohasin Alam</title>
     
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
-    
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
-    
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
+
     <style>
-        body {
-            font-family: 'Poppins', sans-serif;
-            margin: 0;
-            padding: 0;
-            overflow: hidden; /* No scrolling on body */
-            display: flex;
-            flex-direction: column;
-            height: 100vh;
-            background-color: #0d1a26; /* Dark background */
-            color: #ecf0f1;
-        }
-        #map {
-            flex-grow: 1; /* Map takes remaining space */
-            height: calc(100vh - 80px); /* Adjust based on header/footer height */
-            background-color: #0d1a26;
-            z-index: 1;
-        }
-        .header {
-            background-color: #1a2a3a;
-            padding: 15px 20px;
-            text-align: center;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
-            z-index: 10;
-        }
-        .header h1 {
-            margin: 0;
-            font-size: 1.5rem;
-            color: #64ffda; /* Light green accent */
-        }
-        .info-panel {
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Orbitron', sans-serif; background: #0b0f19; color: #00d2ff; }
+        
+        #map { height: 100vh; width: 100%; z-index: 1; background: #0b0f19; }
+
+        .ui-panel {
             position: absolute;
-            top: 80px; /* Below header */
-            left: 10px;
-            background-color: rgba(26, 42, 58, 0.9);
-            padding: 15px;
-            border-radius: 8px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+            top: 20px;
+            left: 20px;
             z-index: 1000;
-            color: #ecf0f1;
-            font-size: 0.9rem;
-            width: 250px;
+            background: rgba(11, 15, 25, 0.85);
+            padding: 20px;
+            border-radius: 15px;
+            border: 1px solid #00d2ff;
+            box-shadow: 0 0 20px rgba(0, 210, 255, 0.3);
+            backdrop-filter: blur(10px);
+            max-width: 300px;
         }
-        .info-panel p {
-            margin: 5px 0;
-        }
-        .info-panel strong {
-            color: #64ffda;
-        }
-        .footer {
-            background-color: #1a2a3a;
-            padding: 10px 20px;
-            text-align: center;
-            font-size: 0.8rem;
-            color: #aaa;
-            box-shadow: 0 -2px 10px rgba(0,0,0,0.3);
-            z-index: 10;
-        }
-        .footer .dev-name {
-            color: #64ffda;
-            font-weight: 600;
-        }
-        .location-error {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background-color: rgba(255, 0, 0, 0.8);
-            color: white;
-            padding: 20px 30px;
-            border-radius: 10px;
-            font-size: 1.1rem;
-            z-index: 10000;
-            display: none; /* Hidden by default */
+
+        h1 { font-size: 18px; margin-bottom: 10px; color: #fff; letter-spacing: 2px; }
+        .stats { font-size: 12px; margin-bottom: 5px; }
+        .dev-tag { margin-top: 15px; font-size: 10px; color: #555; border-top: 1px solid #333; padding-top: 10px; }
+        .dev-name { color: #facc15; font-weight: bold; }
+
+        /* Airplane Icon Style */
+        .plane-icon {
+            transition: all 0.5s ease-in-out;
+            filter: drop-shadow(0 0 5px #00d2ff);
         }
     </style>
 </head>
 <body>
 
-    <div class="header">
-        <h1>Live Flight Map</h1>
+    <div class="ui-panel">
+        <h1>SKY RADAR LIVE</h1>
+        <div class="stats" id="status">লোকেশন খোঁজা হচ্ছে...</div>
+        <div class="stats" id="plane-count">বিমান সংখ্যা: ০</div>
+        
+        <div class="dev-tag">
+            Developer: <span class="dev-name">Csm Mohasin Alam</span>
+        </div>
     </div>
 
     <div id="map"></div>
 
-    <div class="info-panel" id="infoPanel">
-        <p>Location Status: <strong id="locationStatus">Loading...</strong></p>
-        <p>Latitude: <strong id="latDisplay">N/A</strong></p>
-        <p>Longitude: <strong id="lonDisplay">N/A</strong></p>
-    </div>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
-    <div class="location-error" id="locationError">
-        <p>Error: Could not get your location.</p>
-        <p>Please enable location services and refresh the page.</p>
-    </div>
-
-    <div class="footer">
-        Developed with <span style="color:red;">&hearts;</span> by <span class="dev-name">Csm Mohasin Alam</span>
-    </div>
-
-    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
-    
     <script>
         let map;
-        let userMarker;
+        let planesGroup;
+        const airplaneIcon = L.divIcon({
+            html: `<svg style="transform: rotate(45deg)" width="25" height="25" viewBox="0 0 24 24" fill="#00d2ff"><path d="M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z"/></svg>`,
+            className: 'plane-icon',
+            iconSize: [25, 25],
+            iconAnchor: [12, 12]
+        });
 
-        // Initialize Map
+        // ১. ম্যাপ শুরু করা
         function initMap(lat, lon) {
-            if (map) { // If map already exists, remove it
-                map.remove();
-            }
-            map = L.map('map').setView([lat, lon], 13); // Default zoom level
-
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            map = L.map('map').setView([lat, lon], 9);
+            
+            // ডার্ক ম্যাপ থিম (CartoDB Dark Matter)
+            L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+                attribution: '&copy; OpenStreetMap &copy; CARTO'
             }).addTo(map);
 
-            userMarker = L.marker([lat, lon]).addTo(map)
-                .bindPopup('Your Current Location')
-                .openPopup();
+            // ইউজারের নিজের লোকেশন মার্কার
+            L.circle([lat, lon], { radius: 2000, color: '#facc15' }).addTo(map).bindPopup("You are here");
+
+            planesGroup = L.layerGroup().addTo(map);
             
-            document.getElementById('latDisplay').textContent = lat.toFixed(4);
-            document.getElementById('lonDisplay').textContent = lon.toFixed(4);
-            document.getElementById('locationStatus').textContent = "Location found!";
+            // লাইভ ফ্লাইট ডেটা লোড করা শুরু
+            fetchFlights(lat, lon);
+            setInterval(() => fetchFlights(lat, lon), 10000); // প্রতি ১০ সেকেন্ডে আপডেট হবে
         }
 
-        // Get User Location
-        function getUserLocation() {
-            if (navigator.geolocation) {
-                navigator.geolocation.getCurrentPosition(
-                    (position) => {
-                        const lat = position.coords.latitude;
-                        const lon = position.coords.longitude;
-                        initMap(lat, lon);
-                    },
-                    (error) => {
-                        console.error("Error getting location:", error);
-                        document.getElementById('locationStatus').textContent = "Failed to get location.";
-                        document.getElementById('locationError').style.display = 'block'; // Show error message
-                        // Fallback to a default location (e.g., Dhaka) if user denies or error occurs
-                        initMap(23.7773, 90.3995); 
-                        document.getElementById('latDisplay').textContent = "Default";
-                        document.getElementById('lonDisplay').textContent = "Default";
-                    },
-                    { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
-                );
-            } else {
-                document.getElementById('locationStatus').textContent = "Geolocation not supported by browser.";
-                document.getElementById('locationError').style.display = 'block'; // Show error message
-                initMap(23.7773, 90.3995); // Fallback to Dhaka
-                document.getElementById('latDisplay').textContent = "Default";
-                document.getElementById('lonDisplay').textContent = "Default";
+        // ২. OpenSky API থেকে ফ্লাইট ডেটা আনা
+        async function fetchFlights(lat, lon) {
+            document.getElementById('status').innerText = "ফ্লাইট ডেটা আপডেট হচ্ছে...";
+            
+            // আপনার লোকেশনের চারপাশের এরিয়া ক্যালকুলেট করা (প্রায় ২০০ কিমি ব্যাসার্ধ)
+            const latMin = lat - 2;
+            const latMax = lat + 2;
+            const lonMin = lon - 2;
+            const lonMax = lon + 2;
+
+            const url = `https://opensky-network.org/api/states/all?lamin=${latMin}&lamin=${latMin}&lamax=${latMax}&lomin=${lonMin}&lomax=${lonMax}`;
+
+            try {
+                const response = await fetch(url);
+                const data = await response.json();
+                
+                updatePlanes(data.states);
+            } catch (error) {
+                console.error("API Error:", error);
+                document.getElementById('status').innerText = "API লিমিট শেষ, একটু পর চেষ্টা করুন।";
             }
         }
 
-        // Initial call
-        getUserLocation();
+        // ৩. ম্যাপে বিমানগুলো দেখানো
+        function updatePlanes(states) {
+            planesGroup.clearLayers();
+            if (!states) {
+                document.getElementById('plane-count').innerText = "বিমান সংখ্যা: ০";
+                return;
+            }
 
-        // --- Flight Data Integration (Advanced - Requires API Key/Setup) ---
-        // To fetch live flight data, you would typically use an API like ADS-B Exchange.
-        // This part is commented out as it requires an API key and more complex setup.
-        // fetchFlightData(lat, lon); 
-        /*
-        function fetchFlightData(centerLat, centerLon) {
-            // This is a placeholder. Real implementation requires an API.
-            // Example for ADS-B Exchange (might need API key or proxy):
-            // fetch(`https://adsbexchange.com/api/aircrafts?lat=${centerLat}&lon=${centerLon}&radius=100`)
-            //     .then(response => response.json())
-            //     .then(data => {
-            //         data.aircraft.forEach(plane => {
-            //             L.marker([plane.lat, plane.lon]).addTo(map)
-            //                 .bindPopup(`Flight: ${plane.flight} (${plane.type})`);
-            //         });
-            //     })
-            //     .catch(error => console.error('Error fetching flight data:', error));
+            document.getElementById('plane-count').innerText = `বিমান সংখ্যা: ${states.length}`;
+            document.getElementById('status').innerText = "সিস্টেম অনলাইন";
+
+            states.forEach(plane => {
+                const flightNo = plane[1] || "N/A";
+                const pLat = plane[6];
+                const pLon = plane[5];
+                const track = plane[10] || 0; // বিমানের দিক
+                const alt = plane[7] || "N/A";
+
+                if (pLat && pLon) {
+                    const marker = L.marker([pLat, pLon], {
+                        icon: L.divIcon({
+                            html: `<div style="transform: rotate(${track}deg)">
+                                    <svg width="25" height="25" viewBox="0 0 24 24" fill="#facc15">
+                                        <path d="M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z"/>
+                                    </svg>
+                                   </div>`,
+                            className: 'plane-icon',
+                            iconSize: [25, 25]
+                        })
+                    });
+
+                    marker.bindPopup(`
+                        <b>Flight: ${flightNo}</b><br>
+                        Alt: ${alt}m<br>
+                        Track: ${track}°
+                    `);
+                    planesGroup.addLayer(marker);
+                }
+            });
         }
-        */
 
+        // ৪. ইউজার লোকেশন পারমিশন নেওয়া
+        function getLocation() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    (pos) => initMap(pos.coords.latitude, pos.coords.longitude),
+                    () => initMap(23.8103, 90.4125) // লোকেশন না পেলে ঢাকা (Default)
+                );
+            } else {
+                initMap(23.8103, 90.4125);
+            }
+        }
+
+        window.onload = getLocation;
     </script>
 </body>
 </html>
