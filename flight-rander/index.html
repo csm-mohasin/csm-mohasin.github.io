@@ -7,166 +7,92 @@
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
-
         body {
             background: #0f172a;
             color: white;
-            overflow: hidden; /* স্ক্রল বন্ধ রাখার জন্য */
             height: 100vh;
             display: flex;
-            flex-direction: column;
             justify-content: center;
             align-items: center;
+            overflow: hidden;
         }
-
-        /* Background Animation */
-        .bg-glow {
-            position: absolute;
-            width: 300px;
-            height: 300px;
-            background: rgba(37, 99, 235, 0.2);
-            filter: blur(100px);
-            border-radius: 50%;
-            z-index: -1;
-        }
-
         .container {
             text-align: center;
-            transition: all 0.5s ease;
-            z-index: 10;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 40px;
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            width: 90%;
+            max-width: 450px;
         }
-
-        h1 { font-size: 2rem; margin-bottom: 10px; color: #38bdf8; }
-        p { font-size: 0.9rem; margin-bottom: 20px; opacity: 0.8; }
-
+        h1 { font-size: 1.8rem; color: #38bdf8; margin-bottom: 10px; }
+        p { font-size: 0.9rem; opacity: 0.7; margin-bottom: 30px; }
+        
         .btn {
-            background: #2563eb;
+            background: linear-gradient(135deg, #2563eb, #7c3aed);
             color: white;
-            padding: 12px 30px;
+            padding: 15px 35px;
             border: none;
             border-radius: 50px;
             font-weight: 600;
             cursor: pointer;
             transition: 0.3s;
-            box-shadow: 0 4px 15px rgba(37, 99, 235, 0.4);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+            text-transform: uppercase;
+            letter-spacing: 1px;
         }
-
-        .btn:hover { background: #1d4ed8; transform: scale(1.05); }
-
-        /* Iframe Container - Stylish Window */
-        #map-container {
-            display: none;
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            width: 100%;
-            height: 80vh;
-            background: #1e293b;
-            border-radius: 30px 30px 0 0;
-            box-shadow: 0 -10px 40px rgba(0,0,0,0.5);
-            transform: translateY(100%);
-            transition: transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
-            z-index: 100;
-        }
-
-        #map-container.active {
-            display: block;
-            transform: translateY(0);
-        }
-
-        .map-header {
-            padding: 15px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 1px solid rgba(255,255,255,0.1);
-        }
-
-        .close-btn {
-            background: #ef4444;
-            color: white;
-            border: none;
-            padding: 5px 15px;
-            border-radius: 10px;
-            cursor: pointer;
-            font-size: 12px;
-        }
-
-        iframe {
-            width: 100%;
-            height: calc(100% - 60px);
-            border: none;
-        }
-
-        .footer {
-            margin-top: 40px;
-            font-size: 0.8rem;
-            opacity: 0.6;
-        }
-
-        .dev-name { color: #38bdf8; font-weight: 600; }
-
-        #status { font-size: 0.8rem; margin-top: 15px; color: #facc15; }
+        .btn:hover { transform: translateY(-3px); box-shadow: 0 15px 25px rgba(37, 99, 235, 0.4); }
+        
+        .footer { margin-top: 40px; font-size: 0.8rem; opacity: 0.5; }
+        .dev-name { color: #facc15; font-weight: 600; }
+        #status { margin-top: 15px; color: #fb7185; font-size: 0.85rem; }
     </style>
 </head>
 <body>
 
-    <div class="bg-glow"></div>
-
-    <div class="container" id="main-content">
-        <h1>Live Flight Radar</h1>
-        <p>আপনার রিয়েল-টাইম লোকেশন অনুযায়ী ফ্লাইট দেখুন</p>
-        <button class="btn" onclick="openMap()">ম্যাপ লোড করুন</button>
-        <div id="status"></div>
+    <div class="container">
+        <h1>Sky Radar Live</h1>
+        <p>আপনার বর্তমান লোকেশনের ওপর দিয়ে কোন বিমান উড়ে যাচ্ছে দেখতে চান?</p>
         
-        <div class="footer">
-            Project by <span class="dev-name">Csm Mohasin Alam</span>
-        </div>
-    </div>
+        <button class="btn" onclick="startTracking()">ট্র্যাকিং শুরু করুন</button>
+        
+        <div id="status"></div>
 
-    <div id="map-container">
-        <div class="map-header">
-            <span>Live Radar View</span>
-            <button class="close-btn" onclick="closeMap()">বন্ধ করুন</button>
+        <div class="footer">
+            Developed by <br> <span class="dev-name">Csm Mohasin Alam</span>
         </div>
-        <iframe id="flight-iframe" src=""></iframe>
     </div>
 
     <script>
-        function openMap() {
+        function startTracking() {
             const status = document.getElementById('status');
-            const mapContainer = document.getElementById('map-container');
-            const iframe = document.getElementById('flight-iframe');
-
+            
             if (navigator.geolocation) {
-                status.textContent = "লোকেশন পারমিশন নেওয়া হচ্ছে...";
+                status.style.color = "#38bdf8";
+                status.textContent = "লোকেশন চেক করা হচ্ছে...";
                 
                 navigator.geolocation.getCurrentPosition((position) => {
-                    const lat = position.coords.latitude;
-                    const lon = position.coords.longitude;
+                    const lat = position.coords.latitude.toFixed(2);
+                    const lon = position.coords.longitude.toFixed(2);
                     
-                    // Flightradar24 এর লিঙ্ক তৈরি
-                    const mapUrl = `https://www.flightradar24.com/${lat.toFixed(2)},${lon.toFixed(2)}/10`;
+                    const url = `https://www.flightradar24.com/${lat},${lon}/10`;
                     
-                    iframe.src = mapUrl;
-                    status.textContent = "";
+                    // সরাসরি রিডাইরেক্ট না করে নতুন স্মার্ট উইন্ডোতে ওপেন করা
+                    status.textContent = "ম্যাপ ওপেন হচ্ছে!";
                     
-                    // স্লাইড অ্যানিমেশন শুরু
-                    mapContainer.classList.add('active');
+                    setTimeout(() => {
+                        window.open(url, '_blank'); // এটি নতুন ট্যাবে ম্যাপটি ওপেন করবে যা ১০০% কাজ করবে
+                        status.textContent = "";
+                    }, 1000);
+
                 }, (error) => {
-                    status.textContent = "লোকেশন পাওয়া যায়নি। দয়া করে পারমিশন দিন।";
+                    status.style.color = "#fb7185";
+                    status.textContent = "Error: লোকেশন পারমিশন দিন!";
                 });
             } else {
-                status.textContent = "আপনার ব্রাউজার এটি সাপোর্ট করে না।";
+                status.textContent = "ব্রাউজার লোকেশন সাপোর্ট করছে না।";
             }
-        }
-
-        function closeMap() {
-            const mapContainer = document.getElementById('map-container');
-            mapContainer.classList.remove('active');
-            setTimeout(() => {
-                document.getElementById('flight-iframe').src = "";
-            }, 600);
         }
     </script>
 </body>
