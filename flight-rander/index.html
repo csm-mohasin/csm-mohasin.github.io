@@ -3,97 +3,75 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Live Flight Tracker | CSM</title>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <title>Sky Tracker | CSM</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
         body {
-            background: #0f172a;
-            color: white;
-            height: 100vh;
+            background-color: #050a18;
+            color: #00d2ff;
+            font-family: 'Orbitron', sans-serif;
             display: flex;
             justify-content: center;
             align-items: center;
-            overflow: hidden;
-        }
-        .container {
+            height: 100vh;
+            margin: 0;
             text-align: center;
-            background: rgba(255, 255, 255, 0.05);
-            padding: 40px;
-            border-radius: 20px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            backdrop-filter: blur(10px);
-            width: 90%;
-            max-width: 450px;
         }
-        h1 { font-size: 1.8rem; color: #38bdf8; margin-bottom: 10px; }
-        p { font-size: 0.9rem; opacity: 0.7; margin-bottom: 30px; }
-        
+        .card {
+            border: 2px solid #00d2ff;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 0 20px rgba(0, 210, 255, 0.3);
+            background: rgba(10, 20, 40, 0.8);
+        }
         .btn {
-            background: linear-gradient(135deg, #2563eb, #7c3aed);
-            color: white;
-            padding: 15px 35px;
-            border: none;
-            border-radius: 50px;
-            font-weight: 600;
+            background: transparent;
+            color: #00d2ff;
+            border: 2px solid #00d2ff;
+            padding: 10px 20px;
             cursor: pointer;
-            transition: 0.3s;
-            box-shadow: 0 10px 20px rgba(0,0,0,0.3);
-            text-transform: uppercase;
-            letter-spacing: 1px;
+            font-weight: bold;
+            transition: 0.4s;
+            margin-top: 20px;
         }
-        .btn:hover { transform: translateY(-3px); box-shadow: 0 15px 25px rgba(37, 99, 235, 0.4); }
-        
-        .footer { margin-top: 40px; font-size: 0.8rem; opacity: 0.5; }
-        .dev-name { color: #facc15; font-weight: 600; }
-        #status { margin-top: 15px; color: #fb7185; font-size: 0.85rem; }
+        .btn:hover {
+            background: #00d2ff;
+            color: #050a18;
+        }
+        .dev { margin-top: 20px; font-size: 12px; color: #aaa; }
     </style>
 </head>
 <body>
 
-    <div class="container">
-        <h1>Sky Radar Live</h1>
-        <p>আপনার বর্তমান লোকেশনের ওপর দিয়ে কোন বিমান উড়ে যাচ্ছে দেখতে চান?</p>
-        
-        <button class="btn" onclick="startTracking()">ট্র্যাকিং শুরু করুন</button>
-        
-        <div id="status"></div>
+<div class="card">
+    <h2>RADAR SYSTEM</h2>
+    <p>Searching for nearby aircraft...</p>
+    <button class="btn" onclick="launchRadar()">LAUNCH RADAR</button>
+    
+    <div class="dev">Developed by: <b>Csm Mohasin Alam</b></div>
+</div>
 
-        <div class="footer">
-            Developed by <br> <span class="dev-name">Csm Mohasin Alam</span>
-        </div>
-    </div>
-
-    <script>
-        function startTracking() {
-            const status = document.getElementById('status');
+<script>
+function launchRadar() {
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition((position) => {
+            const lat = position.coords.latitude.toFixed(2);
+            const lon = position.coords.longitude.toFixed(2);
+            const url = `https://www.flightradar24.com/${lat},${lon}/10`;
             
-            if (navigator.geolocation) {
-                status.style.color = "#38bdf8";
-                status.textContent = "লোকেশন চেক করা হচ্ছে...";
-                
-                navigator.geolocation.getCurrentPosition((position) => {
-                    const lat = position.coords.latitude.toFixed(2);
-                    const lon = position.coords.longitude.toFixed(2);
-                    
-                    const url = `https://www.flightradar24.com/${lat},${lon}/10`;
-                    
-                    // সরাসরি রিডাইরেক্ট না করে নতুন স্মার্ট উইন্ডোতে ওপেন করা
-                    status.textContent = "ম্যাপ ওপেন হচ্ছে!";
-                    
-                    setTimeout(() => {
-                        window.open(url, '_blank'); // এটি নতুন ট্যাবে ম্যাপটি ওপেন করবে যা ১০০% কাজ করবে
-                        status.textContent = "";
-                    }, 1000);
+            // নতুন ছোট উইন্ডোতে ওপেন করার চেষ্টা (মোবাইলে এটি নতুন ট্যাবে যাবে)
+            // সরাসরি আইফ্রেম ব্লক হওয়ার কারণে এটিই একমাত্র কার্যকর পথ
+            const width = window.innerWidth;
+            const height = window.innerHeight;
+            
+            window.open(url, 'FlightRadar', `width=${width},height=${height},resizable=yes,scrollbars=yes`);
+            
+        }, () => {
+            alert("Please enable location permission!");
+        });
+    }
+}
+</script>
 
-                }, (error) => {
-                    status.style.color = "#fb7185";
-                    status.textContent = "Error: লোকেশন পারমিশন দিন!";
-                });
-            } else {
-                status.textContent = "ব্রাউজার লোকেশন সাপোর্ট করছে না।";
-            }
-        }
-    </script>
 </body>
 </html>
