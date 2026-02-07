@@ -4,631 +4,3044 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="Next-Gen HTML Editor with Syntax Highlighting and Real-Time Preview.">
-  <title>Nebula Editor: Futuristic HTML IDE</title>
-  
-  <!-- Google Fonts -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
-  
-  <!-- FontAwesome for Icons -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-
-  <!-- CodeMirror CSS (Smart Editor Styling) -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/codemirror.min.css">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/theme/dracula.min.css">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/addon/scroll/simplescrollbars.css">
-
+  <meta name="description" content="Smart HTML Editor Pro - Advanced online HTML editor with AI-powered features and real-time preview">
+  <title>Smart HTML Editor Pro | Futuristic Code Editor</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>">
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
     /* ==================== */
-    /* Futuristic Variables */
+    /* CSS Variables & Root */
     /* ==================== */
     :root {
-      --bg-dark: #09090b;
-      --bg-panel: rgba(24, 24, 27, 0.7);
-      --primary: #3b82f6;
-      --accent: #06b6d4;
-      --accent-glow: rgba(6, 182, 212, 0.5);
-      --text-main: #e4e4e7;
-      --text-muted: #a1a1aa;
-      --border: rgba(255, 255, 255, 0.1);
-      --glass: blur(12px) saturate(180%);
-      --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-      --font-ui: 'Inter', sans-serif;
-      --font-code: 'JetBrains Mono', monospace;
+      --primary: #6366f1;
+      --primary-light: #818cf8;
+      --primary-dark: #4f46e5;
+      --secondary: #10b981;
+      --accent: #f59e0b;
+      --danger: #ef4444;
+      --bg-dark: #0f0f1a;
+      --bg-darker: #080812;
+      --bg-card: rgba(30, 30, 50, 0.8);
+      --bg-glass: rgba(255, 255, 255, 0.05);
+      --border-glass: rgba(255, 255, 255, 0.1);
+      --text-primary: #f8fafc;
+      --text-secondary: #94a3b8;
+      --text-muted: #64748b;
+      --glow-primary: 0 0 20px rgba(99, 102, 241, 0.5);
+      --glow-secondary: 0 0 20px rgba(16, 185, 129, 0.5);
+      --transition-fast: 0.15s ease;
+      --transition-normal: 0.3s ease;
+      --transition-slow: 0.5s ease;
+      --radius-sm: 6px;
+      --radius-md: 10px;
+      --radius-lg: 16px;
+      --radius-xl: 24px;
+    }
+
+    /* ==================== */
+    /* Animations */
+    /* ==================== */
+    @keyframes gradient-shift {
+      0%, 100% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+    }
+
+    @keyframes pulse-glow {
+      0%, 100% { box-shadow: 0 0 5px var(--primary), 0 0 10px var(--primary); }
+      50% { box-shadow: 0 0 20px var(--primary), 0 0 30px var(--primary); }
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-5px); }
+    }
+
+    @keyframes shimmer {
+      0% { background-position: -200% 0; }
+      100% { background-position: 200% 0; }
+    }
+
+    @keyframes fade-in {
+      from { opacity: 0; transform: translateY(-10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes slide-in-right {
+      from { opacity: 0; transform: translateX(20px); }
+      to { opacity: 1; transform: translateX(0); }
+    }
+
+    @keyframes scale-in {
+      from { opacity: 0; transform: scale(0.9); }
+      to { opacity: 1; transform: scale(1); }
+    }
+
+    @keyframes rotate-gradient {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    @keyframes typing {
+      from { width: 0; }
+      to { width: 100%; }
+    }
+
+    @keyframes blink {
+      50% { opacity: 0; }
+    }
+
+    @keyframes notification-pop {
+      0% { transform: translateY(100%) scale(0.8); opacity: 0; }
+      50% { transform: translateY(-10%) scale(1.05); }
+      100% { transform: translateY(0) scale(1); opacity: 1; }
     }
 
     /* ==================== */
     /* Base Styles */
     /* ==================== */
-    * { box-sizing: border-box; }
-
-    body {
+    *, *::before, *::after {
+      box-sizing: border-box;
       margin: 0;
-      height: 100vh;
-      background-color: var(--bg-dark);
-      background-image: 
-        radial-gradient(circle at 10% 20%, rgba(59, 130, 246, 0.15) 0%, transparent 20%),
-        radial-gradient(circle at 90% 80%, rgba(6, 182, 212, 0.1) 0%, transparent 20%);
-      color: var(--text-main);
-      font-family: var(--font-ui);
-      display: flex;
-      flex-direction: column;
+      padding: 0;
+    }
+
+    html, body {
+      height: 100%;
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      background: var(--bg-dark);
+      color: var(--text-primary);
       overflow: hidden;
     }
 
-    /* ==================== */
-    /* Header / Toolbar */
-    /* ==================== */
-    header {
-      height: 60px;
-      padding: 0 20px;
+    body {
       display: flex;
-      align-items: center;
-      justify-content: space-between;
-      background: var(--bg-panel);
-      backdrop-filter: var(--glass);
-      border-bottom: 1px solid var(--border);
-      z-index: 10;
+      flex-direction: column;
+      background: 
+        radial-gradient(ellipse at 20% 20%, rgba(99, 102, 241, 0.15) 0%, transparent 50%),
+        radial-gradient(ellipse at 80% 80%, rgba(16, 185, 129, 0.1) 0%, transparent 50%),
+        radial-gradient(ellipse at 50% 50%, rgba(245, 158, 11, 0.05) 0%, transparent 70%),
+        var(--bg-dark);
     }
 
-    .brand {
+    /* ==================== */
+    /* Scrollbar Styles */
+    /* ==================== */
+    ::-webkit-scrollbar {
+      width: 8px;
+      height: 8px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: var(--bg-darker);
+      border-radius: 4px;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: linear-gradient(180deg, var(--primary), var(--primary-dark));
+      border-radius: 4px;
+      transition: var(--transition-normal);
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: linear-gradient(180deg, var(--primary-light), var(--primary));
+    }
+
+    /* ==================== */
+    /* Header Styles */
+    /* ==================== */
+    header {
+      background: var(--bg-card);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border-glass);
+      padding: 0;
+      position: relative;
+      z-index: 100;
+      animation: fade-in 0.5s ease;
+    }
+
+    header::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, var(--primary), var(--secondary), var(--accent), var(--primary));
+      background-size: 300% 100%;
+      animation: gradient-shift 5s linear infinite;
+    }
+
+    .header-main {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 16px;
+    }
+
+    .logo {
       display: flex;
       align-items: center;
       gap: 10px;
-      font-weight: 700;
-      font-size: 1.1rem;
-      letter-spacing: 1px;
-      color: #fff;
-      text-transform: uppercase;
+      padding-right: 16px;
+      border-right: 1px solid var(--border-glass);
+      margin-right: 8px;
     }
-    
-    .brand i { color: var(--accent); text-shadow: 0 0 10px var(--accent-glow); }
 
-    .toolbar-group {
+    .logo-icon {
+      width: 36px;
+      height: 36px;
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      border-radius: var(--radius-md);
       display: flex;
       align-items: center;
-      gap: 8px;
+      justify-content: center;
+      font-size: 20px;
+      animation: float 3s ease-in-out infinite;
+      box-shadow: var(--glow-primary);
     }
 
-    /* Smart Controls */
-    button, select, .file-upload-label {
-      background: rgba(255, 255, 255, 0.05);
-      border: 1px solid var(--border);
-      color: var(--text-main);
-      padding: 6px 12px;
-      border-radius: 6px;
-      font-family: var(--font-ui);
-      font-size: 0.85rem;
+    .logo-text {
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 700;
+      font-size: 1rem;
+      background: linear-gradient(90deg, var(--primary-light), var(--secondary));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .logo-badge {
+      font-size: 0.6rem;
+      padding: 2px 6px;
+      background: var(--accent);
+      color: var(--bg-dark);
+      border-radius: 20px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    /* ==================== */
+    /* Button Styles */
+    /* ==================== */
+    button, select, input[type="file"] {
+      font-family: 'Inter', sans-serif;
+      font-size: 0.8rem;
+      font-weight: 500;
       cursor: pointer;
-      transition: var(--transition);
+      transition: all var(--transition-normal);
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 14px;
+      border: 1px solid var(--border-glass);
+      border-radius: var(--radius-md);
+      background: var(--bg-glass);
+      color: var(--text-primary);
+      backdrop-filter: blur(10px);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .btn::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+      transition: var(--transition-normal);
+    }
+
+    .btn:hover::before {
+      left: 100%;
+    }
+
+    .btn:hover {
+      border-color: var(--primary);
+      background: rgba(99, 102, 241, 0.1);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(99, 102, 241, 0.2);
+    }
+
+    .btn:active {
+      transform: translateY(0);
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+      border-color: var(--primary);
+      box-shadow: 0 2px 10px rgba(99, 102, 241, 0.3);
+    }
+
+    .btn-primary:hover {
+      background: linear-gradient(135deg, var(--primary-light), var(--primary));
+      box-shadow: var(--glow-primary);
+    }
+
+    .btn-success {
+      background: linear-gradient(135deg, var(--secondary), #059669);
+      border-color: var(--secondary);
+    }
+
+    .btn-success:hover {
+      box-shadow: var(--glow-secondary);
+    }
+
+    .btn-danger {
+      border-color: var(--danger);
+      color: var(--danger);
+    }
+
+    .btn-danger:hover {
+      background: rgba(239, 68, 68, 0.1);
+      box-shadow: 0 0 20px rgba(239, 68, 68, 0.3);
+    }
+
+    .btn-icon {
+      padding: 8px;
+      min-width: 36px;
+      justify-content: center;
+    }
+
+    .btn-icon svg {
+      width: 18px;
+      height: 18px;
+    }
+
+    .toggle-btn {
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 0.75rem;
+    }
+
+    .toggle-btn.active {
+      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+      border-color: var(--primary);
+      color: white;
+      box-shadow: 0 0 15px rgba(99, 102, 241, 0.4);
+    }
+
+    /* ==================== */
+    /* Input Styles */
+    /* ==================== */
+    select, input[type="text"], input[type="range"] {
+      background: var(--bg-glass);
+      border: 1px solid var(--border-glass);
+      color: var(--text-primary);
+      border-radius: var(--radius-sm);
+      padding: 6px 10px;
+      outline: none;
+      transition: all var(--transition-normal);
+    }
+
+    select:focus, input[type="text"]:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+    }
+
+    select {
+      cursor: pointer;
+    }
+
+    select option {
+      background: var(--bg-dark);
+      color: var(--text-primary);
+    }
+
+    input[type="range"] {
+      -webkit-appearance: none;
+      appearance: none;
+      height: 6px;
+      padding: 0;
+      border-radius: 3px;
+      background: linear-gradient(90deg, var(--primary), var(--secondary));
+      cursor: pointer;
+    }
+
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: white;
+      cursor: pointer;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+      transition: var(--transition-fast);
+    }
+
+    input[type="range"]::-webkit-slider-thumb:hover {
+      transform: scale(1.2);
+      box-shadow: var(--glow-primary);
+    }
+
+    input[type="file"] {
+      font-size: 0.75rem;
+      color: var(--text-secondary);
+    }
+
+    input[type="file"]::file-selector-button {
+      padding: 6px 12px;
+      border: 1px solid var(--border-glass);
+      border-radius: var(--radius-sm);
+      background: var(--bg-glass);
+      color: var(--text-primary);
+      cursor: pointer;
+      margin-right: 8px;
+      transition: all var(--transition-normal);
+    }
+
+    input[type="file"]::file-selector-button:hover {
+      background: var(--primary);
+      border-color: var(--primary);
+    }
+
+    /* ==================== */
+    /* Label Styles */
+    /* ==================== */
+    label {
+      font-size: 0.75rem;
+      color: var(--text-secondary);
+      font-weight: 500;
+    }
+
+    .control-group {
       display: flex;
       align-items: center;
       gap: 6px;
-      outline: none;
-    }
-
-    button:hover, .file-upload-label:hover {
-      background: rgba(255, 255, 255, 0.1);
-      border-color: var(--accent);
-      box-shadow: 0 0 8px var(--accent-glow);
-      transform: translateY(-1px);
-    }
-
-    button.active {
-      background: var(--accent);
-      color: #000;
-      border-color: var(--accent);
-      font-weight: 600;
-    }
-
-    button i { font-size: 0.9rem; }
-
-    select {
-      appearance: none;
-      padding-right: 30px;
-      background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%2306b6d4%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E");
-      background-repeat: no-repeat;
-      background-position: right .7em top 50%;
-      background-size: .65em auto;
+      padding: 4px 8px;
+      background: var(--bg-glass);
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border-glass);
     }
 
     /* ==================== */
-    /* Main Layout */
+    /* Toolbar Sections */
     /* ==================== */
-    main {
+    .toolbar-section {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding-left: 12px;
+      border-left: 1px solid var(--border-glass);
+    }
+
+    .toolbar-section:first-of-type {
+      padding-left: 0;
+      border-left: none;
+    }
+
+    .toolbar-divider {
+      width: 1px;
+      height: 24px;
+      background: var(--border-glass);
+      margin: 0 4px;
+    }
+
+    .spacer {
       flex: 1;
+    }
+
+    /* ==================== */
+    /* Replace Bar */
+    /* ==================== */
+    .replace-bar {
       display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 16px;
+      background: rgba(99, 102, 241, 0.05);
+      border-top: 1px solid var(--border-glass);
+      animation: fade-in 0.3s ease;
+    }
+
+    .replace-bar.hidden {
+      display: none;
+    }
+
+    .replace-bar input[type="text"] {
+      width: 180px;
+    }
+
+    .replace-feedback {
+      font-size: 0.75rem;
+      color: var(--text-secondary);
+      padding: 4px 10px;
+      background: var(--bg-glass);
+      border-radius: var(--radius-sm);
+    }
+
+    .replace-feedback.success {
+      color: var(--secondary);
+      background: rgba(16, 185, 129, 0.1);
+    }
+
+    .replace-feedback.error {
+      color: var(--danger);
+      background: rgba(239, 68, 68, 0.1);
+    }
+
+    /* ==================== */
+    /* Smart Features Bar */
+    /* ==================== */
+    .smart-bar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 16px;
+      background: linear-gradient(90deg, rgba(99, 102, 241, 0.1), rgba(16, 185, 129, 0.1));
+      border-top: 1px solid var(--border-glass);
+      overflow-x: auto;
+    }
+
+    .smart-bar.hidden {
+      display: none;
+    }
+
+    .smart-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 4px 10px;
+      background: var(--bg-glass);
+      border: 1px solid var(--border-glass);
+      border-radius: 20px;
+      font-size: 0.7rem;
+      color: var(--text-secondary);
+      white-space: nowrap;
+      cursor: pointer;
+      transition: all var(--transition-normal);
+    }
+
+    .smart-chip:hover {
+      background: var(--primary);
+      border-color: var(--primary);
+      color: white;
+      transform: scale(1.05);
+    }
+
+    .smart-chip svg {
+      width: 12px;
+      height: 12px;
+    }
+
+    /* ==================== */
+    /* Preview Snapshots */
+    /* ==================== */
+    .snapshots-bar {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 16px;
+      background: var(--bg-darker);
+      border-top: 1px solid var(--border-glass);
+      overflow-x: auto;
+      scroll-behavior: smooth;
+    }
+
+    .snapshots-bar.hidden {
+      display: none;
+    }
+
+    .snapshot-label {
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      white-space: nowrap;
+    }
+
+    .snapshots-container {
+      display: flex;
+      gap: 10px;
+      padding: 4px;
+    }
+
+    .snapshot-item {
       position: relative;
-      height: calc(100vh - 90px); /* Adjust for header/footer */
+      width: 120px;
+      height: 80px;
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      border: 2px solid var(--border-glass);
+      cursor: pointer;
+      transition: all var(--transition-normal);
+      flex-shrink: 0;
     }
 
-    /* Editor Section */
-    #editorContainer {
-      width: 50%;
-      height: 100%;
+    .snapshot-item:hover {
+      border-color: var(--primary);
+      transform: scale(1.05);
+      box-shadow: var(--glow-primary);
+    }
+
+    .snapshot-item.active {
+      border-color: var(--secondary);
+      box-shadow: var(--glow-secondary);
+    }
+
+    .snapshot-item iframe {
+      width: 400%;
+      height: 400%;
+      transform: scale(0.25);
+      transform-origin: top left;
+      pointer-events: none;
+      border: none;
+    }
+
+    .snapshot-time {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      padding: 3px 6px;
+      background: linear-gradient(transparent, rgba(0,0,0,0.8));
+      font-size: 0.6rem;
+      color: var(--text-secondary);
+      text-align: center;
+    }
+
+    .snapshot-delete {
+      position: absolute;
+      top: 4px;
+      right: 4px;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: var(--danger);
+      color: white;
+      border: none;
+      cursor: pointer;
       display: flex;
-      flex-direction: column;
-      border-right: 1px solid var(--border);
-    }
-
-    .CodeMirror {
-      flex: 1;
-      height: 100%;
-      font-family: var(--font-code);
-      font-size: 14px;
-      line-height: 1.6;
-    }
-
-    /* Preview Section */
-    #previewContainer {
-      width: 50%;
-      height: 100%;
-      position: relative;
-      background-color: #ffffff; /* Iframe needs white usually */
-      background-image: 
-        linear-gradient(45deg, #f0f0f0 25%, transparent 25%), 
-        linear-gradient(-45deg, #f0f0f0 25%, transparent 25%), 
-        linear-gradient(45deg, transparent 75%, #f0f0f0 75%), 
-        linear-gradient(-45deg, transparent 75%, #f0f0f0 75%);
-      background-size: 20px 20px;
-      background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
-      display: flex;
-      flex-direction: column;
       align-items: center;
       justify-content: center;
-      transition: background 0.3s;
+      font-size: 10px;
+      opacity: 0;
+      transition: var(--transition-fast);
     }
 
-    #previewWrapper {
+    .snapshot-item:hover .snapshot-delete {
+      opacity: 1;
+    }
+
+    /* ==================== */
+    /* Main Container */
+    /* ==================== */
+    main {
+      display: flex;
+      flex: 1;
+      overflow: hidden;
+      position: relative;
+    }
+
+    main.vertical {
+      flex-direction: column;
+    }
+
+    /* ==================== */
+    /* Editor Wrapper */
+    /* ==================== */
+    .editor-wrapper {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      background: var(--bg-darker);
+      overflow: hidden;
+    }
+
+    .editor-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 12px;
+      background: var(--bg-card);
+      border-bottom: 1px solid var(--border-glass);
+    }
+
+    .editor-tabs {
+      display: flex;
+      gap: 4px;
+    }
+
+    .editor-tab {
+      padding: 6px 14px;
+      background: var(--bg-glass);
+      border: 1px solid var(--border-glass);
+      border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+      font-size: 0.75rem;
+      color: var(--text-secondary);
+      cursor: pointer;
+      transition: all var(--transition-fast);
+    }
+
+    .editor-tab:hover {
+      background: rgba(99, 102, 241, 0.1);
+      color: var(--text-primary);
+    }
+
+    .editor-tab.active {
+      background: var(--bg-darker);
+      border-bottom-color: var(--bg-darker);
+      color: var(--primary-light);
+    }
+
+    .editor-actions {
+      display: flex;
+      gap: 4px;
+    }
+
+    .editor-container {
+      position: relative;
+      flex: 1;
+      display: flex;
+      overflow: hidden;
+    }
+
+    .line-numbers {
+      padding: 12px 8px;
+      background: rgba(0,0,0,0.2);
+      color: var(--text-muted);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+      line-height: 1.5;
+      text-align: right;
+      user-select: none;
+      overflow: hidden;
+      border-right: 1px solid var(--border-glass);
+    }
+
+    .line-numbers span {
+      display: block;
+    }
+
+    .line-numbers span.active {
+      color: var(--primary-light);
+    }
+
+    textarea#editor {
+      flex: 1;
+      padding: 12px;
+      border: none;
+      outline: none;
+      resize: none;
+      background: transparent;
+      color: var(--text-primary);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 14px;
+      line-height: 1.5;
+      tab-size: 2;
+      caret-color: var(--primary-light);
+    }
+
+    textarea#editor::placeholder {
+      color: var(--text-muted);
+    }
+
+    textarea#editor.dark {
+      background: var(--bg-darker);
+    }
+
+    .editor-status {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 4px 12px;
+      background: var(--bg-card);
+      border-top: 1px solid var(--border-glass);
+      font-size: 0.7rem;
+      color: var(--text-muted);
+    }
+
+    .status-item {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .status-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--secondary);
+      animation: pulse-glow 2s infinite;
+    }
+
+    /* ==================== */
+    /* Previewer Wrapper */
+    /* ==================== */
+    .previewer-wrapper {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      background: white;
+      border-left: 3px solid var(--primary);
+      overflow: hidden;
+    }
+
+    main.vertical .previewer-wrapper {
+      border-left: none;
+      border-top: 3px solid var(--primary);
+    }
+
+    .previewer-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 12px;
+      background: var(--bg-card);
+      border-bottom: 1px solid var(--border-glass);
+    }
+
+    .device-buttons {
+      display: flex;
+      gap: 4px;
+    }
+
+    .device-btn {
+      padding: 4px 8px;
+      background: var(--bg-glass);
+      border: 1px solid var(--border-glass);
+      border-radius: var(--radius-sm);
+      color: var(--text-secondary);
+      font-size: 0.7rem;
+      cursor: pointer;
+      transition: all var(--transition-fast);
+    }
+
+    .device-btn:hover, .device-btn.active {
+      background: var(--primary);
+      border-color: var(--primary);
+      color: white;
+    }
+
+    .preview-url {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      background: var(--bg-glass);
+      border-radius: 20px;
+      font-size: 0.7rem;
+      color: var(--text-muted);
+    }
+
+    .preview-url::before {
+      content: '🔒';
+      font-size: 0.6rem;
+    }
+
+    .previewer-container {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #f5f5f5;
+      overflow: auto;
+      padding: 20px;
+    }
+
+    .preview-frame {
       width: 100%;
       height: 100%;
-      transition: width 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
-      box-shadow: 0 0 30px rgba(0,0,0,0.2);
       background: white;
+      border-radius: var(--radius-md);
+      box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+      overflow: hidden;
+      transition: all var(--transition-normal);
     }
-    
-    iframe {
+
+    .preview-frame.mobile {
+      max-width: 375px;
+      height: 667px;
+      border-radius: 40px;
+      border: 12px solid #1a1a1a;
+    }
+
+    .preview-frame.tablet {
+      max-width: 768px;
+      height: 1024px;
+      border-radius: 20px;
+      border: 8px solid #1a1a1a;
+    }
+
+    .preview-frame iframe {
       width: 100%;
       height: 100%;
       border: none;
     }
 
-    /* Device Frames (Smart Feature) */
-    #previewWrapper.mobile { width: 375px; height: 90%; border-radius: 20px; border: 8px solid #333; }
-    #previewWrapper.tablet { width: 768px; height: 95%; border-radius: 12px; border: 8px solid #333; }
-    
-    /* Live Console (Smart Feature) */
-    #consolePanel {
+    /* ==================== */
+    /* Resizer */
+    /* ==================== */
+    .resizer {
+      position: absolute;
+      background: transparent;
+      z-index: 10;
+      transition: background var(--transition-fast);
+    }
+
+    .resizer:hover, .resizer.active {
+      background: var(--primary);
+    }
+
+    .resizer.horizontal {
+      width: 6px;
+      height: 100%;
+      cursor: col-resize;
+      right: 0;
+      top: 0;
+    }
+
+    .resizer.vertical {
+      width: 100%;
+      height: 6px;
+      cursor: row-resize;
+      bottom: 0;
+      left: 0;
+    }
+
+    /* ==================== */
+    /* Console Panel */
+    /* ==================== */
+    .console-panel {
       position: absolute;
       bottom: 0;
       left: 0;
-      width: 100%;
+      right: 0;
       height: 150px;
-      background: rgba(15, 23, 42, 0.95);
-      border-top: 2px solid var(--accent);
-      color: #0f0;
-      font-family: var(--font-code);
-      font-size: 0.8rem;
-      padding: 10px;
-      overflow-y: auto;
-      transform: translateY(100%);
-      transition: transform 0.3s ease;
-      z-index: 5;
-    }
-    #consolePanel.open { transform: translateY(0); }
-    .log-entry { margin-bottom: 4px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 2px; }
-    .log-error { color: #ff4d4d; }
-
-    /* ==================== */
-    /* Find/Replace Bar */
-    /* ==================== */
-    #replaceBar {
-      position: absolute;
-      top: 10px;
-      right: 20px;
-      background: var(--bg-panel);
-      backdrop-filter: blur(10px);
-      padding: 10px;
-      border: 1px solid var(--border);
-      border-radius: 8px;
+      background: var(--bg-darker);
+      border-top: 1px solid var(--border-glass);
       display: flex;
-      gap: 5px;
-      flex-wrap: wrap;
-      width: 300px;
-      z-index: 20;
-      box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+      flex-direction: column;
+      z-index: 50;
+      animation: slide-in-right 0.3s ease;
     }
-    #replaceBar.hidden { display: none; }
-    #replaceBar input {
-      background: rgba(0,0,0,0.3);
-      border: 1px solid var(--border);
-      color: white;
-      padding: 5px;
-      width: 100%;
-      border-radius: 4px;
+
+    .console-panel.hidden {
+      display: none;
+    }
+
+    .console-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 6px 12px;
+      background: var(--bg-card);
+      border-bottom: 1px solid var(--border-glass);
+    }
+
+    .console-title {
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--text-secondary);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .console-title::before {
+      content: '>';
+      color: var(--secondary);
+    }
+
+    .console-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 8px 12px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.75rem;
+    }
+
+    .console-entry {
+      padding: 4px 0;
+      border-bottom: 1px solid var(--border-glass);
+      display: flex;
+      gap: 8px;
+    }
+
+    .console-entry.log { color: var(--text-primary); }
+    .console-entry.warn { color: var(--accent); }
+    .console-entry.error { color: var(--danger); }
+    .console-entry.info { color: var(--primary-light); }
+
+    .console-time {
+      color: var(--text-muted);
     }
 
     /* ==================== */
     /* Footer */
     /* ==================== */
     footer {
-      height: 30px;
-      background: #000;
-      border-top: 1px solid var(--border);
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 12px;
+      padding: 8px 16px;
+      background: var(--bg-card);
+      border-top: 1px solid var(--border-glass);
+      font-size: 0.7rem;
+      color: var(--text-muted);
+    }
+
+    footer.hidden {
+      display: none;
+    }
+
+    .footer-stats {
+      display: flex;
+      gap: 16px;
+    }
+
+    .stat-item {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .stat-value {
+      color: var(--primary-light);
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 600;
+    }
+
+    .footer-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-left: auto;
+    }
+
+    .footer-link {
+      color: var(--text-secondary);
+      text-decoration: none;
+      transition: color var(--transition-fast);
+    }
+
+    .footer-link:hover {
+      color: var(--primary-light);
+    }
+
+    .social-links {
+      display: flex;
+      gap: 8px;
+    }
+
+    .social-link {
+      width: 28px;
+      height: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--bg-glass);
+      border: 1px solid var(--border-glass);
+      border-radius: 50%;
+      color: var(--text-secondary);
+      transition: all var(--transition-fast);
+    }
+
+    .social-link:hover {
+      background: var(--primary);
+      border-color: var(--primary);
+      color: white;
+      transform: translateY(-2px);
+    }
+
+    .social-link svg {
+      width: 14px;
+      height: 14px;
+    }
+
+    /* ==================== */
+    /* Notification Toast */
+    /* ==================== */
+    .toast {
+      position: fixed;
+      bottom: 80px;
+      right: 20px;
+      padding: 12px 20px;
+      background: var(--bg-card);
+      border: 1px solid var(--border-glass);
+      border-radius: var(--radius-md);
+      color: var(--text-primary);
+      font-size: 0.85rem;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+      z-index: 1000;
+      animation: notification-pop 0.4s ease;
+      backdrop-filter: blur(10px);
+    }
+
+    .toast.hidden {
+      display: none;
+    }
+
+    .toast.success {
+      border-color: var(--secondary);
+    }
+
+    .toast.error {
+      border-color: var(--danger);
+    }
+
+    .toast-icon {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+    }
+
+    .toast.success .toast-icon {
+      background: var(--secondary);
+    }
+
+    .toast.error .toast-icon {
+      background: var(--danger);
+    }
+
+    /* ==================== */
+    /* Modal */
+    /* ==================== */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.7);
+      backdrop-filter: blur(5px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      animation: fade-in 0.2s ease;
+    }
+
+    .modal-overlay.hidden {
+      display: none;
+    }
+
+    .modal {
+      background: var(--bg-card);
+      border: 1px solid var(--border-glass);
+      border-radius: var(--radius-lg);
+      width: 90%;
+      max-width: 500px;
+      max-height: 80vh;
+      overflow: hidden;
+      animation: scale-in 0.3s ease;
+    }
+
+    .modal-header {
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 0 15px;
-      font-size: 0.75rem;
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border-glass);
+    }
+
+    .modal-title {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .modal-close {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: var(--bg-glass);
+      border: 1px solid var(--border-glass);
+      color: var(--text-secondary);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all var(--transition-fast);
+    }
+
+    .modal-close:hover {
+      background: var(--danger);
+      border-color: var(--danger);
+      color: white;
+    }
+
+    .modal-body {
+      padding: 20px;
+      overflow-y: auto;
+      max-height: 60vh;
+    }
+
+    .modal-footer {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      padding: 16px 20px;
+      border-top: 1px solid var(--border-glass);
+    }
+
+    /* ==================== */
+    /* Templates Grid */
+    /* ==================== */
+    .templates-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+      gap: 12px;
+    }
+
+    .template-card {
+      padding: 16px;
+      background: var(--bg-glass);
+      border: 1px solid var(--border-glass);
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      transition: all var(--transition-normal);
+      text-align: center;
+    }
+
+    .template-card:hover {
+      border-color: var(--primary);
+      background: rgba(99, 102, 241, 0.1);
+      transform: translateY(-2px);
+    }
+
+    .template-icon {
+      font-size: 2rem;
+      margin-bottom: 8px;
+    }
+
+    .template-name {
+      font-size: 0.8rem;
+      color: var(--text-primary);
+      font-weight: 500;
+    }
+
+    /* ==================== */
+    /* History List */
+    /* ==================== */
+    .history-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .history-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px;
+      background: var(--bg-glass);
+      border: 1px solid var(--border-glass);
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      transition: all var(--transition-fast);
+    }
+
+    .history-item:hover {
+      border-color: var(--primary);
+      background: rgba(99, 102, 241, 0.1);
+    }
+
+    .history-preview {
+      width: 60px;
+      height: 40px;
+      background: white;
+      border-radius: var(--radius-sm);
+      overflow: hidden;
+    }
+
+    .history-info {
+      flex: 1;
+    }
+
+    .history-time {
+      font-size: 0.8rem;
+      color: var(--text-primary);
+      font-weight: 500;
+    }
+
+    .history-size {
+      font-size: 0.7rem;
       color: var(--text-muted);
     }
-    
-    .footer-stats span { margin-right: 15px; }
-    .footer-stats i { margin-right: 5px; color: var(--accent); }
 
-    /* File Input Hidden */
-    #fileInput { display: none; }
+    /* ==================== */
+    /* Keyboard Shortcuts */
+    /* ==================== */
+    .shortcuts-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
 
-    /* Scrollbars */
-    ::-webkit-scrollbar { width: 8px; height: 8px; }
-    ::-webkit-scrollbar-track { background: var(--bg-dark); }
-    ::-webkit-scrollbar-thumb { background: #333; border-radius: 4px; }
-    ::-webkit-scrollbar-thumb:hover { background: var(--accent); }
+    .shortcut-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 0;
+      border-bottom: 1px solid var(--border-glass);
+    }
 
+    .shortcut-item:last-child {
+      border-bottom: none;
+    }
+
+    .shortcut-desc {
+      color: var(--text-secondary);
+      font-size: 0.85rem;
+    }
+
+    .shortcut-keys {
+      display: flex;
+      gap: 4px;
+    }
+
+    kbd {
+      padding: 4px 8px;
+      background: var(--bg-glass);
+      border: 1px solid var(--border-glass);
+      border-radius: var(--radius-sm);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.75rem;
+      color: var(--text-primary);
+    }
+
+    /* ==================== */
+    /* Auto-save Indicator */
+    /* ==================== */
+    .autosave-indicator {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      background: rgba(16, 185, 129, 0.1);
+      border-radius: 20px;
+      font-size: 0.7rem;
+      color: var(--secondary);
+      animation: fade-in 0.3s ease;
+    }
+
+    .autosave-indicator.saving {
+      color: var(--accent);
+      background: rgba(245, 158, 11, 0.1);
+    }
+
+    .autosave-indicator::before {
+      content: '';
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: currentColor;
+    }
+
+    .autosave-indicator.saving::before {
+      animation: pulse-glow 1s infinite;
+    }
+
+    /* ==================== */
+    /* Utilities */
+    /* ==================== */
+    .hidden {
+      display: none !important;
+    }
+
+    .number {
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .text-gradient {
+      background: linear-gradient(90deg, var(--primary-light), var(--secondary));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    /* ==================== */
+    /* Responsive */
+    /* ==================== */
+    @media (max-width: 768px) {
+      .header-main {
+        padding: 8px 12px;
+      }
+
+      .logo {
+        padding-right: 10px;
+        margin-right: 4px;
+      }
+
+      .logo-text {
+        display: none;
+      }
+
+      .toolbar-section {
+        padding-left: 8px;
+      }
+
+      .spacer {
+        display: none;
+      }
+
+      main {
+        flex-direction: column;
+      }
+
+      .previewer-wrapper {
+        border-left: none;
+        border-top: 3px solid var(--primary);
+      }
+    }
   </style>
 </head>
 
 <body>
-
-  <!-- HEADER / TOOLBAR -->
+  <!-- Header -->
   <header>
-    <div class="brand">
-      <i class="fa-solid fa-code"></i> Nebula
+    <div class="header-main">
+      <div class="logo">
+        <div class="logo-icon">⚡</div>
+        <span class="logo-text">SmartEdit</span>
+        <span class="logo-badge">Pro</span>
+      </div>
+
+      <div class="toolbar-section">
+        <button type="button" class="btn btn-success" id="runButton" title="Run code (Ctrl+Enter)">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+          Run
+        </button>
+        <button type="button" class="btn" id="saveButton" title="Save snapshot (Ctrl+S)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+          Save
+        </button>
+        <a href="" download="document.html" id="downloadLink" class="btn" title="Download file">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Download
+        </a>
+      </div>
+
+      <div class="toolbar-section">
+        <button type="button" class="btn" id="templatesButton" title="Code templates">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+          Templates
+        </button>
+        <button type="button" class="btn" id="formatButton" title="Format code (Ctrl+Shift+F)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="21" y1="10" x2="7" y2="10"/><line x1="21" y1="6" x2="3" y2="6"/><line x1="21" y1="14" x2="3" y2="14"/><line x1="21" y1="18" x2="7" y2="18"/></svg>
+          Format
+        </button>
+        <button type="button" class="btn" id="minifyButton" title="Minify code">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="4 14 10 14 10 20"/><polyline points="20 10 14 10 14 4"/><line x1="14" y1="10" x2="21" y2="3"/><line x1="3" y1="21" x2="10" y2="14"/></svg>
+          Minify
+        </button>
+      </div>
+
+      <div class="toolbar-section">
+        <button type="button" class="btn" id="historyButton" title="Code history">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          History
+        </button>
+        <button type="button" class="btn btn-danger" id="resetButton" title="Reset to default">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
+          Reset
+        </button>
+      </div>
+
+      <div class="spacer"></div>
+
+      <div class="toolbar-section">
+        <div class="control-group">
+          <label for="fontSizeSelector">Size</label>
+          <select id="fontSizeSelector">
+            <option>12</option>
+            <option>13</option>
+            <option selected>14</option>
+            <option>15</option>
+            <option>16</option>
+            <option>18</option>
+            <option>20</option>
+          </select>
+        </div>
+        <div class="control-group">
+          <label for="previewSelector">Preview</label>
+          <select id="previewSelector">
+            <option>Instant</option>
+            <option value="500" selected>0.5s</option>
+            <option value="1000">1.0s</option>
+            <option value="2000">2.0s</option>
+            <option>Manual</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="toolbar-section">
+        <button type="button" class="toggle-btn" id="verticalViewToggle" title="Toggle vertical view">↕ Vertical</button>
+        <button type="button" class="toggle-btn" id="darkEditorToggle" title="Toggle dark editor">🌙 Dark</button>
+        <button type="button" class="toggle-btn" id="lineNumbersToggle" title="Toggle line numbers">123</button>
+        <button type="button" class="toggle-btn" id="consoleToggle" title="Toggle console">Console</button>
+        <button type="button" class="toggle-btn" id="replaceBarToggle" title="Toggle find/replace">Find</button>
+        <button type="button" class="toggle-btn" id="snapshotsToggle" title="Toggle snapshots bar">📷</button>
+      </div>
+
+      <div class="toolbar-section">
+        <input type="file" accept="text/html,.htm,.css,.js" id="fileInput">
+        <button type="button" class="btn btn-icon" id="shortcutsButton" title="Keyboard shortcuts">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M6 8h.01M10 8h.01M14 8h.01M18 8h.01M8 12h.01M12 12h.01M16 12h.01M8 16h8"/></svg>
+        </button>
+        <button type="button" class="btn btn-icon" id="settingsButton" title="Settings">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg>
+        </button>
+      </div>
     </div>
 
-    <div class="toolbar-group">
-      <!-- File Operations -->
-      <label for="fileInput" class="file-upload-label" title="Upload File">
-        <i class="fa-solid fa-folder-open"></i>
-      </label>
-      <input type="file" id="fileInput" accept=".html,.htm,.txt">
-      
-      <button type="button" id="downloadBtn" title="Download Code">
-        <i class="fa-solid fa-download"></i>
-      </button>
-
-      <!-- Smart Features -->
-      <button type="button" id="formatBtn" title="Smart Format (Prettify)">
-        <i class="fa-solid fa-wand-magic-sparkles"></i>
-      </button>
-      
-      <button type="button" id="replaceToggleBtn" title="Find & Replace">
-        <i class="fa-solid fa-magnifying-glass"></i>
-      </button>
-
-      <div style="width: 1px; height: 20px; background: var(--border); margin: 0 5px;"></div>
-
-      <!-- Device Simulator -->
-      <button type="button" class="device-btn active" data-view="desktop" title="Desktop View">
-        <i class="fa-solid fa-desktop"></i>
-      </button>
-      <button type="button" class="device-btn" data-view="tablet" title="Tablet View">
-        <i class="fa-solid fa-tablet-screen-button"></i>
-      </button>
-      <button type="button" class="device-btn" data-view="mobile" title="Mobile View">
-        <i class="fa-solid fa-mobile-screen-button"></i>
-      </button>
+    <!-- Replace Bar -->
+    <div class="replace-bar hidden" id="replaceBar">
+      <label for="findInput">Find</label>
+      <input type="text" id="findInput" placeholder="Search...">
+      <label for="replaceInput">Replace</label>
+      <input type="text" id="replaceInput" placeholder="Replace with...">
+      <button type="button" class="toggle-btn" id="matchCaseToggle">Aa</button>
+      <button type="button" class="toggle-btn" id="wholeWordToggle">W</button>
+      <button type="button" class="toggle-btn" id="regexModeToggle">.*</button>
+      <button type="button" class="btn" id="findPrevButton">◀</button>
+      <button type="button" class="btn" id="findNextButton">▶</button>
+      <button type="button" class="btn btn-primary" id="replaceAllButton">Replace All</button>
+      <button type="button" class="btn" id="undoReplaceButton" disabled>Undo</button>
+      <span class="replace-feedback" id="replaceFeedback"></span>
     </div>
 
-    <div class="toolbar-group">
-      <button type="button" id="consoleToggleBtn" title="Toggle Console">
-        <i class="fa-solid fa-terminal"></i>
+    <!-- Smart Features Bar -->
+    <div class="smart-bar" id="smartBar">
+      <span style="font-size: 0.7rem; color: var(--text-muted); margin-right: 8px;">Quick Insert:</span>
+      <div class="smart-chip" data-snippet="div">&lt;div&gt;</div>
+      <div class="smart-chip" data-snippet="img">&lt;img&gt;</div>
+      <div class="smart-chip" data-snippet="link">&lt;a&gt;</div>
+      <div class="smart-chip" data-snippet="button">&lt;button&gt;</div>
+      <div class="smart-chip" data-snippet="form">&lt;form&gt;</div>
+      <div class="smart-chip" data-snippet="table">&lt;table&gt;</div>
+      <div class="smart-chip" data-snippet="script">&lt;script&gt;</div>
+      <div class="smart-chip" data-snippet="style">&lt;style&gt;</div>
+      <div class="smart-chip" data-snippet="comment">&lt;!--&gt;</div>
+      <div class="smart-chip" data-snippet="meta">meta</div>
+      <div class="smart-chip" data-snippet="flex">flexbox</div>
+      <div class="smart-chip" data-snippet="grid">grid</div>
+      <div class="smart-chip" data-snippet="lorem">lorem</div>
+      <div class="toolbar-divider"></div>
+      <div class="autosave-indicator" id="autosaveIndicator">Auto-saved</div>
+    </div>
+
+    <!-- Snapshots Bar -->
+    <div class="snapshots-bar hidden" id="snapshotsBar">
+      <span class="snapshot-label">📷 Snapshots</span>
+      <button type="button" class="btn btn-icon" id="addSnapshotButton" title="Take snapshot">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
       </button>
-      <button type="button" id="runBtn" class="active">
-        <i class="fa-solid fa-play"></i> Run
-      </button>
+      <div class="snapshots-container" id="snapshotsContainer">
+        <!-- Snapshots will be added here -->
+      </div>
     </div>
   </header>
 
-  <!-- FIND & REPLACE BAR (Floating) -->
-  <div id="replaceBar" class="hidden">
-    <input type="text" id="findInput" placeholder="Find...">
-    <input type="text" id="replaceInput" placeholder="Replace with...">
-    <div style="display:flex; justify-content:space-between; width:100%; margin-top:5px;">
-      <button id="replaceAllBtn" style="font-size:0.7rem;">Replace All</button>
-      <button id="closeReplaceBtn" style="border:none; background:transparent;"><i class="fa-solid fa-xmark"></i></button>
-    </div>
-  </div>
-
-  <!-- MAIN CONTENT -->
-  <main>
-    <!-- Code Editor -->
-    <div id="editorContainer">
-      <textarea id="codeMirrorArea"></textarea>
-    </div>
-
-    <!-- Preview -->
-    <div id="previewContainer">
-      <div id="previewWrapper">
-        <iframe></iframe>
-      </div>
-      
-      <!-- Smart Console Overlay -->
-      <div id="consolePanel">
-        <div style="position:sticky; top:0; background:#0f172a; padding-bottom:5px; border-bottom:1px solid #333; margin-bottom:5px; font-weight:bold;">
-          <i class="fa-solid fa-bug"></i> Live Console
+  <!-- Main Content -->
+  <main id="mainContainer">
+    <div class="editor-wrapper" id="editorWrapper">
+      <div class="editor-header">
+        <div class="editor-tabs">
+          <div class="editor-tab active">index.html</div>
         </div>
-        <div id="consoleOutput"></div>
+        <div class="editor-actions">
+          <button type="button" class="btn btn-icon" id="selectAllButton" title="Select all (Ctrl+A)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 9h6v6H9z"/></svg>
+          </button>
+          <button type="button" class="btn btn-icon" id="copyCodeButton" title="Copy code">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          </button>
+          <button type="button" class="btn btn-icon" id="wrapToggle" title="Toggle word wrap">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M3 12h15a3 3 0 1 1 0 6h-4l2-2m-2 2 2 2M3 18h7"/></svg>
+          </button>
+        </div>
       </div>
-    </div>
-  </main>
-
-  <!-- FOOTER -->
-  <footer>
-    <div class="footer-stats">
-      <span id="charCount"><i class="fa-solid fa-text-width"></i> 0 Chars</span>
-      <span id="lineCount"><i class="fa-solid fa-list-ol"></i> 0 Lines</span>
-    </div>
-    <div class="footer-stats">
-      <span>Auto-Run: <span style="color:var(--accent)">ON</span></span>
-      <span>Nebula v2.0</span>
-    </div>
-  </footer>
-
-  <!-- SCRIPTS: CodeMirror & Logic -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/codemirror.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/xml/xml.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/javascript/javascript.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/css/css.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/htmlmixed/htmlmixed.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/addon/edit/closetag.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/addon/edit/matchbrackets.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/addon/scroll/simplescrollbars.min.js"></script>
-
-  <script>
-    // ====================
-    // Default Template
-    // ====================
-    const defaultCode = `<!DOCTYPE html>
+      <div class="editor-container">
+        <div class="line-numbers" id="lineNumbers"></div>
+        <textarea id="editor" spellcheck="false"><!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>My Awesome Page</title>
   <style>
-    body {
-      font-family: 'Segoe UI', sans-serif;
-      background: #121212;
-      color: #fff;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
+    * {
       margin: 0;
-      overflow: hidden;
+      padding: 0;
+      box-sizing: border-box;
     }
-    .card {
+    
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
       background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-      padding: 2rem;
-      border-radius: 15px;
-      box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .card {
+      background: rgba(255, 255, 255, 0.95);
+      padding: 40px;
+      border-radius: 20px;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
       text-align: center;
+      max-width: 400px;
       animation: float 3s ease-in-out infinite;
     }
-    h1 { margin: 0 0 10px; }
-    button {
-      background: white;
-      color: #764ba2;
-      border: none;
-      padding: 10px 20px;
-      border-radius: 20px;
-      cursor: pointer;
-      font-weight: bold;
-      transition: transform 0.2s;
-    }
-    button:hover { transform: scale(1.05); }
+    
     @keyframes float {
       0%, 100% { transform: translateY(0); }
       50% { transform: translateY(-10px); }
+    }
+    
+    h1 {
+      color: #333;
+      margin-bottom: 10px;
+      font-size: 2rem;
+    }
+    
+    p {
+      color: #666;
+      line-height: 1.6;
+    }
+    
+    .btn {
+      display: inline-block;
+      margin-top: 20px;
+      padding: 12px 30px;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      color: white;
+      text-decoration: none;
+      border-radius: 30px;
+      font-weight: 600;
+      transition: transform 0.3s, box-shadow 0.3s;
+    }
+    
+    .btn:hover {
+      transform: scale(1.05);
+      box-shadow: 0 10px 20px rgba(102, 126, 234, 0.4);
     }
   </style>
 </head>
 <body>
   <div class="card">
-    <h1>Hello Future</h1>
-    <p>Edit code on the left, see magic on the right.</p>
-    <button onclick="sayHi()">Click Me</button>
+    <h1>🚀 Hello, World!</h1>
+    <p>Welcome to SmartEdit Pro. Start coding and see your changes instantly!</p>
+    <a href="#" class="btn">Get Started</a>
   </div>
   <script>
-    function sayHi() {
-      console.log("Button Clicked!");
-      alert("Welcome to Nebula Editor!");
-    }
-    console.log("System Ready...");
-  <\/script>
+    console.log('Page loaded successfully!');
+    console.log('SmartEdit Pro - Ready to code!');
+  </script>
 </body>
-</html>`;
+</html></textarea>
+        <div class="resizer horizontal" id="resizer"></div>
+      </div>
+      <div class="editor-status">
+        <div class="status-item">
+          <span class="status-dot"></span>
+          <span>Ready</span>
+        </div>
+        <div class="status-item">
+          <span>Ln <span id="cursorLine">1</span>, Col <span id="cursorCol">1</span></span>
+        </div>
+        <div class="status-item">
+          <span id="selectionInfo"></span>
+        </div>
+      </div>
+    </div>
 
+    <div class="previewer-wrapper" id="previewerWrapper">
+      <div class="previewer-header">
+        <div class="device-buttons">
+          <button type="button" class="device-btn active" data-device="desktop" title="Desktop view">🖥</button>
+          <button type="button" class="device-btn" data-device="tablet" title="Tablet view">📱</button>
+          <button type="button" class="device-btn" data-device="mobile" title="Mobile view">📲</button>
+        </div>
+        <div class="preview-url">preview://localhost</div>
+        <button type="button" class="btn btn-icon" id="refreshPreview" title="Refresh preview">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><polyline points="23 20 23 14 17 14"/><path d="M20.49 9A9 9 0 0 0 5.64 5.64L1 10m22 4-4.64 4.36A9 9 0 0 1 3.51 15"/></svg>
+        </button>
+      </div>
+      <div class="previewer-container">
+        <div class="preview-frame" id="previewFrame">
+          <iframe id="previewer"></iframe>
+        </div>
+      </div>
+    </div>
+
+    <!-- Console Panel -->
+    <div class="console-panel hidden" id="consolePanel">
+      <div class="console-header">
+        <span class="console-title">Console</span>
+        <button type="button" class="btn btn-icon" id="clearConsole" title="Clear console">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      <div class="console-body" id="consoleBody">
+        <!-- Console entries will be added here -->
+      </div>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer id="footer">
+    <div class="footer-stats">
+      <div class="stat-item">
+        <span class="stat-value" id="characterCount">0</span>
+        <span id="characterLabel">characters</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-value" id="byteCount">0</span>
+        <span id="byteLabel">bytes</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-value" id="lineCount">0</span>
+        <span>lines</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-value" id="wordCount">0</span>
+        <span>words</span>
+      </div>
+    </div>
+    <div class="footer-actions">
+      <span style="color: var(--text-muted);">Share:</span>
+      <div class="social-links">
+        <a href="#" class="social-link" title="Share on Twitter">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M23 3a10.9 10.9 0 0 1-3.14 1.53 4.48 4.48 0 0 0-7.86 3v1A10.66 10.66 0 0 1 3 4s-4 9 5 13a11.64 11.64 0 0 1-7 2c9 5 20 0 20-11.5a4.5 4.5 0 0 0-.08-.83A7.72 7.72 0 0 0 23 3z"/></svg>
+        </a>
+        <a href="#" class="social-link" title="Share on LinkedIn">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg>
+        </a>
+        <button type="button" class="social-link" id="copyLinkButton" title="Copy link">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+        </button>
+      </div>
+      <span style="color: var(--text-muted); margin-left: 12px;">
+        Made with ❤️ by <a href="#" class="footer-link">SmartEdit Team</a>
+      </span>
+    </div>
+  </footer>
+
+  <!-- Toast Notification -->
+  <div class="toast hidden" id="toast">
+    <span class="toast-icon">✓</span>
+    <span class="toast-message" id="toastMessage"></span>
+  </div>
+
+  <!-- Templates Modal -->
+  <div class="modal-overlay hidden" id="templatesModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 class="modal-title">📝 Code Templates</h3>
+        <button type="button" class="modal-close" data-close>&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="templates-grid" id="templatesGrid">
+          <div class="template-card" data-template="blank">
+            <div class="template-icon">📄</div>
+            <div class="template-name">Blank HTML</div>
+          </div>
+          <div class="template-card" data-template="landing">
+            <div class="template-icon">🚀</div>
+            <div class="template-name">Landing Page</div>
+          </div>
+          <div class="template-card" data-template="portfolio">
+            <div class="template-icon">💼</div>
+            <div class="template-name">Portfolio</div>
+          </div>
+          <div class="template-card" data-template="dashboard">
+            <div class="template-icon">📊</div>
+            <div class="template-name">Dashboard</div>
+          </div>
+          <div class="template-card" data-template="blog">
+            <div class="template-icon">✍️</div>
+            <div class="template-name">Blog Post</div>
+          </div>
+          <div class="template-card" data-template="form">
+            <div class="template-icon">📋</div>
+            <div class="template-name">Form Page</div>
+          </div>
+          <div class="template-card" data-template="animation">
+            <div class="template-icon">🎨</div>
+            <div class="template-name">CSS Animation</div>
+          </div>
+          <div class="template-card" data-template="game">
+            <div class="template-icon">🎮</div>
+            <div class="template-name">Simple Game</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- History Modal -->
+  <div class="modal-overlay hidden" id="historyModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 class="modal-title">📜 Code History</h3>
+        <button type="button" class="modal-close" data-close>&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="history-list" id="historyList">
+          <!-- History items will be added here -->
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-danger" id="clearHistoryButton">Clear All</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Shortcuts Modal -->
+  <div class="modal-overlay hidden" id="shortcutsModal">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 class="modal-title">⌨️ Keyboard Shortcuts</h3>
+        <button type="button" class="modal-close" data-close>&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="shortcuts-list">
+          <div class="shortcut-item">
+            <span class="shortcut-desc">Run code</span>
+            <div class="shortcut-keys"><kbd>Ctrl</kbd><kbd>Enter</kbd></div>
+          </div>
+          <div class="shortcut-item">
+            <span class="shortcut-desc">Save snapshot</span>
+            <div class="shortcut-keys"><kbd>Ctrl</kbd><kbd>S</kbd></div>
+          </div>
+          <div class="shortcut-item">
+            <span class="shortcut-desc">Format code</span>
+            <div class="shortcut-keys"><kbd>Ctrl</kbd><kbd>Shift</kbd><kbd>F</kbd></div>
+          </div>
+          <div class="shortcut-item">
+            <span class="shortcut-desc">Find & Replace</span>
+            <div class="shortcut-keys"><kbd>Ctrl</kbd><kbd>H</kbd></div>
+          </div>
+          <div class="shortcut-item">
+            <span class="shortcut-desc">Toggle console</span>
+            <div class="shortcut-keys"><kbd>Ctrl</kbd><kbd>`</kbd></div>
+          </div>
+          <div class="shortcut-item">
+            <span class="shortcut-desc">Select all</span>
+            <div class="shortcut-keys"><kbd>Ctrl</kbd><kbd>A</kbd></div>
+          </div>
+          <div class="shortcut-item">
+            <span class="shortcut-desc">Duplicate line</span>
+            <div class="shortcut-keys"><kbd>Ctrl</kbd><kbd>D</kbd></div>
+          </div>
+          <div class="shortcut-item">
+            <span class="shortcut-desc">Comment line</span>
+            <div class="shortcut-keys"><kbd>Ctrl</kbd><kbd>/</kbd></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ====================
+    // Constants and Variables
+    // ====================
+    const editor = document.getElementById('editor');
+    const previewer = document.getElementById('previewer');
+    const previewFrame = document.getElementById('previewFrame');
+    const mainContainer = document.getElementById('mainContainer');
+    const editorWrapper = document.getElementById('editorWrapper');
+    const previewerWrapper = document.getElementById('previewerWrapper');
+    const lineNumbers = document.getElementById('lineNumbers');
+    const resizer = document.getElementById('resizer');
+    
+    // Header elements
+    const runButton = document.getElementById('runButton');
+    const saveButton = document.getElementById('saveButton');
+    const downloadLink = document.getElementById('downloadLink');
+    const templatesButton = document.getElementById('templatesButton');
+    const formatButton = document.getElementById('formatButton');
+    const minifyButton = document.getElementById('minifyButton');
+    const historyButton = document.getElementById('historyButton');
+    const resetButton = document.getElementById('resetButton');
+    const fontSizeSelector = document.getElementById('fontSizeSelector');
+    const previewSelector = document.getElementById('previewSelector');
+    const verticalViewToggle = document.getElementById('verticalViewToggle');
+    const darkEditorToggle = document.getElementById('darkEditorToggle');
+    const lineNumbersToggle = document.getElementById('lineNumbersToggle');
+    const consoleToggle = document.getElementById('consoleToggle');
+    const replaceBarToggle = document.getElementById('replaceBarToggle');
+    const snapshotsToggle = document.getElementById('snapshotsToggle');
+    const fileInput = document.getElementById('fileInput');
+    const shortcutsButton = document.getElementById('shortcutsButton');
+    
+    // Replace bar
+    const replaceBar = document.getElementById('replaceBar');
+    const findInput = document.getElementById('findInput');
+    const replaceInput = document.getElementById('replaceInput');
+    const matchCaseToggle = document.getElementById('matchCaseToggle');
+    const wholeWordToggle = document.getElementById('wholeWordToggle');
+    const regexModeToggle = document.getElementById('regexModeToggle');
+    const findPrevButton = document.getElementById('findPrevButton');
+    const findNextButton = document.getElementById('findNextButton');
+    const replaceAllButton = document.getElementById('replaceAllButton');
+    const undoReplaceButton = document.getElementById('undoReplaceButton');
+    const replaceFeedback = document.getElementById('replaceFeedback');
+    
+    // Smart bar
+    const smartBar = document.getElementById('smartBar');
+    const autosaveIndicator = document.getElementById('autosaveIndicator');
+    
+    // Snapshots bar
+    const snapshotsBar = document.getElementById('snapshotsBar');
+    const snapshotsContainer = document.getElementById('snapshotsContainer');
+    const addSnapshotButton = document.getElementById('addSnapshotButton');
+    
+    // Editor actions
+    const selectAllButton = document.getElementById('selectAllButton');
+    const copyCodeButton = document.getElementById('copyCodeButton');
+    const wrapToggle = document.getElementById('wrapToggle');
+    const cursorLine = document.getElementById('cursorLine');
+    const cursorCol = document.getElementById('cursorCol');
+    const selectionInfo = document.getElementById('selectionInfo');
+    
+    // Preview
+    const deviceButtons = document.querySelectorAll('.device-btn');
+    const refreshPreview = document.getElementById('refreshPreview');
+    
+    // Console
+    const consolePanel = document.getElementById('consolePanel');
+    const consoleBody = document.getElementById('consoleBody');
+    const clearConsole = document.getElementById('clearConsole');
+    
+    // Footer
+    const footer = document.getElementById('footer');
+    const characterCount = document.getElementById('characterCount');
+    const byteCount = document.getElementById('byteCount');
+    const lineCount = document.getElementById('lineCount');
+    const wordCount = document.getElementById('wordCount');
+    const copyLinkButton = document.getElementById('copyLinkButton');
+    
+    // Toast
+    const toast = document.getElementById('toast');
+    const toastMessage = document.getElementById('toastMessage');
+    
+    // Modals
+    const templatesModal = document.getElementById('templatesModal');
+    const historyModal = document.getElementById('historyModal');
+    const shortcutsModal = document.getElementById('shortcutsModal');
+    const templatesGrid = document.getElementById('templatesGrid');
+    const historyList = document.getElementById('historyList');
+    const clearHistoryButton = document.getElementById('clearHistoryButton');
+    
+    // State
+    let previousEditorValue = null;
+    let snapshots = [];
+    let history = [];
+    let editorSize = 50;
+    let isResizing = false;
+    let autoSaveTimeout = null;
+    let lastSavedCode = '';
+    
+    // ====================
+    // Utility Functions
+    // ====================
+    function debounce(func, delay) {
+      let timeout;
+      return (...args) => {
+        clearTimeout(timeout);
+        timeout = setTimeout(() => func.apply(this, args), delay);
+      };
+    }
+    
+    function formatNumber(num) {
+      return new Intl.NumberFormat().format(num);
+    }
+    
+    function getTimeString() {
+      return new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    }
+    
+    function showToast(message, type = 'success') {
+      toast.className = `toast ${type}`;
+      toastMessage.textContent = message;
+      toast.classList.remove('hidden');
+      setTimeout(() => toast.classList.add('hidden'), 3000);
+    }
+    
+    function toggleClass(element, className, force) {
+      element.classList.toggle(className, force);
+    }
+    
+    function isActive(button) {
+      return button.classList.contains('active');
+    }
+    
+    // ====================
+    // Snippet Definitions
+    // ====================
+    const snippets = {
+      div: '<div class="">\n  \n</div>',
+      img: '<img src="" alt="" width="" height="">',
+      link: '<a href="#" target="_blank"></a>',
+      button: '<button type="button" class=""></button>',
+      form: '<form action="" method="post">\n  <input type="text" name="" placeholder="">\n  <button type="submit">Submit</button>\n</form>',
+      table: '<table>\n  <thead>\n    <tr>\n      <th>Header</th>\n    </tr>\n  </thead>\n  <tbody>\n    <tr>\n      <td>Data</td>\n    </tr>\n  </tbody>\n</table>',
+      script: '<script>\n  \n<\/script>',
+      style: '<style>\n  \n</style>',
+      comment: '<!-- -->',
+      meta: '<meta name="" content="">',
+      flex: 'display: flex;\njustify-content: center;\nalign-items: center;',
+      grid: 'display: grid;\ngrid-template-columns: repeat(3, 1fr);\ngap: 1rem;',
+      lorem: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.'
+    };
+    
+    // ====================
+    // Template Definitions
+    // ====================
+    const templates = {
+      blank: `<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Document</title>
+  <style>
+    
+  </style>
+</head>
+<body>
+  
+</body>
+</html>`,
+      landing: `<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Landing Page</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: system-ui, sans-serif; }
+    .hero {
+      min-height: 100vh;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      color: white;
+    }
+    .hero h1 { font-size: 3rem; margin-bottom: 1rem; }
+    .hero p { font-size: 1.25rem; opacity: 0.9; margin-bottom: 2rem; }
+    .btn {
+      display: inline-block;
+      padding: 1rem 2rem;
+      background: white;
+      color: #764ba2;
+      text-decoration: none;
+      border-radius: 50px;
+      font-weight: 600;
+      transition: transform 0.3s;
+    }
+    .btn:hover { transform: scale(1.05); }
+  </style>
+</head>
+<body>
+  <section class="hero">
+    <div>
+      <h1>Welcome to Our Site</h1>
+      <p>Build something amazing today</p>
+      <a href="#" class="btn">Get Started</a>
+    </div>
+  </section>
+</body>
+</html>`,
+      portfolio: `<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Portfolio</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: system-ui, sans-serif; background: #0a0a0a; color: white; }
+    .container { max-width: 1200px; margin: 0 auto; padding: 2rem; }
+    header { text-align: center; padding: 4rem 0; }
+    header h1 { font-size: 3rem; background: linear-gradient(90deg, #00d4ff, #7b2ff7); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .projects { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 2rem; }
+    .project { background: #1a1a2e; border-radius: 1rem; overflow: hidden; transition: transform 0.3s; }
+    .project:hover { transform: translateY(-5px); }
+    .project img { width: 100%; height: 200px; object-fit: cover; }
+    .project-info { padding: 1.5rem; }
+    .project h3 { margin-bottom: 0.5rem; }
+    .project p { color: #888; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>My Portfolio</h1>
+      <p>Web Developer & Designer</p>
+    </header>
+    <div class="projects">
+      <div class="project">
+        <img src="https://picsum.photos/400/200?random=1" alt="Project">
+        <div class="project-info">
+          <h3>Project One</h3>
+          <p>A beautiful web application</p>
+        </div>
+      </div>
+      <div class="project">
+        <img src="https://picsum.photos/400/200?random=2" alt="Project">
+        <div class="project-info">
+          <h3>Project Two</h3>
+          <p>Mobile-first design</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>`,
+      dashboard: `<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Dashboard</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: system-ui, sans-serif; background: #f0f2f5; }
+    .dashboard { display: grid; grid-template-columns: 250px 1fr; min-height: 100vh; }
+    .sidebar { background: #1a1a2e; color: white; padding: 2rem; }
+    .sidebar h2 { margin-bottom: 2rem; }
+    .nav-item { padding: 1rem; margin-bottom: 0.5rem; border-radius: 0.5rem; cursor: pointer; }
+    .nav-item:hover { background: rgba(255,255,255,0.1); }
+    .main { padding: 2rem; }
+    .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem; }
+    .card { background: white; padding: 1.5rem; border-radius: 1rem; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
+    .card h3 { color: #666; font-size: 0.875rem; margin-bottom: 0.5rem; }
+    .card .value { font-size: 2rem; font-weight: 700; color: #333; }
+  </style>
+</head>
+<body>
+  <div class="dashboard">
+    <aside class="sidebar">
+      <h2>Dashboard</h2>
+      <div class="nav-item">📊 Overview</div>
+      <div class="nav-item">📈 Analytics</div>
+      <div class="nav-item">👥 Users</div>
+      <div class="nav-item">⚙️ Settings</div>
+    </aside>
+    <main class="main">
+      <h1 style="margin-bottom: 2rem;">Welcome back!</h1>
+      <div class="cards">
+        <div class="card">
+          <h3>Total Users</h3>
+          <div class="value">12,345</div>
+        </div>
+        <div class="card">
+          <h3>Revenue</h3>
+          <div class="value">$45,678</div>
+        </div>
+        <div class="card">
+          <h3>Growth</h3>
+          <div class="value">+23%</div>
+        </div>
+      </div>
+    </main>
+  </div>
+</body>
+</html>`,
+      blog: `<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Blog Post</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: Georgia, serif; background: #fafafa; color: #333; line-height: 1.8; }
+    article { max-width: 700px; margin: 0 auto; padding: 4rem 2rem; }
+    h1 { font-size: 2.5rem; margin-bottom: 1rem; }
+    .meta { color: #888; margin-bottom: 2rem; }
+    .cover { width: 100%; height: 400px; object-fit: cover; border-radius: 1rem; margin-bottom: 2rem; }
+    p { margin-bottom: 1.5rem; }
+    blockquote { border-left: 4px solid #667eea; padding-left: 1.5rem; margin: 2rem 0; font-style: italic; color: #555; }
+  </style>
+</head>
+<body>
+  <article>
+    <h1>The Art of Web Development</h1>
+    <p class="meta">Published on January 1, 2024 • 5 min read</p>
+    <img src="https://picsum.photos/800/400?random=3" alt="Cover" class="cover">
+    <p>Web development is both an art and a science. It requires creativity to design beautiful interfaces and technical skills to bring them to life.</p>
+    <blockquote>"The best code is no code at all." — Jeff Atwood</blockquote>
+    <p>As developers, we strive to write clean, maintainable code that solves real problems for real people.</p>
+  </article>
+</body>
+</html>`,
+      form: `<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Contact Form</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: system-ui, sans-serif; background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); min-height: 100vh; display: flex; align-items: center; justify-content: center; }
+    .form-container { background: white; padding: 3rem; border-radius: 1rem; box-shadow: 0 10px 40px rgba(0,0,0,0.1); width: 100%; max-width: 450px; }
+    h1 { text-align: center; margin-bottom: 2rem; color: #333; }
+    .form-group { margin-bottom: 1.5rem; }
+    label { display: block; margin-bottom: 0.5rem; font-weight: 500; color: #555; }
+    input, textarea { width: 100%; padding: 0.75rem 1rem; border: 2px solid #e0e0e0; border-radius: 0.5rem; font-size: 1rem; transition: border-color 0.3s; }
+    input:focus, textarea:focus { outline: none; border-color: #667eea; }
+    textarea { resize: vertical; min-height: 120px; }
+    button { width: 100%; padding: 1rem; background: linear-gradient(135deg, #667eea, #764ba2); color: white; border: none; border-radius: 0.5rem; font-size: 1rem; font-weight: 600; cursor: pointer; transition: transform 0.3s; }
+    button:hover { transform: translateY(-2px); }
+  </style>
+</head>
+<body>
+  <div class="form-container">
+    <h1>Contact Us</h1>
+    <form>
+      <div class="form-group">
+        <label for="name">Name</label>
+        <input type="text" id="name" placeholder="Your name">
+      </div>
+      <div class="form-group">
+        <label for="email">Email</label>
+        <input type="email" id="email" placeholder="your@email.com">
+      </div>
+      <div class="form-group">
+        <label for="message">Message</label>
+        <textarea id="message" placeholder="Your message..."></textarea>
+      </div>
+      <button type="submit">Send Message</button>
+    </form>
+  </div>
+</body>
+</html>`,
+      animation: `<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CSS Animation</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: #0f0f1a; min-height: 100vh; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+    
+    .loader {
+      display: flex;
+      gap: 0.5rem;
+    }
+    
+    .dot {
+      width: 1rem;
+      height: 1rem;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      border-radius: 50%;
+      animation: bounce 1.4s infinite ease-in-out both;
+    }
+    
+    .dot:nth-child(1) { animation-delay: -0.32s; }
+    .dot:nth-child(2) { animation-delay: -0.16s; }
+    .dot:nth-child(3) { animation-delay: 0; }
+    
+    @keyframes bounce {
+      0%, 80%, 100% { transform: scale(0); }
+      40% { transform: scale(1); }
+    }
+    
+    .ring {
+      position: absolute;
+      width: 200px;
+      height: 200px;
+      border: 4px solid transparent;
+      border-top-color: #667eea;
+      border-radius: 50%;
+      animation: spin 1.5s linear infinite;
+    }
+    
+    .ring::before, .ring::after {
+      content: '';
+      position: absolute;
+      border: 4px solid transparent;
+      border-radius: 50%;
+    }
+    
+    .ring::before {
+      top: 10px; left: 10px; right: 10px; bottom: 10px;
+      border-top-color: #764ba2;
+      animation: spin 2s linear infinite reverse;
+    }
+    
+    .ring::after {
+      top: 25px; left: 25px; right: 25px; bottom: 25px;
+      border-top-color: #f59e0b;
+      animation: spin 1s linear infinite;
+    }
+    
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+<body>
+  <div class="ring"></div>
+  <div class="loader">
+    <div class="dot"></div>
+    <div class="dot"></div>
+    <div class="dot"></div>
+  </div>
+</body>
+</html>`,
+      game: `<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Click Game</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: system-ui, sans-serif; background: linear-gradient(135deg, #1a1a2e, #16213e); min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; color: white; }
+    .score { font-size: 2rem; margin-bottom: 2rem; }
+    .score span { color: #f59e0b; font-weight: 700; }
+    .target {
+      width: 80px;
+      height: 80px;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      border-radius: 50%;
+      cursor: pointer;
+      position: absolute;
+      transition: transform 0.1s;
+      box-shadow: 0 0 30px rgba(102, 126, 234, 0.5);
+    }
+    .target:hover { transform: scale(1.1); }
+    .target:active { transform: scale(0.9); }
+    .info { margin-top: 2rem; color: #888; }
+  </style>
+</head>
+<body>
+  <div class="score">Score: <span id="score">0</span></div>
+  <div class="target" id="target"></div>
+  <p class="info">Click the circle as fast as you can!</p>
+  <script>
+    const target = document.getElementById('target');
+    const scoreEl = document.getElementById('score');
+    let score = 0;
+    
+    function moveTarget() {
+      const maxX = window.innerWidth - 100;
+      const maxY = window.innerHeight - 100;
+      target.style.left = Math.random() * maxX + 'px';
+      target.style.top = Math.random() * maxY + 'px';
+    }
+    
+    target.addEventListener('click', () => {
+      score++;
+      scoreEl.textContent = score;
+      moveTarget();
+    });
+    
+    moveTarget();
+  </script>
+</body>
+</html>`
+    };
+    
+    // ====================
+    // Core Functions
+    // ====================
+    function createBlob() {
+      return new Blob([editor.value], { type: 'text/html; charset=utf-8' });
+    }
+    
+    function updateDownloadLink() {
+      downloadLink.href = URL.createObjectURL(createBlob());
+    }
+    
+    function preview() {
+      previewer.replaceWith(previewer);
+      const doc = previewer.contentDocument;
+      doc.open();
+      doc.write(editor.value);
+      doc.close();
+      
+      // Capture console output
+      if (!consolePanel.classList.contains('hidden')) {
+        captureConsole();
+      }
+    }
+    
+    function captureConsole() {
+      try {
+        const iframeWindow = previewer.contentWindow;
+        const methods = ['log', 'warn', 'error', 'info'];
+        
+        methods.forEach(method => {
+          const original = iframeWindow.console[method];
+          iframeWindow.console[method] = (...args) => {
+            addConsoleEntry(method, args.join(' '));
+            original.apply(iframeWindow.console, args);
+          };
+        });
+      } catch (e) {
+        // Cross-origin issues
+      }
+    }
+    
+    function addConsoleEntry(type, message) {
+      const entry = document.createElement('div');
+      entry.className = `console-entry ${type}`;
+      entry.innerHTML = `<span class="console-time">${getTimeString()}</span><span>${message}</span>`;
+      consoleBody.appendChild(entry);
+      consoleBody.scrollTop = consoleBody.scrollHeight;
+    }
+    
+    function updateLineNumbers() {
+      const lines = editor.value.split('\n').length;
+      lineNumbers.innerHTML = Array.from({ length: lines }, (_, i) => 
+        `<span>${i + 1}</span>`
+      ).join('');
+    }
+    
+    function updateCursorPosition() {
+      const text = editor.value.substring(0, editor.selectionStart);
+      const lines = text.split('\n');
+      cursorLine.textContent = lines.length;
+      cursorCol.textContent = lines[lines.length - 1].length + 1;
+      
+      const selLength = Math.abs(editor.selectionEnd - editor.selectionStart);
+      selectionInfo.textContent = selLength > 0 ? `(${selLength} selected)` : '';
+    }
+    
+    function updateStats() {
+      const text = editor.value;
+      characterCount.textContent = formatNumber(text.length);
+      byteCount.textContent = formatNumber(new Blob([text]).size);
+      lineCount.textContent = formatNumber(text.split('\n').length);
+      wordCount.textContent = formatNumber(text.trim().split(/\s+/).filter(Boolean).length);
+    }
+    
+    function resizeEditor() {
+      editorWrapper.style.flexGrow = editorSize;
+      previewerWrapper.style.flexGrow = 100 - editorSize;
+    }
+    
+    function formatCode() {
+      let code = editor.value;
+      let formatted = '';
+      let indent = 0;
+      const indentStr = '  ';
+      
+      // Simple HTML formatter
+      const tokens = code.replace(/>\s*</g, '>\n<').split('\n');
+      
+      tokens.forEach(token => {
+        token = token.trim();
+        if (!token) return;
+        
+        if (token.match(/^<\/([\w]+)/)) {
+          indent = Math.max(0, indent - 1);
+        }
+        
+        formatted += indentStr.repeat(indent) + token + '\n';
+        
+        if (token.match(/^<[\w][^>]*[^\/]>/) && !token.match(/^<(br|hr|img|input|meta|link)/i)) {
+          indent++;
+        }
+      });
+      
+      editor.value = formatted.trim();
+      updateAll();
+      showToast('Code formatted!');
+    }
+    
+    function minifyCode() {
+      let code = editor.value;
+      code = code.replace(/\s+/g, ' ')
+                 .replace(/>\s+</g, '><')
+                 .replace(/\s*{\s*/g, '{')
+                 .replace(/\s*}\s*/g, '}')
+                 .replace(/\s*;\s*/g, ';')
+                 .trim();
+      editor.value = code;
+      updateAll();
+      showToast('Code minified!');
+    }
+    
+    function insertSnippet(snippetKey) {
+      const snippet = snippets[snippetKey];
+      if (!snippet) return;
+      
+      const start = editor.selectionStart;
+      const end = editor.selectionEnd;
+      const text = editor.value;
+      
+      editor.value = text.substring(0, start) + snippet + text.substring(end);
+      editor.selectionStart = editor.selectionEnd = start + snippet.length;
+      editor.focus();
+      updateAll();
+    }
+    
+    function applyTemplate(templateKey) {
+      const template = templates[templateKey];
+      if (!template) return;
+      
+      if (editor.value && editor.value !== editor.defaultValue) {
+        if (!confirm('This will replace your current code. Continue?')) return;
+      }
+      
+      editor.value = template;
+      updateAll();
+      closeAllModals();
+      showToast('Template applied!');
+    }
+    
+    function saveSnapshot() {
+      const snapshot = {
+        id: Date.now(),
+        code: editor.value,
+        time: getTimeString(),
+        date: new Date().toLocaleDateString()
+      };
+      
+      snapshots.unshift(snapshot);
+      if (snapshots.length > 10) snapshots.pop();
+      
+      renderSnapshots();
+      saveToStorage();
+      showToast('Snapshot saved!');
+    }
+    
+    function renderSnapshots() {
+      snapshotsContainer.innerHTML = '';
+      
+      snapshots.forEach((snapshot, index) => {
+        const item = document.createElement('div');
+        item.className = 'snapshot-item';
+        item.innerHTML = `
+          <iframe srcdoc="${snapshot.code.replace(/"/g, '&quot;')}"></iframe>
+          <div class="snapshot-time">${snapshot.time}</div>
+          <button class="snapshot-delete" data-index="${index}">&times;</button>
+        `;
+        
+        item.addEventListener('click', (e) => {
+          if (!e.target.classList.contains('snapshot-delete')) {
+            editor.value = snapshot.code;
+            updateAll();
+            showToast('Snapshot restored!');
+          }
+        });
+        
+        snapshotsContainer.appendChild(item);
+      });
+      
+      // Delete buttons
+      snapshotsContainer.querySelectorAll('.snapshot-delete').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const index = parseInt(btn.dataset.index);
+          snapshots.splice(index, 1);
+          renderSnapshots();
+          saveToStorage();
+        });
+      });
+    }
+    
+    function saveHistory() {
+      const historyItem = {
+        id: Date.now(),
+        code: editor.value,
+        time: getTimeString(),
+        date: new Date().toLocaleDateString(),
+        size: new Blob([editor.value]).size
+      };
+      
+      history.unshift(historyItem);
+      if (history.length > 20) history.pop();
+      saveToStorage();
+    }
+    
+    function renderHistory() {
+      historyList.innerHTML = '';
+      
+      if (history.length === 0) {
+        historyList.innerHTML = '<p style="color: var(--text-muted); text-align: center;">No history yet</p>';
+        return;
+      }
+      
+      history.forEach((item, index) => {
+        const div = document.createElement('div');
+        div.className = 'history-item';
+        div.innerHTML = `
+          <div class="history-preview">
+            <iframe srcdoc="${item.code.replace(/"/g, '&quot;')}" style="width:400%;height:400%;transform:scale(0.25);transform-origin:top left;border:none;"></iframe>
+          </div>
+          <div class="history-info">
+            <div class="history-time">${item.date} at ${item.time}</div>
+            <div class="history-size">${formatNumber(item.size)} bytes</div>
+          </div>
+        `;
+        
+        div.addEventListener('click', () => {
+          editor.value = item.code;
+          updateAll();
+          closeAllModals();
+          showToast('History restored!');
+        });
+        
+        historyList.appendChild(div);
+      });
+    }
+    
+    function autoSave() {
+      if (editor.value !== lastSavedCode) {
+        autosaveIndicator.textContent = 'Saving...';
+        autosaveIndicator.classList.add('saving');
+        
+        setTimeout(() => {
+          lastSavedCode = editor.value;
+          saveToStorage();
+          autosaveIndicator.textContent = 'Auto-saved';
+          autosaveIndicator.classList.remove('saving');
+        }, 500);
+      }
+    }
+    
+    function saveToStorage() {
+      const state = {
+        editor: editor.value,
+        snapshots,
+        history,
+        settings: {
+          fontSize: fontSizeSelector.value,
+          previewMode: previewSelector.value,
+          editorSize,
+          verticalView: isActive(verticalViewToggle),
+          darkEditor: isActive(darkEditorToggle),
+          lineNumbers: isActive(lineNumbersToggle),
+          console: isActive(consoleToggle),
+          replaceBar: isActive(replaceBarToggle),
+          snapshotsBar: isActive(snapshotsToggle),
+          wordWrap: isActive(wrapToggle)
+        }
+      };
+      localStorage.setItem('smartEditState', JSON.stringify(state));
+    }
+    
+    function loadFromStorage() {
+      const saved = localStorage.getItem('smartEditState');
+      if (!saved) return;
+      
+      try {
+        const state = JSON.parse(saved);
+        
+        if (state.editor) editor.value = state.editor;
+        if (state.snapshots) snapshots = state.snapshots;
+        if (state.history) history = state.history;
+        
+        if (state.settings) {
+          const s = state.settings;
+          fontSizeSelector.value = s.fontSize || '14';
+          previewSelector.value = s.previewMode || '500';
+          editorSize = s.editorSize || 50;
+          
+          if (s.verticalView) verticalViewToggle.classList.add('active');
+          if (s.darkEditor) darkEditorToggle.classList.add('active');
+          if (s.lineNumbers) lineNumbersToggle.classList.add('active');
+          if (s.console) consoleToggle.classList.add('active');
+          if (s.replaceBar) replaceBarToggle.classList.add('active');
+          if (s.snapshotsBar) snapshotsToggle.classList.add('active');
+          if (s.wordWrap) wrapToggle.classList.add('active');
+        }
+        
+        lastSavedCode = state.editor || '';
+      } catch (e) {
+        console.error('Failed to load state:', e);
+      }
+    }
+    
+    function closeAllModals() {
+      document.querySelectorAll('.modal-overlay').forEach(m => m.classList.add('hidden'));
+    }
+    
+    function updateAll() {
+      dispatchPreviewUpdate();
+      updateLineNumbers();
+      updateCursorPosition();
+      updateStats();
+      updateDownloadLink();
+    }
+    
+    const debouncedPreview = debounce(preview, 500);
+    const debouncedAutoSave = debounce(autoSave, 2000);
+    const debouncedSaveHistory = debounce(saveHistory, 10000);
+    
+    function dispatchPreviewUpdate() {
+      const mode = previewSelector.value;
+      if (mode === 'Instant') {
+        preview();
+      } else if (mode !== 'Manual') {
+        debounce(preview, parseInt(mode))();
+      }
+    }
+    
+    // ====================
+    // Event Listeners
+    // ====================
+    
+    // Editor events
+    editor.addEventListener('input', () => {
+      updateAll();
+      debouncedAutoSave();
+      debouncedSaveHistory();
+    });
+    
+    editor.addEventListener('click', updateCursorPosition);
+    editor.addEventListener('keyup', updateCursorPosition);
+    editor.addEventListener('scroll', () => {
+      lineNumbers.scrollTop = editor.scrollTop;
+    });
+    
+    // Tab key support
+    editor.addEventListener('keydown', (e) => {
+      if (e.key === 'Tab') {
+        e.preventDefault();
+        const start = editor.selectionStart;
+        const end = editor.selectionEnd;
+        editor.value = editor.value.substring(0, start) + '  ' + editor.value.substring(end);
+        editor.selectionStart = editor.selectionEnd = start + 2;
+        updateAll();
+      }
+      
+      // Auto-close brackets
+      const pairs = { '(': ')', '[': ']', '{': '}', '"': '"', "'": "'", '`': '`', '<': '>' };
+      if (pairs[e.key]) {
+        e.preventDefault();
+        const start = editor.selectionStart;
+        const end = editor.selectionEnd;
+        const selected = editor.value.substring(start, end);
+        editor.value = editor.value.substring(0, start) + e.key + selected + pairs[e.key] + editor.value.substring(end);
+        editor.selectionStart = start + 1;
+        editor.selectionEnd = start + 1 + selected.length;
+        updateAll();
+      }
+    });
+    
+    // Keyboard shortcuts
+    document.addEventListener('keydown', (e) => {
+      if (e.ctrlKey || e.metaKey) {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          preview();
+          showToast('Code executed!');
+        } else if (e.key === 's') {
+          e.preventDefault();
+          saveSnapshot();
+        } else if (e.shiftKey && e.key === 'F') {
+          e.preventDefault();
+          formatCode();
+        } else if (e.key === 'h') {
+          e.preventDefault();
+          replaceBarToggle.click();
+        } else if (e.key === '`') {
+          e.preventDefault();
+          consoleToggle.click();
+        } else if (e.key === 'd') {
+          e.preventDefault();
+          // Duplicate line
+          const start = editor.selectionStart;
+          const lines = editor.value.split('\n');
+          let charCount = 0;
+          let lineIndex = 0;
+          for (let i = 0; i < lines.length; i++) {
+            charCount += lines[i].length + 1;
+            if (charCount > start) {
+              lineIndex = i;
+              break;
+            }
+          }
+          lines.splice(lineIndex, 0, lines[lineIndex]);
+          editor.value = lines.join('\n');
+          updateAll();
+        }
+      }
+    });
+    
+    // Button events
+    runButton.addEventListener('click', () => {
+      preview();
+      showToast('Code executed!');
+    });
+    
+    saveButton.addEventListener('click', saveSnapshot);
+    downloadLink.addEventListener('click', updateDownloadLink);
+    
+    templatesButton.addEventListener('click', () => {
+      templatesModal.classList.remove('hidden');
+    });
+    
+    formatButton.addEventListener('click', formatCode);
+    minifyButton.addEventListener('click', minifyCode);
+    
+    historyButton.addEventListener('click', () => {
+      renderHistory();
+      historyModal.classList.remove('hidden');
+    });
+    
+    resetButton.addEventListener('click', () => {
+      if (!confirm('Reset to default template? Your code will be saved to history.')) return;
+      saveHistory();
+      editor.value = editor.defaultValue;
+      updateAll();
+      showToast('Reset complete!');
+    });
+    
+    shortcutsButton.addEventListener('click', () => {
+      shortcutsModal.classList.remove('hidden');
+    });
+    
+    // Settings
+    fontSizeSelector.addEventListener('change', () => {
+      editor.style.fontSize = fontSizeSelector.value + 'px';
+      saveToStorage();
+    });
+    
+    previewSelector.addEventListener('change', () => {
+      saveToStorage();
+    });
+    
+    // Toggle buttons
+    verticalViewToggle.addEventListener('click', function() {
+      this.classList.toggle('active');
+      mainContainer.classList.toggle('vertical');
+      saveToStorage();
+    });
+    
+    darkEditorToggle.addEventListener('click', function() {
+      this.classList.toggle('active');
+      editor.classList.toggle('dark');
+      saveToStorage();
+    });
+    
+    lineNumbersToggle.addEventListener('click', function() {
+      this.classList.toggle('active');
+      lineNumbers.style.display = isActive(this) ? 'block' : 'none';
+      saveToStorage();
+    });
+    
+    consoleToggle.addEventListener('click', function() {
+      this.classList.toggle('active');
+      consolePanel.classList.toggle('hidden');
+      saveToStorage();
+    });
+    
+    replaceBarToggle.addEventListener('click', function() {
+      this.classList.toggle('active');
+      replaceBar.classList.toggle('hidden');
+      saveToStorage();
+    });
+    
+    snapshotsToggle.addEventListener('click', function() {
+      this.classList.toggle('active');
+      snapshotsBar.classList.toggle('hidden');
+      saveToStorage();
+    });
+    
+    wrapToggle.addEventListener('click', function() {
+      this.classList.toggle('active');
+      editor.style.whiteSpace = isActive(this) ? 'pre-wrap' : 'pre';
+      saveToStorage();
+    });
+    
+    // Editor actions
+    selectAllButton.addEventListener('click', () => editor.select());
+    
+    copyCodeButton.addEventListener('click', () => {
+      navigator.clipboard.writeText(editor.value);
+      showToast('Code copied!');
+    });
+    
+    // Device buttons
+    deviceButtons.forEach(btn => {
+      btn.addEventListener('click', function() {
+        deviceButtons.forEach(b => b.classList.remove('active'));
+        this.classList.add('active');
+        previewFrame.className = 'preview-frame ' + this.dataset.device;
+      });
+    });
+    
+    refreshPreview.addEventListener('click', preview);
+    
+    // Console
+    clearConsole.addEventListener('click', () => {
+      consoleBody.innerHTML = '';
+    });
+    
+    // Snapshots
+    addSnapshotButton.addEventListener('click', saveSnapshot);
+    
+    // Smart chips (snippets)
+    document.querySelectorAll('.smart-chip[data-snippet]').forEach(chip => {
+      chip.addEventListener('click', () => {
+        insertSnippet(chip.dataset.snippet);
+      });
+    });
+    
+    // Templates
+    templatesGrid.querySelectorAll('.template-card').forEach(card => {
+      card.addEventListener('click', () => {
+        applyTemplate(card.dataset.template);
+      });
+    });
+    
+    // History
+    clearHistoryButton.addEventListener('click', () => {
+      if (!confirm('Clear all history?')) return;
+      history = [];
+      renderHistory();
+      saveToStorage();
+      showToast('History cleared!');
+    });
+    
+    // Modal close
+    document.querySelectorAll('.modal-overlay').forEach(modal => {
+      modal.addEventListener('click', (e) => {
+        if (e.target === modal) closeAllModals();
+      });
+    });
+    
+    document.querySelectorAll('[data-close]').forEach(btn => {
+      btn.addEventListener('click', closeAllModals);
+    });
+    
+    // File input
+    fileInput.addEventListener('change', async function() {
+      const file = this.files[0];
+      if (file) {
+        saveHistory();
+        editor.value = await file.text();
+        downloadLink.download = file.name;
+        updateAll();
+        showToast('File loaded!');
+      }
+    });
+    
+    // Replace functionality
+    replaceAllButton.addEventListener('click', () => {
+      const findValue = findInput.value;
+      const replaceValue = replaceInput.value;
+      
+      if (!findValue) {
+        replaceFeedback.textContent = 'Enter search term';
+        replaceFeedback.className = 'replace-feedback error';
+        return;
+      }
+      
+      const flags = 'g' + (isActive(matchCaseToggle) ? '' : 'i');
+      let pattern = isActive(regexModeToggle) ? findValue : findValue.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      
+      if (isActive(wholeWordToggle)) {
+        pattern = `\\b${pattern}\\b`;
+      }
+      
+      try {
+        const regex = new RegExp(pattern, flags);
+        const matches = editor.value.match(regex);
+        
+        if (matches) {
+          previousEditorValue = editor.value;
+          editor.value = editor.value.replace(regex, replaceValue);
+          replaceFeedback.textContent = `${matches.length} replacement(s) made`;
+          replaceFeedback.className = 'replace-feedback success';
+          undoReplaceButton.disabled = false;
+          updateAll();
+        } else {
+          replaceFeedback.textContent = 'No matches found';
+          replaceFeedback.className = 'replace-feedback error';
+        }
+      } catch (e) {
+        replaceFeedback.textContent = 'Invalid regex';
+        replaceFeedback.className = 'replace-feedback error';
+      }
+    });
+    
+    undoReplaceButton.addEventListener('click', () => {
+      if (previousEditorValue !== null) {
+        editor.value = previousEditorValue;
+        previousEditorValue = null;
+        undoReplaceButton.disabled = true;
+        updateAll();
+        showToast('Replacement undone!');
+      }
+    });
+    
+    // Copy link
+    copyLinkButton.addEventListener('click', () => {
+      navigator.clipboard.writeText(window.location.href);
+      showToast('Link copied!');
+    });
+    
+    // Resizer
+    resizer.addEventListener('mousedown', (e) => {
+      isResizing = true;
+      document.body.style.cursor = 'col-resize';
+    });
+    
+    document.addEventListener('mousemove', (e) => {
+      if (!isResizing) return;
+      
+      const containerRect = mainContainer.getBoundingClientRect();
+      const percentage = ((e.clientX - containerRect.left) / containerRect.width) * 100;
+      editorSize = Math.max(20, Math.min(80, percentage));
+      resizeEditor();
+    });
+    
+    document.addEventListener('mouseup', () => {
+      if (isResizing) {
+        isResizing = false;
+        document.body.style.cursor = '';
+        saveToStorage();
+      }
+    });
+    
     // ====================
     // Initialization
     // ====================
+    loadFromStorage();
     
-    // Initialize CodeMirror (The Smart Editor)
-    const editor = CodeMirror.fromTextArea(document.getElementById('codeMirrorArea'), {
-      mode: 'htmlmixed',
-      theme: 'dracula',
-      lineNumbers: true,
-      autoCloseTags: true,
-      matchBrackets: true,
-      lineWrapping: true,
-      scrollbarStyle: "simple",
-      indentUnit: 2,
-      tabSize: 2
-    });
-
-    editor.setValue(localStorage.getItem('nebula-code') || defaultCode);
-
-    // Elements
-    const iframe = document.querySelector('iframe');
-    const previewWrapper = document.getElementById('previewWrapper');
-    const consoleOutput = document.getElementById('consoleOutput');
-    const charCountEl = document.getElementById('charCount');
-    const lineCountEl = document.getElementById('lineCount');
+    // Apply loaded settings
+    editor.style.fontSize = fontSizeSelector.value + 'px';
+    toggleClass(mainContainer, 'vertical', isActive(verticalViewToggle));
+    toggleClass(editor, 'dark', isActive(darkEditorToggle));
+    lineNumbers.style.display = isActive(lineNumbersToggle) ? 'block' : 'none';
+    toggleClass(consolePanel, 'hidden', !isActive(consoleToggle));
+    toggleClass(replaceBar, 'hidden', !isActive(replaceBarToggle));
+    toggleClass(snapshotsBar, 'hidden', !isActive(snapshotsToggle));
+    editor.style.whiteSpace = isActive(wrapToggle) ? 'pre-wrap' : 'pre';
     
-    // ====================
-    // Smart Functions
-    // ====================
-
-    // 1. Live Preview with Console Interception
-    function updatePreview() {
-      const code = editor.getValue();
-      
-      // Save to local storage
-      localStorage.setItem('nebula-code', code);
-      
-      // Update Stats
-      charCountEl.innerHTML = `<i class="fa-solid fa-text-width"></i> ${code.length} Chars`;
-      lineCountEl.innerHTML = `<i class="fa-solid fa-list-ol"></i> ${editor.lineCount()} Lines`;
-
-      // Inject Console Logic into the iframe
-      const consoleScript = `
-        <script>
-          (function(){
-            const oldLog = console.log;
-            const oldError = console.error;
-            const oldWarn = console.warn;
-            
-            function sendToParent(type, args) {
-              try {
-                const msg = args.map(arg => {
-                  if(typeof arg === 'object') return JSON.stringify(arg);
-                  return String(arg);
-                }).join(' ');
-                window.parent.postMessage({source: 'iframe-console', type, msg}, '*');
-              } catch(e) {}
-            }
-
-            console.log = function(...args) { sendToParent('log', args); oldLog.apply(console, args); };
-            console.error = function(...args) { sendToParent('error', args); oldError.apply(console, args); };
-            console.warn = function(...args) { sendToParent('warn', args); oldWarn.apply(console, args); };
-          })();
-        <\/script>
-      `;
-
-      // Split head/body to inject script correctly if possible
-      let finalHTML = code;
-      if (code.includes('<head>')) {
-        finalHTML = code.replace('<head>', '<head>' + consoleScript);
-      } else {
-        finalHTML = consoleScript + code;
-      }
-
-      const doc = iframe.contentDocument || iframe.contentWindow.document;
-      doc.open();
-      doc.write(finalHTML);
-      doc.close();
-    }
-
-    // Debounce function to prevent lag
-    let timeout;
-    editor.on('change', () => {
-      clearTimeout(timeout);
-      timeout = setTimeout(updatePreview, 800); // 0.8s delay
-    });
-
-    // 2. Receive Console Messages
-    window.addEventListener('message', (event) => {
-      if (event.data && event.data.source === 'iframe-console') {
-        const div = document.createElement('div');
-        div.className = 'log-entry';
-        if (event.data.type === 'error') div.classList.add('log-error');
-        div.textContent = `> [${event.data.type.toUpperCase()}] ${event.data.msg}`;
-        consoleOutput.appendChild(div);
-        consoleOutput.scrollTop = consoleOutput.scrollHeight;
-      }
-    });
-
-    // 3. Smart Format (Simple Indenter)
-    document.getElementById('formatBtn').addEventListener('click', () => {
-      const totalLines = editor.lineCount();
-      editor.autoFormatRange({line:0, ch:0}, {line:totalLines});
-      // Fallback manual selection format if autoFormatRange isn't fully loaded
-      for (let i = 0; i < totalLines; i++) {
-        editor.indentLine(i);
-      }
-    });
-
-    // 4. Device Simulator
-    const deviceBtns = document.querySelectorAll('.device-btn');
-    deviceBtns.forEach(btn => {
-      btn.addEventListener('click', () => {
-        // Remove active class from all
-        deviceBtns.forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        
-        // Change View
-        const view = btn.dataset.view;
-        previewWrapper.className = ''; // reset
-        if(view !== 'desktop') previewWrapper.classList.add(view);
-      });
-    });
-
-    // 5. Toggle Console Panel
-    document.getElementById('consoleToggleBtn').addEventListener('click', () => {
-      document.getElementById('consolePanel').classList.toggle('open');
-    });
-
-    // 6. Find & Replace UI Logic
-    document.getElementById('replaceToggleBtn').addEventListener('click', () => {
-      document.getElementById('replaceBar').classList.toggle('hidden');
-      document.getElementById('findInput').focus();
+    resizeEditor();
+    renderSnapshots();
+    updateAll();
+    
+    // Save on page leave
+    window.addEventListener('beforeunload', saveToStorage);
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) saveToStorage();
     });
     
-    document.getElementById('closeReplaceBtn').addEventListener('click', () => {
-      document.getElementById('replaceBar').classList.add('hidden');
-    });
-
-    document.getElementById('replaceAllBtn').addEventListener('click', () => {
-      const findTxt = document.getElementById('findInput').value;
-      const repTxt = document.getElementById('replaceInput').value;
-      if(!findTxt) return;
-      
-      const content = editor.getValue();
-      const regex = new RegExp(findTxt, 'g');
-      const newContent = content.replace(regex, repTxt);
-      editor.setValue(newContent);
-    });
-
-    // 7. File Operations
-    // Download
-    document.getElementById('downloadBtn').addEventListener('click', () => {
-      const blob = new Blob([editor.getValue()], {type: "text/html"});
-      const link = document.createElement("a");
-      link.href = URL.createObjectURL(blob);
-      link.download = "index.html";
-      link.click();
-    });
-
-    // Upload
-    document.getElementById('fileInput').addEventListener('change', function(e) {
-      const file = e.target.files[0];
-      if (!file) return;
-      const reader = new FileReader();
-      reader.onload = function(e) {
-        editor.setValue(e.target.result);
-      };
-      reader.readAsText(file);
-    });
-
-    // Run Button (Immediate Refresh)
-    document.getElementById('runBtn').addEventListener('click', () => {
-      consoleOutput.innerHTML = ''; // Clear console
-      updatePreview();
-    });
-
-    // Initial run
-    updatePreview();
-
+    console.log('🚀 SmartEdit Pro loaded successfully!');
   </script>
 </body>
 </html>
