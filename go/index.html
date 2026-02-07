@@ -1,0 +1,634 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Next-Gen HTML Editor with Syntax Highlighting and Real-Time Preview.">
+  <title>Nebula Editor: Futuristic HTML IDE</title>
+  
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+  
+  <!-- FontAwesome for Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <!-- CodeMirror CSS (Smart Editor Styling) -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/codemirror.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/theme/dracula.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/addon/scroll/simplescrollbars.css">
+
+  <style>
+    /* ==================== */
+    /* Futuristic Variables */
+    /* ==================== */
+    :root {
+      --bg-dark: #09090b;
+      --bg-panel: rgba(24, 24, 27, 0.7);
+      --primary: #3b82f6;
+      --accent: #06b6d4;
+      --accent-glow: rgba(6, 182, 212, 0.5);
+      --text-main: #e4e4e7;
+      --text-muted: #a1a1aa;
+      --border: rgba(255, 255, 255, 0.1);
+      --glass: blur(12px) saturate(180%);
+      --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      --font-ui: 'Inter', sans-serif;
+      --font-code: 'JetBrains Mono', monospace;
+    }
+
+    /* ==================== */
+    /* Base Styles */
+    /* ==================== */
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      height: 100vh;
+      background-color: var(--bg-dark);
+      background-image: 
+        radial-gradient(circle at 10% 20%, rgba(59, 130, 246, 0.15) 0%, transparent 20%),
+        radial-gradient(circle at 90% 80%, rgba(6, 182, 212, 0.1) 0%, transparent 20%);
+      color: var(--text-main);
+      font-family: var(--font-ui);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* ==================== */
+    /* Header / Toolbar */
+    /* ==================== */
+    header {
+      height: 60px;
+      padding: 0 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: var(--bg-panel);
+      backdrop-filter: var(--glass);
+      border-bottom: 1px solid var(--border);
+      z-index: 10;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 700;
+      font-size: 1.1rem;
+      letter-spacing: 1px;
+      color: #fff;
+      text-transform: uppercase;
+    }
+    
+    .brand i { color: var(--accent); text-shadow: 0 0 10px var(--accent-glow); }
+
+    .toolbar-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* Smart Controls */
+    button, select, .file-upload-label {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border);
+      color: var(--text-main);
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-family: var(--font-ui);
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: var(--transition);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      outline: none;
+    }
+
+    button:hover, .file-upload-label:hover {
+      background: rgba(255, 255, 255, 0.1);
+      border-color: var(--accent);
+      box-shadow: 0 0 8px var(--accent-glow);
+      transform: translateY(-1px);
+    }
+
+    button.active {
+      background: var(--accent);
+      color: #000;
+      border-color: var(--accent);
+      font-weight: 600;
+    }
+
+    button i { font-size: 0.9rem; }
+
+    select {
+      appearance: none;
+      padding-right: 30px;
+      background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%2306b6d4%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E");
+      background-repeat: no-repeat;
+      background-position: right .7em top 50%;
+      background-size: .65em auto;
+    }
+
+    /* ==================== */
+    /* Main Layout */
+    /* ==================== */
+    main {
+      flex: 1;
+      display: flex;
+      position: relative;
+      height: calc(100vh - 90px); /* Adjust for header/footer */
+    }
+
+    /* Editor Section */
+    #editorContainer {
+      width: 50%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      border-right: 1px solid var(--border);
+    }
+
+    .CodeMirror {
+      flex: 1;
+      height: 100%;
+      font-family: var(--font-code);
+      font-size: 14px;
+      line-height: 1.6;
+    }
+
+    /* Preview Section */
+    #previewContainer {
+      width: 50%;
+      height: 100%;
+      position: relative;
+      background-color: #ffffff; /* Iframe needs white usually */
+      background-image: 
+        linear-gradient(45deg, #f0f0f0 25%, transparent 25%), 
+        linear-gradient(-45deg, #f0f0f0 25%, transparent 25%), 
+        linear-gradient(45deg, transparent 75%, #f0f0f0 75%), 
+        linear-gradient(-45deg, transparent 75%, #f0f0f0 75%);
+      background-size: 20px 20px;
+      background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.3s;
+    }
+
+    #previewWrapper {
+      width: 100%;
+      height: 100%;
+      transition: width 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
+      box-shadow: 0 0 30px rgba(0,0,0,0.2);
+      background: white;
+    }
+    
+    iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+    }
+
+    /* Device Frames (Smart Feature) */
+    #previewWrapper.mobile { width: 375px; height: 90%; border-radius: 20px; border: 8px solid #333; }
+    #previewWrapper.tablet { width: 768px; height: 95%; border-radius: 12px; border: 8px solid #333; }
+    
+    /* Live Console (Smart Feature) */
+    #consolePanel {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: 150px;
+      background: rgba(15, 23, 42, 0.95);
+      border-top: 2px solid var(--accent);
+      color: #0f0;
+      font-family: var(--font-code);
+      font-size: 0.8rem;
+      padding: 10px;
+      overflow-y: auto;
+      transform: translateY(100%);
+      transition: transform 0.3s ease;
+      z-index: 5;
+    }
+    #consolePanel.open { transform: translateY(0); }
+    .log-entry { margin-bottom: 4px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 2px; }
+    .log-error { color: #ff4d4d; }
+
+    /* ==================== */
+    /* Find/Replace Bar */
+    /* ==================== */
+    #replaceBar {
+      position: absolute;
+      top: 10px;
+      right: 20px;
+      background: var(--bg-panel);
+      backdrop-filter: blur(10px);
+      padding: 10px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      display: flex;
+      gap: 5px;
+      flex-wrap: wrap;
+      width: 300px;
+      z-index: 20;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+    }
+    #replaceBar.hidden { display: none; }
+    #replaceBar input {
+      background: rgba(0,0,0,0.3);
+      border: 1px solid var(--border);
+      color: white;
+      padding: 5px;
+      width: 100%;
+      border-radius: 4px;
+    }
+
+    /* ==================== */
+    /* Footer */
+    /* ==================== */
+    footer {
+      height: 30px;
+      background: #000;
+      border-top: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 15px;
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+    
+    .footer-stats span { margin-right: 15px; }
+    .footer-stats i { margin-right: 5px; color: var(--accent); }
+
+    /* File Input Hidden */
+    #fileInput { display: none; }
+
+    /* Scrollbars */
+    ::-webkit-scrollbar { width: 8px; height: 8px; }
+    ::-webkit-scrollbar-track { background: var(--bg-dark); }
+    ::-webkit-scrollbar-thumb { background: #333; border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--accent); }
+
+  </style>
+</head>
+
+<body>
+
+  <!-- HEADER / TOOLBAR -->
+  <header>
+    <div class="brand">
+      <i class="fa-solid fa-code"></i> Nebula
+    </div>
+
+    <div class="toolbar-group">
+      <!-- File Operations -->
+      <label for="fileInput" class="file-upload-label" title="Upload File">
+        <i class="fa-solid fa-folder-open"></i>
+      </label>
+      <input type="file" id="fileInput" accept=".html,.htm,.txt">
+      
+      <button type="button" id="downloadBtn" title="Download Code">
+        <i class="fa-solid fa-download"></i>
+      </button>
+
+      <!-- Smart Features -->
+      <button type="button" id="formatBtn" title="Smart Format (Prettify)">
+        <i class="fa-solid fa-wand-magic-sparkles"></i>
+      </button>
+      
+      <button type="button" id="replaceToggleBtn" title="Find & Replace">
+        <i class="fa-solid fa-magnifying-glass"></i>
+      </button>
+
+      <div style="width: 1px; height: 20px; background: var(--border); margin: 0 5px;"></div>
+
+      <!-- Device Simulator -->
+      <button type="button" class="device-btn active" data-view="desktop" title="Desktop View">
+        <i class="fa-solid fa-desktop"></i>
+      </button>
+      <button type="button" class="device-btn" data-view="tablet" title="Tablet View">
+        <i class="fa-solid fa-tablet-screen-button"></i>
+      </button>
+      <button type="button" class="device-btn" data-view="mobile" title="Mobile View">
+        <i class="fa-solid fa-mobile-screen-button"></i>
+      </button>
+    </div>
+
+    <div class="toolbar-group">
+      <button type="button" id="consoleToggleBtn" title="Toggle Console">
+        <i class="fa-solid fa-terminal"></i>
+      </button>
+      <button type="button" id="runBtn" class="active">
+        <i class="fa-solid fa-play"></i> Run
+      </button>
+    </div>
+  </header>
+
+  <!-- FIND & REPLACE BAR (Floating) -->
+  <div id="replaceBar" class="hidden">
+    <input type="text" id="findInput" placeholder="Find...">
+    <input type="text" id="replaceInput" placeholder="Replace with...">
+    <div style="display:flex; justify-content:space-between; width:100%; margin-top:5px;">
+      <button id="replaceAllBtn" style="font-size:0.7rem;">Replace All</button>
+      <button id="closeReplaceBtn" style="border:none; background:transparent;"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+  </div>
+
+  <!-- MAIN CONTENT -->
+  <main>
+    <!-- Code Editor -->
+    <div id="editorContainer">
+      <textarea id="codeMirrorArea"></textarea>
+    </div>
+
+    <!-- Preview -->
+    <div id="previewContainer">
+      <div id="previewWrapper">
+        <iframe></iframe>
+      </div>
+      
+      <!-- Smart Console Overlay -->
+      <div id="consolePanel">
+        <div style="position:sticky; top:0; background:#0f172a; padding-bottom:5px; border-bottom:1px solid #333; margin-bottom:5px; font-weight:bold;">
+          <i class="fa-solid fa-bug"></i> Live Console
+        </div>
+        <div id="consoleOutput"></div>
+      </div>
+    </div>
+  </main>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="footer-stats">
+      <span id="charCount"><i class="fa-solid fa-text-width"></i> 0 Chars</span>
+      <span id="lineCount"><i class="fa-solid fa-list-ol"></i> 0 Lines</span>
+    </div>
+    <div class="footer-stats">
+      <span>Auto-Run: <span style="color:var(--accent)">ON</span></span>
+      <span>Nebula v2.0</span>
+    </div>
+  </footer>
+
+  <!-- SCRIPTS: CodeMirror & Logic -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/codemirror.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/xml/xml.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/javascript/javascript.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/css/css.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/mode/htmlmixed/htmlmixed.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/addon/edit/closetag.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/addon/edit/matchbrackets.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.13/addon/scroll/simplescrollbars.min.js"></script>
+
+  <script>
+    // ====================
+    // Default Template
+    // ====================
+    const defaultCode = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #121212;
+      color: #fff;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+      overflow: hidden;
+    }
+    .card {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      padding: 2rem;
+      border-radius: 15px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+      text-align: center;
+      animation: float 3s ease-in-out infinite;
+    }
+    h1 { margin: 0 0 10px; }
+    button {
+      background: white;
+      color: #764ba2;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 20px;
+      cursor: pointer;
+      font-weight: bold;
+      transition: transform 0.2s;
+    }
+    button:hover { transform: scale(1.05); }
+    @keyframes float {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-10px); }
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>Hello Future</h1>
+    <p>Edit code on the left, see magic on the right.</p>
+    <button onclick="sayHi()">Click Me</button>
+  </div>
+  <script>
+    function sayHi() {
+      console.log("Button Clicked!");
+      alert("Welcome to Nebula Editor!");
+    }
+    console.log("System Ready...");
+  <\/script>
+</body>
+</html>`;
+
+    // ====================
+    // Initialization
+    // ====================
+    
+    // Initialize CodeMirror (The Smart Editor)
+    const editor = CodeMirror.fromTextArea(document.getElementById('codeMirrorArea'), {
+      mode: 'htmlmixed',
+      theme: 'dracula',
+      lineNumbers: true,
+      autoCloseTags: true,
+      matchBrackets: true,
+      lineWrapping: true,
+      scrollbarStyle: "simple",
+      indentUnit: 2,
+      tabSize: 2
+    });
+
+    editor.setValue(localStorage.getItem('nebula-code') || defaultCode);
+
+    // Elements
+    const iframe = document.querySelector('iframe');
+    const previewWrapper = document.getElementById('previewWrapper');
+    const consoleOutput = document.getElementById('consoleOutput');
+    const charCountEl = document.getElementById('charCount');
+    const lineCountEl = document.getElementById('lineCount');
+    
+    // ====================
+    // Smart Functions
+    // ====================
+
+    // 1. Live Preview with Console Interception
+    function updatePreview() {
+      const code = editor.getValue();
+      
+      // Save to local storage
+      localStorage.setItem('nebula-code', code);
+      
+      // Update Stats
+      charCountEl.innerHTML = `<i class="fa-solid fa-text-width"></i> ${code.length} Chars`;
+      lineCountEl.innerHTML = `<i class="fa-solid fa-list-ol"></i> ${editor.lineCount()} Lines`;
+
+      // Inject Console Logic into the iframe
+      const consoleScript = `
+        <script>
+          (function(){
+            const oldLog = console.log;
+            const oldError = console.error;
+            const oldWarn = console.warn;
+            
+            function sendToParent(type, args) {
+              try {
+                const msg = args.map(arg => {
+                  if(typeof arg === 'object') return JSON.stringify(arg);
+                  return String(arg);
+                }).join(' ');
+                window.parent.postMessage({source: 'iframe-console', type, msg}, '*');
+              } catch(e) {}
+            }
+
+            console.log = function(...args) { sendToParent('log', args); oldLog.apply(console, args); };
+            console.error = function(...args) { sendToParent('error', args); oldError.apply(console, args); };
+            console.warn = function(...args) { sendToParent('warn', args); oldWarn.apply(console, args); };
+          })();
+        <\/script>
+      `;
+
+      // Split head/body to inject script correctly if possible
+      let finalHTML = code;
+      if (code.includes('<head>')) {
+        finalHTML = code.replace('<head>', '<head>' + consoleScript);
+      } else {
+        finalHTML = consoleScript + code;
+      }
+
+      const doc = iframe.contentDocument || iframe.contentWindow.document;
+      doc.open();
+      doc.write(finalHTML);
+      doc.close();
+    }
+
+    // Debounce function to prevent lag
+    let timeout;
+    editor.on('change', () => {
+      clearTimeout(timeout);
+      timeout = setTimeout(updatePreview, 800); // 0.8s delay
+    });
+
+    // 2. Receive Console Messages
+    window.addEventListener('message', (event) => {
+      if (event.data && event.data.source === 'iframe-console') {
+        const div = document.createElement('div');
+        div.className = 'log-entry';
+        if (event.data.type === 'error') div.classList.add('log-error');
+        div.textContent = `> [${event.data.type.toUpperCase()}] ${event.data.msg}`;
+        consoleOutput.appendChild(div);
+        consoleOutput.scrollTop = consoleOutput.scrollHeight;
+      }
+    });
+
+    // 3. Smart Format (Simple Indenter)
+    document.getElementById('formatBtn').addEventListener('click', () => {
+      const totalLines = editor.lineCount();
+      editor.autoFormatRange({line:0, ch:0}, {line:totalLines});
+      // Fallback manual selection format if autoFormatRange isn't fully loaded
+      for (let i = 0; i < totalLines; i++) {
+        editor.indentLine(i);
+      }
+    });
+
+    // 4. Device Simulator
+    const deviceBtns = document.querySelectorAll('.device-btn');
+    deviceBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        // Remove active class from all
+        deviceBtns.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        
+        // Change View
+        const view = btn.dataset.view;
+        previewWrapper.className = ''; // reset
+        if(view !== 'desktop') previewWrapper.classList.add(view);
+      });
+    });
+
+    // 5. Toggle Console Panel
+    document.getElementById('consoleToggleBtn').addEventListener('click', () => {
+      document.getElementById('consolePanel').classList.toggle('open');
+    });
+
+    // 6. Find & Replace UI Logic
+    document.getElementById('replaceToggleBtn').addEventListener('click', () => {
+      document.getElementById('replaceBar').classList.toggle('hidden');
+      document.getElementById('findInput').focus();
+    });
+    
+    document.getElementById('closeReplaceBtn').addEventListener('click', () => {
+      document.getElementById('replaceBar').classList.add('hidden');
+    });
+
+    document.getElementById('replaceAllBtn').addEventListener('click', () => {
+      const findTxt = document.getElementById('findInput').value;
+      const repTxt = document.getElementById('replaceInput').value;
+      if(!findTxt) return;
+      
+      const content = editor.getValue();
+      const regex = new RegExp(findTxt, 'g');
+      const newContent = content.replace(regex, repTxt);
+      editor.setValue(newContent);
+    });
+
+    // 7. File Operations
+    // Download
+    document.getElementById('downloadBtn').addEventListener('click', () => {
+      const blob = new Blob([editor.getValue()], {type: "text/html"});
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.download = "index.html";
+      link.click();
+    });
+
+    // Upload
+    document.getElementById('fileInput').addEventListener('change', function(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        editor.setValue(e.target.result);
+      };
+      reader.readAsText(file);
+    });
+
+    // Run Button (Immediate Refresh)
+    document.getElementById('runBtn').addEventListener('click', () => {
+      consoleOutput.innerHTML = ''; // Clear console
+      updatePreview();
+    });
+
+    // Initial run
+    updatePreview();
+
+  </script>
+</body>
+</html>
