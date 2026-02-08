@@ -3,77 +3,82 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CSM Full-Data Radar</title>
+    <title>CSM Ultra Radar | Dynamic Icons</title>
     
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Inter:wght@400;700&display=swap" rel="stylesheet">
 
     <style>
-        body, html { margin: 0; padding: 0; height: 100%; background: #0b0f19; font-family: 'Roboto', sans-serif; overflow: hidden; }
-        #map { height: 100vh; width: 100%; z-index: 1; }
+        :root { --accent: #ff1493; --bg: #0b0f19; --glass: rgba(10, 20, 30, 0.95); }
+        body, html { margin: 0; padding: 0; height: 100%; background: var(--bg); font-family: 'Inter', sans-serif; overflow: hidden; }
+        #map { height: 100vh; width: 100%; z-index: 1; background: #050505; }
 
-        /* UI Panels */
+        /* --- UI Elements --- */
         .glass-panel {
             position: absolute; top: 15px; left: 15px; z-index: 1000;
-            background: rgba(10, 20, 30, 0.95); border-left: 4px solid #ff1493;
-            padding: 12px; border-radius: 4px; width: 200px; color: #00f3ff;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.5); font-family: 'Share Tech Mono', monospace;
+            background: var(--glass); border-left: 4px solid var(--accent);
+            padding: 12px; border-radius: 8px; width: 220px; color: #00f3ff;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.5); backdrop-filter: blur(10px);
         }
 
-        /* Flight Info Card - Professional FR24 Style */
+        .search-container {
+            position: absolute; top: 15px; right: 60px; z-index: 1000;
+            display: flex; gap: 5px;
+        }
+        .search-input {
+            background: var(--glass); border: 1px solid var(--accent);
+            padding: 8px 15px; color: white; border-radius: 20px;
+            outline: none; width: 140px; transition: 0.3s; font-size: 13px;
+        }
+        .search-input:focus { width: 200px; box-shadow: 0 0 15px var(--accent); }
+
+        /* --- Flight Info Card --- */
         #flight-card {
             position: absolute; bottom: -500px; left: 0; right: 0;
-            background: #ffffff; color: #333; transition: bottom 0.5s ease;
-            z-index: 2000; padding: 20px; border-radius: 20px 20px 0 0;
-            max-width: 550px; margin: auto; box-shadow: 0 -10px 40px rgba(0,0,0,0.5);
+            background: #fff; color: #111; transition: bottom 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.1);
+            z-index: 2000; padding: 25px; border-radius: 24px 24px 0 0;
+            max-width: 500px; margin: auto; box-shadow: 0 -10px 50px rgba(0,0,0,0.6);
         }
         #flight-card.active { bottom: 0; }
+        .card-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-bottom: 1px solid #eee; padding-bottom: 10px; }
+        .grid-data { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .data-box { background: #f8f9fa; padding: 10px; border-radius: 10px; border: 1px solid #eee; }
+        .label { font-size: 9px; color: #999; text-transform: uppercase; font-weight: bold; display: block; }
+        .value { font-size: 14px; font-weight: 700; color: #222; }
+        .close-btn { font-size: 30px; cursor: pointer; color: #ccc; }
 
-        .card-header { border-bottom: 2px solid #f1f1f1; padding-bottom: 10px; margin-bottom: 15px; }
-        .callsign-box { display: flex; justify-content: space-between; align-items: center; }
-        .callsign { font-size: 28px; font-weight: 900; color: #111; }
-        .icao24 { font-family: 'Share Tech Mono'; color: #ff1493; background: #fff0f5; padding: 2px 8px; border-radius: 5px; font-size: 14px; }
-
-        /* Data Grid */
-        .data-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-        .data-item { background: #f8f9fa; padding: 10px; border-radius: 8px; border: 1px solid #eee; }
-        .data-label { font-size: 10px; color: #999; text-transform: uppercase; font-weight: bold; display: block; }
-        .data-val { font-size: 14px; font-weight: 700; color: #222; }
-
-        .close-btn { position: absolute; top: 15px; right: 20px; font-size: 25px; cursor: pointer; color: #bbb; }
-        .leaflet-marker-icon { transition: transform 1s linear !important; }
+        /* Marker Transition */
+        .plane-marker { transition: transform 1s linear; }
     </style>
 </head>
 <body>
 
     <div class="glass-panel">
-        <div style="font-size: 14px;">CSM RADAR V3.0</div>
-        <div id="count" style="font-size: 11px; margin-top:5px;">SCANNING...</div>
-        <div style="font-size: 9px; color:#facc15; margin-top:3px;">DEV: CSM MOHASIN ALAM</div>
+        <div style="font-family: 'Share Tech Mono'; font-weight: bold; letter-spacing: 1px;">CSM DYNAMIC RADAR</div>
+        <div id="count" style="font-size: 12px; margin-top:5px; color: #fff;">AIRCRAFT: 0</div>
+        <div style="font-size: 10px; color: var(--accent); margin-top:5px;">ENGINEER: MOHASIN ALAM</div>
+    </div>
+
+    <div class="search-container">
+        <input type="text" id="searchBox" class="search-input" placeholder="Enter Callsign...">
+        <button onclick="searchFlight()" style="background: var(--accent); border: none; color: white; border-radius: 50%; width: 35px; height: 35px; cursor: pointer;">🔍</button>
     </div>
 
     <div id="flight-card">
-        <span class="close-btn" onclick="closeCard()">×</span>
-        <div class="card-header">
-            <div class="callsign-box">
-                <span id="c-callsign" class="callsign">N/A</span>
-                <span id="c-icao24" class="icao24">#000000</span>
+        <div class="card-head">
+            <div>
+                <span id="c-call" style="font-size: 26px; font-weight: 900;">N/A</span>
+                <div id="c-country" style="font-size: 14px; color: #666;">Unknown Origin</div>
             </div>
-            <div id="c-country" style="color: #666; font-size: 14px; margin-top: 5px;">Country of Origin</div>
+            <span class="close-btn" onclick="closeCard()">&times;</span>
         </div>
-
-        <div class="data-grid">
-            <div class="data-item"><span class="data-label">Baro Altitude</span><span id="c-alt" class="data-val">-</span></div>
-            <div class="data-item"><span class="data-label">Ground Speed</span><span id="c-speed" class="data-val">-</span></div>
-            <div class="data-item"><span class="data-label">True Track</span><span id="c-track" class="data-val">-</span></div>
-            <div class="data-item"><span class="data-label">Vertical Rate</span><span id="c-vert" class="data-val">-</span></div>
-            <div class="data-item"><span class="data-label">Longitude</span><span id="c-lon" class="data-val">-</span></div>
-            <div class="data-item"><span class="data-label">Latitude</span><span id="c-lat" class="data-val">-</span></div>
-            <div class="data-item"><span class="data-label">Position Source</span><span id="c-source" class="data-val">ADS-B</span></div>
-            <div class="data-item"><span class="data-label">Squawk Code</span><span id="c-squawk" class="data-val">7000</span></div>
+        <div class="grid-data">
+            <div class="data-box"><span class="label">Altitude</span><span id="c-alt" class="value">-</span></div>
+            <div class="data-box"><span class="label">Ground Speed</span><span id="c-speed" class="value">-</span></div>
+            <div class="data-box"><span class="label">Heading</span><span id="c-track" class="value">-</span></div>
+            <div class="data-box"><span class="label">Vertical Rate</span><span id="c-vert" class="value">-</span></div>
+            <div class="data-box" style="grid-column: span 2; border-left: 4px solid var(--accent);"><span class="label">ICAO24 Transponder</span><span id="c-icao24" class="value" style="font-family: 'Share Tech Mono';">-</span></div>
         </div>
-        
-        <div style="text-align: center; margin-top: 15px; font-size: 10px; color: #ccc;">DATA SOURCE: OPENSKY NETWORK (REAL-TIME)</div>
     </div>
 
     <div id="map"></div>
@@ -83,12 +88,25 @@
     <script>
         let map, planeLayer, pathLayer;
         let activePlanes = {}; 
-        const PINK = "#ff1493";
+        const ACCENT = "#ff1493";
 
-        // URL Hash Sync
-        function syncURL() {
-            const c = map.getCenter();
-            window.history.replaceState(null, null, `#${c.lat.toFixed(4)},${c.lng.toFixed(4)},${map.getZoom()}`);
+        // ১. আইকন জেনারেটর (Type & Zoom Based)
+        function getPlaneIcon(category, zoom) {
+            let size = zoom * 2.2; // জুম অনুযায়ী সাইজ
+            let path = "M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z"; // Default
+
+            if (category === 7) { // Helicopter
+                path = "M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-5-9h10v2H7z";
+                size = zoom * 1.5;
+            } else if (category === 3) { // Heavy Jet
+                size = zoom * 3.2;
+            }
+
+            return L.divIcon({
+                html: `<div class="plane-marker"><svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="${ACCENT}" style="filter: drop-shadow(0 0 2px rgba(0,0,0,0.5));"><path d="${path}"/></svg></div>`,
+                iconSize: [size, size],
+                className: ''
+            });
         }
 
         async function initRadar(lat, lon, zoom = 9) {
@@ -96,55 +114,65 @@
             const sat = L.tileLayer('https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}');
             
             map = L.map('map', { zoomControl: false, layers: [dark] }).setView([lat, lon], zoom);
-            L.control.layers({"Radar Mode": dark, "Satellite View": sat}, null, {collapsed: false}).addTo(map);
+            L.control.layers({"Radar": dark, "Satellite": sat}, null, {position: 'topright'}).addTo(map);
 
             planeLayer = L.layerGroup().addTo(map);
             pathLayer = L.layerGroup().addTo(map);
 
-            map.on('moveend', syncURL);
-            
+            map.on('moveend', () => {
+                const c = map.getCenter();
+                window.history.replaceState(null, null, `#${c.lat.toFixed(4)},${c.lng.toFixed(4)},${map.getZoom()}`);
+                fetchData(); // লোকেশন পাল্টালে ডেটা আপডেট
+            });
+
             fetchData();
-            setInterval(fetchData, 12000);
+            setInterval(fetchData, 10000);
             setInterval(smoothMove, 1000);
         }
 
         async function fetchData() {
             const c = map.getCenter();
-            const r = 3.5;
+            const r = 4.0;
             const url = `https://opensky-network.org/api/states/all?lamin=${c.lat-r}&lamax=${c.lat+r}&lomin=${c.lng-r}&lomax=${c.lng+r}`;
 
             try {
                 const res = await fetch(url);
                 const data = await res.json();
-                const states = data.states || [];
-                document.getElementById('count').innerText = `AIRCRAFT: ${states.length} DETECTED`;
-                updatePlanes(states);
+                updateMap(data.states || []);
             } catch (e) {}
         }
 
-        function updatePlanes(states) {
-            const seen = new Set();
-            states.forEach(s => {
-                const [icao24, call, country, last_pos, last_contact, lon, lat, baro_alt, on_ground, vel, track, vert, sensors, geo_alt, squawk, spi, pos_source] = s;
-                if (!lat || !lon) return;
-                seen.add(icao24);
+        function updateMap(states) {
+            document.getElementById('count').innerText = `AIRCRAFT: ${states.length}`;
+            const currentIds = new Set();
+            const zoom = map.getZoom();
 
-                const icon = `<div style="transform: rotate(${(track || 0)-45}deg)"><svg width="32" height="32" viewBox="0 0 24 24" fill="${PINK}"><path d="M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z"/></svg></div>`;
+            states.forEach(s => {
+                const [icao24, call, country, , , lon, lat, , , , track, , category] = s;
+                if (!lat || !lon) return;
+                currentIds.add(icao24);
 
                 if (activePlanes[icao24]) {
                     activePlanes[icao24].marker.setLatLng([lat, lon]);
-                    activePlanes[icao24].data = s; 
-                } else {
-                    const marker = L.marker([lat, lon], { icon: L.divIcon({ html: icon, iconSize: [32, 32], className: '' })}).addTo(planeLayer);
-                    const poly = L.polyline([], {color: PINK, weight: 2, opacity: 0.4}).addTo(pathLayer);
+                    activePlanes[icao24].marker.setIcon(getPlaneIcon(category, zoom));
                     
+                    const el = activePlanes[icao24].marker.getElement();
+                    if(el) el.style.transform += ` rotate(${track || 0}deg)`;
+                    activePlanes[icao24].data = s;
+                } else {
+                    const marker = L.marker([lat, lon], { icon: getPlaneIcon(category, zoom) }).addTo(planeLayer);
                     marker.on('click', () => showInfo(icao24));
-                    activePlanes[icao24] = { marker, poly, history: [[lat, lon]], data: s };
+                    activePlanes[icao24] = { 
+                        marker, 
+                        poly: L.polyline([], {color: ACCENT, weight: 2, opacity: 0.3}).addTo(pathLayer), 
+                        history: [[lat, lon]], 
+                        data: s 
+                    };
                 }
             });
 
             for (let id in activePlanes) {
-                if (!seen.has(id)) {
+                if (!currentIds.has(id)) {
                     planeLayer.removeLayer(activePlanes[id].marker);
                     pathLayer.removeLayer(activePlanes[id].poly);
                     delete activePlanes[id];
@@ -152,21 +180,27 @@
             }
         }
 
+        function searchFlight() {
+            const query = document.getElementById('searchBox').value.toUpperCase().trim();
+            for (let id in activePlanes) {
+                if ((activePlanes[id].data[1] || "").trim() === query) {
+                    map.flyTo(activePlanes[id].marker.getLatLng(), 11);
+                    showInfo(id);
+                    return;
+                }
+            }
+            alert("Flight not found in visible range!");
+        }
+
         function showInfo(id) {
             const s = activePlanes[id].data;
-            // ওপেনস্কাই ইনডেক্স অনুযায়ী ডেটা ম্যাপিং
-            document.getElementById('c-callsign').innerText = s[1] ? s[1].trim() : 'N/A';
-            document.getElementById('c-icao24').innerText = `#${s[0].toUpperCase()}`;
+            document.getElementById('c-call').innerText = s[1] || 'N/A';
             document.getElementById('c-country').innerText = s[2];
-            document.getElementById('c-alt').innerText = s[7] ? `${Math.round(s[7] * 3.28084).toLocaleString()} ft` : 'Ground';
-            document.getElementById('c-speed').innerText = s[9] ? `${Math.round(s[9] * 1.94384)} kts` : '0 kts';
-            document.getElementById('c-track').innerText = s[10] ? `${Math.round(s[10])}°` : '0°';
-            document.getElementById('c-vert').innerText = s[11] ? `${Math.round(s[11] * 196.85)} fpm` : '0 fpm';
-            document.getElementById('c-lat').innerText = s[6].toFixed(4);
-            document.getElementById('c-lon').innerText = s[5].toFixed(4);
-            document.getElementById('c-squawk').innerText = s[14] || 'N/A';
-            document.getElementById('c-source').innerText = s[16] === 0 ? "ADS-B" : "ASTERIX";
-
+            document.getElementById('c-alt').innerText = s[7] ? `${Math.round(s[7]*3.28).toLocaleString()} ft` : 'Ground';
+            document.getElementById('c-speed').innerText = s[9] ? `${Math.round(s[9]*1.94)} kts` : '0 kts';
+            document.getElementById('c-track').innerText = `${Math.round(s[10])}°`;
+            document.getElementById('c-vert').innerText = s[11] ? `${Math.round(s[11]*196)} fpm` : '0';
+            document.getElementById('c-icao24').innerText = s[0].toUpperCase();
             document.getElementById('flight-card').classList.add('active');
         }
 
@@ -176,16 +210,15 @@
             for (let id in activePlanes) {
                 const p = activePlanes[id];
                 const s = p.data;
-                if (!s[9]) continue; // গতি না থাকলে মুভ করবে না
-
-                const dist = s[9] / 111111; // মিটার থেকে ডিগ্রিতে রূপান্তর
-                const rad = (s[10] - 90) * (Math.PI / 180);
-                
-                // বর্তমান ডাটা অবজেক্টের ল্যাট/লন আপডেট
-                s[6] += dist * Math.sin(-rad);
-                s[5] += dist * Math.cos(rad);
-
+                if (!s[9]) continue;
+                const d = s[9] / 111111;
+                const r = (s[10] - 90) * (Math.PI / 180);
+                s[6] += d * Math.sin(-r); s[5] += d * Math.cos(r);
                 p.marker.setLatLng([s[6], s[5]]);
+                
+                const el = p.marker.getElement();
+                if(el) el.style.transform += ` rotate(${s[10]}deg)`;
+
                 p.history.push([s[6], s[5]]);
                 if (p.history.length > 20) p.history.shift();
                 p.poly.setLatLngs(p.history);
