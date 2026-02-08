@@ -3,96 +3,55 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CSM Ultra Radar | Mohasin Alam</title>
+    <title>CSM Final Radar | Mohasin Alam</title>
     
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <link href="https://fonts.googleapis.com/css2?family=Syncopate:wght@400;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap" rel="stylesheet">
 
     <style>
-        :root {
-            --neon-blue: #00f3ff;
-            --radar-bg: rgba(10, 20, 30, 0.85);
-        }
-
-        body, html { margin: 0; padding: 0; height: 100%; background: #050505; color: var(--neon-blue); font-family: 'Share Tech Mono', monospace; }
-        
+        body, html { margin: 0; padding: 0; height: 100%; background: #050505; color: #00f3ff; font-family: 'Share Tech Mono', monospace; }
         #map { height: 100vh; width: 100%; z-index: 1; background: #050505; }
 
         /* Smart UI Panel */
         .glass-panel {
             position: absolute;
             top: 20px; left: 20px; z-index: 1000;
-            background: var(--radar-bg);
-            backdrop-filter: blur(12px);
-            border: 1px solid rgba(0, 243, 255, 0.3);
-            padding: 20px; border-radius: 8px;
-            box-shadow: 0 0 30px rgba(0, 243, 255, 0.1);
-            width: 280px;
+            background: rgba(10, 20, 30, 0.9);
+            backdrop-filter: blur(10px);
+            border: 1px solid #ff1493;
+            padding: 15px; border-radius: 4px;
+            width: 240px; box-shadow: 0 0 20px rgba(255, 20, 147, 0.2);
+            pointer-events: auto;
         }
 
-        h1 { font-family: 'Syncopate', sans-serif; font-size: 14px; margin: 0 0 15px 0; letter-spacing: 3px; color: #fff; border-left: 3px solid var(--neon-blue); padding-left: 10px; }
+        .header-title { font-size: 16px; color: #ff1493; border-bottom: 1px solid #ff1493; margin-bottom: 10px; padding-bottom: 5px; font-weight: bold; }
+        .stat { font-size: 13px; margin-bottom: 5px; }
+        .dev-tag { margin-top: 10px; font-size: 11px; color: #facc15; border-top: 1px solid #333; padding-top: 5px; text-align: center; }
 
-        .stat-row { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 13px; }
-        .label { color: rgba(255,255,255,0.6); }
-        .value { color: var(--neon-blue); text-shadow: 0 0 8px var(--neon-blue); }
+        /* Marker Styles */
+        .leaflet-marker-icon { transition: transform 1s linear !important; }
+        
+        /* Popup Styling */
+        .leaflet-popup-content-wrapper { background: #111 !important; color: #ff1493 !important; border: 1px solid #ff1493; border-radius: 0; }
+        .leaflet-popup-tip { background: #ff1493 !important; }
+        
+        .info-table { width: 100%; font-size: 11px; margin-top: 5px; border-collapse: collapse; }
+        .info-table td { padding: 2px 0; border-bottom: 1px solid rgba(255, 20, 147, 0.2); }
+        .label { color: #888; }
+        .val { color: #fff; text-align: right; }
 
-        .dev-info { margin-top: 20px; font-size: 10px; border-top: 1px dashed rgba(255,255,255,0.2); padding-top: 10px; text-align: center; }
-        .dev-name { color: #facc15; font-weight: bold; text-transform: uppercase; }
-
-        /* Radar Scanning Animation */
-        .radar-scan {
-            position: absolute;
-            top: 50%; left: 50%;
-            width: 400px; height: 400px;
-            background: conic-gradient(from 0deg, rgba(0, 243, 255, 0.1) 0%, transparent 40%);
-            border-radius: 50%;
-            transform: translate(-50%, -50%);
-            animation: rotateRadar 4s linear infinite;
-            pointer-events: none;
-            z-index: 500;
-        }
-
-        @keyframes rotateRadar {
-            to { transform: translate(-50%, -50%) rotate(360deg); }
-        }
-
-        /* Pulsing User Location */
-        .user-pulse {
-            width: 14px; height: 14px;
-            background: #fff; border-radius: 50%;
-            animation: pulse 2s infinite;
-        }
-
-        @keyframes pulse {
-            0% { box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.7); }
-            70% { box-shadow: 0 0 0 20px rgba(255, 255, 255, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(255, 255, 255, 0); }
-        }
+        /* Custom Zoom Controls to match theme */
+        .leaflet-control-layers { background: rgba(10, 20, 30, 0.9) !important; color: #00f3ff !important; border: 1px solid #00f3ff !important; font-family: 'Share Tech Mono', monospace !important; }
     </style>
 </head>
 <body>
 
-    <div class="radar-scan"></div>
-
     <div class="glass-panel">
-        <h1>RADAR SYSTEM V3.0</h1>
-        <div class="stat-row">
-            <span class="label">SYSTEM:</span>
-            <span class="value" id="status">INITIALIZING...</span>
-        </div>
-        <div class="stat-row">
-            <span class="label">AIRCRAFT:</span>
-            <span class="value" id="count">0</span>
-        </div>
-        <div class="stat-row">
-            <span class="label">COORDS:</span>
-            <span class="value" id="loc">SEARCHING...</span>
-        </div>
-
-        <div class="dev-info">
-            SYSTEM ARCHITECT:<br>
-            <span class="dev-name">Csm Mohasin Alam</span>
-        </div>
+        <div class="header-title">CSM GLOBAL RADAR</div>
+        <div class="stat" id="status">SYSTEM: BOOTING...</div>
+        <div class="stat" id="count">AIRCRAFT: 0 DETECTED</div>
+        <div class="stat" id="coords">POS: FETCHING...</div>
+        <div class="dev-tag">ENGINEER: CSM MOHASIN Alam</div>
     </div>
 
     <div id="map"></div>
@@ -100,88 +59,138 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
     <script>
-        let map, planeLayer;
-        const NEON_BLUE = "#00f3ff";
+        let map, planeLayer, pathLayer;
+        let activePlanes = {}; 
+        const PINK = "#ff1493";
 
         async function initRadar(lat, lon) {
-            try {
-                // ম্যাপ লোড হচ্ছে কিনা নিশ্চিত করা
-                map = L.map('map', { zoomControl: false, attributionControl: false }).setView([lat, lon], 10);
-                document.getElementById('loc').innerText = `${lat.toFixed(2)}, ${lon.toFixed(2)}`;
+            document.getElementById('coords').innerText = `POS: ${lat.toFixed(2)}, ${lon.toFixed(2)}`;
 
-                L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png').addTo(map);
+            // ১. ম্যাপ মুড লেয়ারসমূহ
+            const darkMap = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png');
+            const satelliteMap = L.tileLayer('https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}');
+            const terrainMap = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png');
 
-                const userIcon = L.divIcon({ className: 'user-pulse', iconSize: [14, 14] });
-                L.marker([lat, lon], { icon: userIcon }).addTo(map).bindPopup("MY BASE STATION");
+            // ২. ম্যাপ ইনিশিয়ালাইজ (ডিফল্ট ডার্ক মোড)
+            map = L.map('map', { 
+                zoomControl: true,
+                layers: [darkMap],
+                attributionControl: false 
+            }).setView([lat, lon], 9);
 
-                planeLayer = L.layerGroup().addTo(map);
-                updateRadar(lat, lon);
-                setInterval(() => updateRadar(lat, lon), 15000); // ১৫ সেকেন্ড পর পর আপডেট
-                
-                document.getElementById('status').innerText = "ONLINE";
-            } catch (err) {
-                document.getElementById('status').innerText = "MAP ERROR";
-                console.error(err);
-            }
+            // ৩. লেয়ার কন্ট্রোল বক্স (ডান দিকে উপরে)
+            const baseMaps = {
+                "<span style='color: #888'>DARK RADAR</span>": darkMap,
+                "<span style='color: #888'>SATELLITE</span>": satelliteMap,
+                "<span style='color: #888'>STREET</span>": terrainMap
+            };
+            L.control.layers(baseMaps, null, { collapsed: false }).addTo(map);
+
+            planeLayer = L.layerGroup().addTo(map);
+            pathLayer = L.layerGroup().addTo(map);
+
+            // বেস স্টেশন সার্কেল
+            L.circle([lat, lon], {radius: 1500, color: '#fff', fillOpacity: 0.5}).addTo(map);
+
+            updateRadar(lat, lon);
+            setInterval(() => updateRadar(lat, lon), 12000); 
+            setInterval(predictAndTrail, 1000); 
         }
 
         async function updateRadar(lat, lon) {
-            const range = 1.8; // ২০০ কিমি এরিয়া
-            const url = `https://opensky-network.org/api/states/all?lamin=${lat-range}&lamax=${lat+range}&lomin=${lon-range}&lomax=${lon+range}`;
+            const r = 2.5; 
+            const url = `https://opensky-network.org/api/states/all?lamin=${lat-r}&lamax=${lat+r}&lomin=${lon-r}&lomax=${lon+r}`;
 
             try {
                 const res = await fetch(url);
-                if (!res.ok) throw new Error("API Limit");
                 const data = await res.json();
                 const states = data.states || [];
-                
-                document.getElementById('count').innerText = states.length;
-                renderPlanes(states);
-            } catch (e) {
-                document.getElementById('status').innerText = "DATA BUSY";
-                console.log("API Limit Reached or Network Issue");
+                document.getElementById('count').innerText = `AIRCRAFT: ${states.length} DETECTED`;
+                document.getElementById('status').innerText = "SYSTEM: ACTIVE";
+                syncPlanes(states);
+            } catch (e) { 
+                document.getElementById('status').innerText = "SYSTEM: BUSY"; 
             }
         }
 
-        function renderPlanes(states) {
-            planeLayer.clearLayers();
+        function syncPlanes(states) {
+            const currentIds = new Set();
             states.forEach(s => {
                 const [icao, callsign, origin, , , lon, lat, alt, , vel, track] = s;
-                
-                if (lat && lon) {
-                    const planeMarkup = `
-                        <div style="transform: rotate(${(track || 0) - 45}deg);">
-                            <svg width="24" height="24" viewBox="0 0 24 24" fill="${NEON_BLUE}">
-                                <path d="M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z"/>
-                            </svg>
-                        </div>`;
+                if (!lat || !lon) return;
+                currentIds.add(icao);
 
+                const planeHtml = `<div style="transform: rotate(${(track || 0) - 45}deg);">
+                    <svg width="26" height="26" viewBox="0 0 24 24" fill="${PINK}">
+                        <path d="M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z"/>
+                    </svg>
+                </div>`;
+
+                const popupHtml = `
+                    <div style="min-width:160px">
+                        <b style="font-size:14px">CALLSIGN: ${callsign || 'N/A'}</b>
+                        <table class="info-table">
+                            <tr><td class="label">ORIGIN</td><td class="val">${origin}</td></tr>
+                            <tr><td class="label">SPEED</td><td class="val">${Math.round(vel*3.6)} km/h</td></tr>
+                            <tr><td class="label">ALTITUDE</td><td class="val">${Math.round(alt || 0)} m</td></tr>
+                            <tr><td class="label">HEADING</td><td class="val">${Math.round(track)}°</td></tr>
+                        </table>
+                    </div>
+                `;
+
+                if (activePlanes[icao]) {
+                    activePlanes[icao].marker.setLatLng([lat, lon]);
+                    activePlanes[icao].marker.getPopup().setContent(popupHtml);
+                    activePlanes[icao].history.push([lat, lon]);
+                    if (activePlanes[icao].history.length > 40) activePlanes[icao].history.shift();
+                    activePlanes[icao].data = { lat, lon, vel, track };
+                } else {
                     const marker = L.marker([lat, lon], {
-                        icon: L.divIcon({ html: planeMarkup, className: '', iconSize: [24, 24] })
-                    });
+                        icon: L.divIcon({ html: planeHtml, iconSize: [26, 26], className: '' })
+                    }).addTo(planeLayer);
 
-                    marker.bindPopup(`
-                        <div style="color:#000; font-family:monospace; font-size:12px;">
-                            <b>ID: ${callsign || 'N/A'}</b><br>
-                            ORIGIN: ${origin}<br>
-                            ALT: ${Math.round(alt || 0)}m<br>
-                            SPEED: ${Math.round((vel || 0) * 3.6)}km/h
-                        </div>
-                    `);
-                    planeLayer.addLayer(marker);
+                    // ডার্ক পিঙ্ক ট্রেইল (পলিলাইন)
+                    const polyline = L.polyline([], {color: PINK, weight: 2, opacity: 0.7, dashArray: '4, 8'}).addTo(pathLayer);
+
+                    marker.bindPopup(popupHtml);
+                    activePlanes[icao] = { marker, polyline, history: [[lat, lon]], data: { lat, lon, vel, track } };
                 }
             });
+
+            for (let id in activePlanes) {
+                if (!currentIds.has(id)) {
+                    pathLayer.removeLayer(activePlanes[id].polyline);
+                    planeLayer.removeLayer(activePlanes[id].marker);
+                    delete activePlanes[id];
+                }
+            }
+        }
+
+        function predictAndTrail() {
+            for (let id in activePlanes) {
+                const p = activePlanes[id];
+                if (!p.data.vel || !p.data.track) continue;
+
+                const speedInDeg = p.data.vel / 111111; 
+                const angleRad = (p.data.track - 90) * (Math.PI / 180);
+                const newLat = p.data.lat + (speedInDeg * Math.sin(-angleRad));
+                const newLon = p.data.lon + (speedInDeg * Math.cos(angleRad));
+
+                p.marker.setLatLng([newLat, newLon]);
+                p.data.lat = newLat;
+                p.data.lon = newLon;
+
+                p.history.push([newLat, newLon]);
+                if (p.history.length > 25) p.history.shift();
+                p.polyline.setLatLngs(p.history);
+            }
         }
 
         window.onload = () => {
-            // ইউজারের কাছ থেকে লোকেশন পাওয়ার ট্রাই
             navigator.geolocation.getCurrentPosition(
                 p => initRadar(p.coords.latitude, p.coords.longitude),
-                () => {
-                    console.log("Location Denied. Using Default.");
-                    initRadar(23.81, 90.41); // ঢাকা ডিফল্ট
-                },
-                { timeout: 10000 }
+                () => initRadar(23.81, 90.41),
+                { enableHighAccuracy: true }
             );
         };
     </script>
