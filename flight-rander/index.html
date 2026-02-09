@@ -10,341 +10,229 @@
 
     <style>
         :root {
-            --primary-color: #00ff00; /* Neon Green */
-            --accent-color: #ff00ff; /* Neon Pink */
-            --bg-color: #050505;
-            --terminal-bg: rgba(0, 0, 0, 0.95);
+            --primary: #00ff00; /* Neon Green */
+            --accent: #ff00ff;  /* Neon Pink */
+            --bg: #050505;
+            --terminal-bg: rgba(0, 0, 0, 0.9);
         }
-        body, html { margin: 0; padding: 0; height: 100%; background: var(--bg-color); font-family: 'VT323', monospace; color: var(--primary-color); overflow: hidden; position: relative; }
-        #map { height: 100vh; width: 100%; z-index: 1; filter: saturate(1.2) contrast(1.1); }
 
-        /* --- Scanline Effect (CRT Monitor Style) --- */
+        body, html { margin: 0; padding: 0; height: 100%; background: var(--bg); font-family: 'VT323', monospace; color: var(--primary); overflow: hidden; }
+        
+        #map { height: 100vh; width: 100%; z-index: 1; }
+
+        /* --- Overlay Effects (Click Fix) --- */
+        #scanlines, .glitch {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none; /* এটি সবচেয়ে গুরুত্বপূর্ণ: ম্যাপে ক্লিক করার বাধা সরিয়ে দেয় */
+            z-index: 5000;
+        }
+
         #scanlines {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 10000;
-            background: repeating-linear-gradient(
-                to bottom,
-                transparent 0%,
-                transparent 1px,
-                rgba(0, 0, 0, 0.3) 1px,
-                rgba(0, 0, 0, 0.3) 2px
-            );
-            pointer-events: none;
+            background: repeating-linear-gradient(to bottom, transparent 0%, transparent 1px, rgba(0, 0, 0, 0.3) 1px, rgba(0, 0, 0, 0.3) 2px);
             opacity: 0.3;
         }
 
-        /* --- Glitch Effect (CSS Animation) --- */
-        .glitch {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            pointer-events: none; z-index: 9999;
-            animation: glitch-anim 2.5s infinite linear alternate-reverse;
-            opacity: 0;
-        }
-
-        @keyframes glitch-anim {
-            0% { transform: translate(0, 0); opacity: 0; }
-            10% { opacity: 0.8; }
-            20% { transform: translate(-2px, 2px) scale(1.01); opacity: 0.6; }
-            30% { opacity: 0; }
-            40% { transform: translate(3px, -3px) scale(0.99); opacity: 0.7; }
-            50% { opacity: 0; }
-            60% { transform: translate(-1px, 1px); opacity: 0.5; }
-            70% { opacity: 0; }
-            80% { transform: translate(2px, -2px) scale(1.02); opacity: 0.8; }
-            90% { opacity: 0; }
-            100% { transform: translate(0, 0); opacity: 0; }
-        }
-
-        /* --- Terminal Console --- */
-        #terminal-output {
-            position: absolute; bottom: 0; left: 0; width: 100%; height: 150px;
-            background: var(--terminal-bg); z-index: 5000;
-            font-family: 'Share Tech Mono', monospace; font-size: 14px;
-            color: var(--primary-color); padding: 10px; box-sizing: border-box;
-            overflow-y: scroll; white-space: pre-wrap; word-wrap: break-word;
-            border-top: 2px solid var(--accent-color);
-            text-shadow: 0 0 5px var(--primary-color);
-        }
-        #terminal-output::-webkit-scrollbar { display: none; } /* Hide scrollbar */
-
-        /* --- Top Status Bar --- */
+        /* --- UI Elements --- */
         .status-bar {
             position: absolute; top: 0; left: 0; right: 0; height: 30px;
             background: var(--terminal-bg); z-index: 6000;
             display: flex; justify-content: space-between; align-items: center;
-            padding: 0 15px; border-bottom: 2px solid var(--accent-color);
-            font-size: 16px;
+            padding: 0 15px; border-bottom: 2px solid var(--accent);
+            text-shadow: 0 0 5px var(--primary);
         }
 
-        /* --- Search & Controls --- */
         .controls-panel {
-            position: absolute; top: 40px; right: 15px; z-index: 6000;
-            background: var(--terminal-bg); border: 1px solid var(--primary-color);
-            padding: 10px; border-radius: 5px;
-            box-shadow: 0 0 15px var(--primary-color);
+            position: absolute; top: 45px; right: 15px; z-index: 6000;
+            background: var(--terminal-bg); border: 1px solid var(--primary);
+            padding: 10px; border-radius: 5px; box-shadow: 0 0 15px var(--primary);
         }
-        .controls-panel input, .controls-panel button {
-            background: transparent; border: 1px solid var(--primary-color);
-            color: var(--primary-color); padding: 8px; margin-bottom: 5px;
-            width: 150px; outline: none; font-family: 'VT323', monospace;
-        }
-        .controls-panel button { width: 100%; cursor: pointer; }
-        .controls-panel button:hover { background: rgba(0, 255, 0, 0.2); }
 
-        /* --- Flight Info Card (Hacked Style) --- */
+        .controls-panel input {
+            background: transparent; border: 1px solid var(--primary);
+            color: var(--primary); padding: 5px; margin-bottom: 5px;
+            width: 140px; font-family: 'VT323'; outline: none;
+        }
+
+        .controls-panel button {
+            background: var(--primary); border: none; color: black;
+            padding: 5px; width: 100%; cursor: pointer; font-weight: bold;
+        }
+
+        /* --- Terminal --- */
+        #terminal-output {
+            position: absolute; bottom: 0; left: 0; width: 100%; height: 140px;
+            background: var(--terminal-bg); z-index: 5000;
+            font-family: 'Share Tech Mono', monospace; font-size: 13px;
+            padding: 10px; border-top: 2px solid var(--accent);
+            overflow-y: auto; text-shadow: 0 0 3px var(--primary);
+        }
+
+        /* --- Flight Card (Z-Index Fixed) --- */
         #flight-card {
-            position: absolute; bottom: -500px; left: 0; right: 0;
-            background: var(--terminal-bg); color: var(--primary-color);
-            transition: bottom 0.5s ease-in-out;
-            z-index: 7000; padding: 20px; border-radius: 10px 10px 0 0;
-            max-width: 450px; margin: auto; border: 2px solid var(--accent-color);
-            box-shadow: 0 -5px 20px var(--accent-color);
-            text-shadow: 0 0 5px var(--primary-color);
+            position: absolute; bottom: -500px; left: 50%; transform: translateX(-50%);
+            background: var(--terminal-bg); color: var(--primary);
+            transition: bottom 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            z-index: 7000; padding: 20px; border: 2px solid var(--accent);
+            width: 90%; max-width: 420px; box-shadow: 0 0 20px var(--accent);
         }
-        #flight-card.active { bottom: 150px; } /* Above terminal */
+        #flight-card.active { bottom: 160px; }
 
-        .card-head { border-bottom: 1px dashed var(--primary-color); padding-bottom: 10px; margin-bottom: 15px; }
-        .card-head span { font-size: 28px; font-weight: bold; color: var(--accent-color); }
-        .card-head div { font-size: 16px; color: var(--primary-color); }
+        .data-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 15px; }
+        .data-box { border: 1px solid var(--primary); padding: 8px; background: rgba(0, 255, 0, 0.05); }
 
-        .grid-data { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-        .data-box { background: rgba(0, 255, 0, 0.1); padding: 8px; border: 1px solid var(--primary-color); }
-        .label { font-size: 10px; color: var(--primary-color); text-transform: uppercase; opacity: 0.7; }
-        .value { font-size: 14px; font-weight: bold; }
-        .close-btn { position: absolute; top: 10px; right: 15px; font-size: 24px; cursor: pointer; color: var(--accent-color); }
+        /* --- Aircraft Markers --- */
+        .plane-marker { 
+            filter: drop-shadow(0 0 5px var(--primary));
+            cursor: pointer !important;
+        }
 
-        /* --- Leaflet Specifics (Hacking Theme) --- */
-        .leaflet-control-layers { background: var(--terminal-bg) !important; border: 1px solid var(--primary-color) !important; color: var(--primary-color) !important; }
-        .leaflet-control-layers-selector + span { color: var(--primary-color) !important; }
-        .leaflet-marker-icon { transition: transform 1s linear !important; filter: drop-shadow(0 0 5px var(--primary-color)); }
-        .leaflet-popup-content-wrapper, .leaflet-popup-tip { background: var(--terminal-bg) !important; color: var(--primary-color) !important; border: 1px solid var(--primary-color) !important; text-shadow: 0 0 5px var(--primary-color); }
-        .plane-marker svg { transition: transform 0.5s ease-in-out; }
+        .leaflet-marker-icon { z-index: 10000 !important; } /* বিমানকে সবার উপরে রাখার জন্য */
     </style>
 </head>
 <body>
+
     <div id="scanlines"></div>
     <div class="glitch"></div>
 
     <div class="status-bar">
-        <span>// STATUS: OPERATIONAL</span>
-        <span id="system-time">// 12:34:56</span>
+        <span>// CSM_COVERT_OS: ACTIVE</span>
+        <span id="system-time">// 00:00:00</span>
     </div>
 
     <div class="controls-panel">
-        <input type="text" id="searchBox" placeholder="ACCESS FLIGHT ID">
-        <button onclick="searchFlight()">INITIATE SEARCH</button>
-        <button onclick="toggleTerminal()">TOGGLE CONSOLE</button>
+        <input type="text" id="searchBox" placeholder="CALLSIGN_ID">
+        <button onclick="searchFlight()">SCAN TARGET</button>
     </div>
 
     <div id="map"></div>
 
     <div id="flight-card">
-        <span class="close-btn" onclick="closeCard()">[ X ]</span>
-        <div class="card-head">
-            <span id="c-call">// TARGET: N/A</span>
-            <div id="c-icao24">ADDR: #000000</div>
+        <div style="display:flex; justify-content:space-between; align-items:center">
+            <span id="c-call" style="font-size:26px; color:var(--accent); font-weight:bold;">N/A</span>
+            <span onclick="closeCard()" style="cursor:pointer; color:var(--accent)">[ CLOSE ]</span>
         </div>
-        <div class="grid-data">
-            <div class="data-box"><span class="label">Altitude</span><span id="c-alt" class="value">-</span></div>
-            <div class="data-box"><span class="label">Ground Speed</span><span id="c-speed" class="value">-</span></div>
-            <div class="data-box"><span class="label">Heading</span><span id="c-track" class="value">-</span></div>
-            <div class="data-box"><span class="label">Vertical Rate</span><span id="c-vert" class="value">-</span></div>
-            <div class="data-box"><span class="label">Origin</span><span id="c-country" class="value">-</span></div>
-            <div class="data-box"><span class="label">Squawk</span><span id="c-squawk" class="value">-</span></div>
+        <div id="c-icao24" style="font-size:14px; opacity:0.8; font-family:'Share Tech Mono'">ADDR: #000000</div>
+        
+        <div class="data-grid">
+            <div class="data-box"><div style="font-size:10px; opacity:0.6">ALTITUDE</div><span id="c-alt">-</span></div>
+            <div class="data-box"><div style="font-size:10px; opacity:0.6">G-SPEED</div><span id="c-speed">-</span></div>
+            <div class="data-box"><div style="font-size:10px; opacity:0.6">HEADING</div><span id="c-track">-</span></div>
+            <div class="data-box"><div style="font-size:10px; opacity:0.6">V-RATE</div><span id="c-vert">-</span></div>
+            <div class="data-box" style="grid-column: span 2;"><div style="font-size:10px; opacity:0.6">ORIGIN</div><span id="c-country">-</span></div>
         </div>
-        <div style="margin-top: 15px; text-align: center; font-size: 12px; color: var(--accent-color);">
-            [// DECRYPTED FLIGHT DATA //]
-        </div>
+        <div style="text-align:center; margin-top:15px; font-size:12px; color:var(--accent)">// DATA_DECRYPTED_SUCCESSFULLY //</div>
     </div>
 
     <div id="terminal-output">
-        <span style="color: var(--accent-color); font-weight: bold;">CSM COVERT OS_V1.0.1</span><br>
-        <span style="color: var(--primary-color);">> Initializing core modules...</span><br>
+        <span style="color:var(--accent)">[SYSTEM] CSM ELITE RADAR INITIALIZED...</span><br>
+        <span>[SYSTEM] ACCESSING SATELLITE FEED...</span><br>
     </div>
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-
     <script>
-        let map, planeLayer, pathLayer;
-        let activePlanes = {}; 
-        const PRIMARY = "#00ff00"; // Neon Green
-        const ACCENT = "#ff00ff";  // Neon Pink
-        let terminalVisible = true;
-        let logIndex = 0;
-        const terminalLogs = [
-            ">> Establishing secure connection to OpenSky_API...",
-            ">> Data stream initiated. Monitoring global airspace.",
-            ">> Decrypting ADS-B Transmissions...",
-            ">> Identifying potential targets...",
-            ">> Radar sweep in progress. Status: NOMINAL.",
-            ">> Filtering civilian traffic. Focus: UNKNOWN. "
-        ];
+        let map, planeLayer;
+        let activePlanes = {};
+        const COLOR = "#00ff00";
 
-        function logToTerminal(message) {
-            const terminal = document.getElementById('terminal-output');
-            terminal.innerHTML += `> ${message}<br>`;
-            terminal.scrollTop = terminal.scrollHeight;
+        function log(msg) {
+            const t = document.getElementById('terminal-output');
+            t.innerHTML += `> ${msg}<br>`;
+            t.scrollTop = t.scrollHeight;
         }
 
-        function updateSystemTime() {
-            const now = new Date();
-            document.getElementById('system-time').innerText = `// ${now.toLocaleTimeString()}`;
+        async function init() {
+            const base = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png');
+            map = L.map('map', { zoomControl: false, layers: [base] }).setView([23.81, 90.41], 9);
+            planeLayer = L.layerGroup().addTo(map);
+
+            setInterval(() => {
+                document.getElementById('system-time').innerText = `// ${new Date().toLocaleTimeString()}`;
+            }, 1000);
+
+            fetchData();
+            setInterval(fetchData, 10000);
+            log("[OK] SATELLITE LINK ESTABLISHED.");
         }
 
-        // --- Core Radar Logic ---
-        function getPlaneIcon(category, zoom) {
-            let size = zoom * 2.2; 
-            let path = "M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z"; 
-
-            if (category === 7) { path = "M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-5-9h10v2H7z"; size = zoom * 1.5; }
-            else if (category === 3) { size = zoom * 3.2; }
-
+        function getIcon(track, zoom) {
+            const size = zoom * 2.5;
             return L.divIcon({
-                html: `<div class="plane-marker"><svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="${PRIMARY}"><path d="${path}"/></svg></div>`,
+                html: `<div class="plane-marker" style="transform: rotate(${track}deg)">
+                    <svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="${COLOR}">
+                        <path d="M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z"/>
+                    </svg></div>`,
                 iconSize: [size, size],
                 className: ''
             });
         }
 
-        async function initRadar(lat, lon, zoom = 9) {
-            logToTerminal(">> Establishing map interface connection...");
-            const dark = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png');
-            const sat = L.tileLayer('https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}');
-            
-            map = L.map('map', { zoomControl: false, layers: [dark] }).setView([lat, lon], zoom);
-            L.control.layers({"Radar View": dark, "Satellite Grid": sat}, null, {position: 'topright'}).addTo(map);
-
-            planeLayer = L.layerGroup().addTo(map);
-            pathLayer = L.layerGroup().addTo(map);
-
-            map.on('moveend', () => {
-                const c = map.getCenter();
-                window.history.replaceState(null, null, `#${c.lat.toFixed(4)},${c.lng.toFixed(4)},${map.getZoom()}`);
-                logToTerminal(`>> Map re-calibrated. New focus: ${c.lat.toFixed(2)},${c.lng.toFixed(2)}`);
-                fetchData(); 
-            });
-
-            setInterval(updateSystemTime, 1000);
-            setInterval(() => { logToTerminal(terminalLogs[logIndex++ % terminalLogs.length]); }, 7000); // Log random messages
-            
-            fetchData();
-            setInterval(fetchData, 10000);
-            setInterval(smoothMove, 1000);
-            logToTerminal(">> Radar core activated. Awaiting data stream...");
-        }
-
         async function fetchData() {
             const c = map.getCenter();
-            const r = 4.0;
+            const r = 3.5;
             const url = `https://opensky-network.org/api/states/all?lamin=${c.lat-r}&lamax=${c.lat+r}&lomin=${c.lng-r}&lomax=${c.lng+r}`;
 
             try {
                 const res = await fetch(url);
                 const data = await res.json();
-                updateMap(data.states || []);
-            } catch (e) {
-                logToTerminal(">> ERROR: Data stream interrupted. Retrying...");
-            }
+                updateMarkers(data.states || []);
+            } catch (e) { log("[ERR] STREAM_INTERRUPTED."); }
         }
 
-        function updateMap(states) {
-            document.getElementById('count').innerText = `ACTIVE TARGETS: ${states.length}`;
-            const currentIds = new Set();
+        function updateMarkers(states) {
+            const ids = new Set();
             const zoom = map.getZoom();
 
             states.forEach(s => {
-                const [icao24, call, country, , , lon, lat, baro_alt, on_ground, vel, track, vert, , geo_alt, squawk, , category] = s;
+                const [icao, call, country, , , lon, lat, alt, , vel, track, vert] = s;
                 if (!lat || !lon) return;
-                currentIds.add(icao24);
+                ids.add(icao);
 
-                if (activePlanes[icao24]) {
-                    activePlanes[icao24].marker.setLatLng([lat, lon]);
-                    activePlanes[icao24].marker.setIcon(getPlaneIcon(category, zoom));
-                    const el = activePlanes[icao24].marker.getElement();
-                    if(el) el.style.transform = `rotate(${track || 0}deg)`;
-                    activePlanes[icao24].data = s;
+                if (activePlanes[icao]) {
+                    activePlanes[icao].setLatLng([lat, lon]);
+                    activePlanes[icao].setIcon(getIcon(track, zoom));
+                    activePlanes[icao].data = s;
                 } else {
-                    const marker = L.marker([lat, lon], { icon: getPlaneIcon(category, zoom) }).addTo(planeLayer);
-                    marker.on('click', () => showInfo(icao24));
-                    activePlanes[icao24] = { marker, poly: L.polyline([], {color: ACCENT, weight: 2, opacity: 0.4}).addTo(pathLayer), history: [[lat, lon]], data: s };
-                    logToTerminal(`>> NEW TARGET DETECTED: ${call || icao24}`);
+                    const m = L.marker([lat, lon], { icon: getIcon(track, zoom) }).addTo(planeLayer);
+                    m.on('click', () => {
+                        document.getElementById('c-call').innerText = call ? "// " + call.trim() : "// PRIVATE";
+                        document.getElementById('c-icao24').innerText = "ADDR: #" + icao.toUpperCase();
+                        document.getElementById('c-alt').innerText = alt ? Math.round(alt*3.28).toLocaleString() + " FT" : "GROUND";
+                        document.getElementById('c-speed').innerText = Math.round(vel*1.94) + " KTS";
+                        document.getElementById('c-track').innerText = Math.round(track) + " DEG";
+                        document.getElementById('c-vert').innerText = Math.round(vert*196) + " FPM";
+                        document.getElementById('c-country').innerText = country;
+                        document.getElementById('flight-card').classList.add('active');
+                        log(`[TARGET_ACQUIRED] ${icao.toUpperCase()}`);
+                    });
+                    activePlanes[icao] = m;
+                    activePlanes[icao].data = s;
+                    log(`[NEW_SIGNAL] ADDR_${icao.toUpperCase()}`);
                 }
             });
 
             for (let id in activePlanes) {
-                if (!currentIds.has(id)) {
-                    planeLayer.removeLayer(activePlanes[id].marker);
-                    pathLayer.removeLayer(activePlanes[id].poly);
+                if (!ids.has(id)) {
+                    planeLayer.removeLayer(activePlanes[id]);
                     delete activePlanes[id];
-                    logToTerminal(`>> TARGET LOST: ${id}`);
                 }
             }
         }
 
         function searchFlight() {
-            const query = document.getElementById('searchBox').value.toUpperCase().trim();
+            const q = document.getElementById('searchBox').value.toUpperCase().trim();
             for (let id in activePlanes) {
-                if ((activePlanes[id].data[1] || "").trim() === query || id.toUpperCase() === query) {
-                    map.flyTo(activePlanes[id].marker.getLatLng(), 11);
-                    showInfo(id);
-                    logToTerminal(`>> TARGET ACQUIRED: ${query}`);
+                if (id.toUpperCase() === q || (activePlanes[id].data[1] || "").trim() === q) {
+                    map.flyTo(activePlanes[id].getLatLng(), 11);
+                    activePlanes[id].fire('click');
                     return;
                 }
             }
-            logToTerminal(`>> WARNING: Target "${query}" not found in current range.`);
-        }
-
-        function showInfo(id) {
-            const s = activePlanes[id].data;
-            document.getElementById('c-call').innerText = `// TARGET: ${s[1] || 'UNKNOWN'}`;
-            document.getElementById('c-icao24').innerText = `ADDR: #${s[0].toUpperCase()}`;
-            document.getElementById('c-country').innerText = `ORIGIN: ${s[2]}`;
-            document.getElementById('c-alt').innerText = s[7] ? `${Math.round(s[7]*3.28).toLocaleString()} ft` : 'GROUND';
-            document.getElementById('c-speed').innerText = s[9] ? `${Math.round(s[9]*1.94)} kts` : '0 kts';
-            document.getElementById('c-track').innerText = `${Math.round(s[10])}°`;
-            document.getElementById('c-vert').innerText = s[11] ? `${Math.round(s[11]*196)} fpm` : '0 fpm';
-            document.getElementById('c-squawk').innerText = s[14] || 'N/A';
-            document.getElementById('flight-card').classList.add('active');
-            // document.getElementById('blip').play(); // Optional sound
+            log(`[SCAN_FAILED] TARGET ${q} NOT IN RANGE.`);
         }
 
         function closeCard() { document.getElementById('flight-card').classList.remove('active'); }
 
-        function smoothMove() {
-            for (let id in activePlanes) {
-                const p = activePlanes[id];
-                const s = p.data;
-                if (!s[9]) continue;
-                const d = s[9] / 111111;
-                const r = (s[10] - 90) * (Math.PI / 180);
-                s[6] += d * Math.sin(-r); s[5] += d * Math.cos(r);
-                p.marker.setLatLng([s[6], s[5]]);
-                
-                const el = p.marker.getElement();
-                if(el) el.style.transform = `rotate(${s[10]}deg)`;
-
-                p.history.push([s[6], s[5]]);
-                if (p.history.length > 20) p.history.shift();
-                p.poly.setLatLngs(p.history);
-            }
-        }
-
-        function toggleTerminal() {
-            const terminal = document.getElementById('terminal-output');
-            if (terminalVisible) {
-                terminal.style.height = '0';
-                document.getElementById('flight-card').style.bottom = '0';
-            } else {
-                terminal.style.height = '150px';
-                document.getElementById('flight-card').style.bottom = '150px';
-            }
-            terminalVisible = !terminalVisible;
-        }
-
-        window.onload = () => {
-            const h = window.location.hash.substring(1).split(',');
-            if (h.length === 3) initRadar(parseFloat(h[0]), parseFloat(h[1]), parseInt(h[2]));
-            else navigator.geolocation.getCurrentPosition(p => initRadar(p.coords.latitude, p.coords.longitude), () => initRadar(23.81, 90.41));
-        };
+        window.onload = init;
     </script>
 </body>
 </html>
