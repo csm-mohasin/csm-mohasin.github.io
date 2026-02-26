@@ -3,14 +3,11 @@ import { OrbitControls } from 'https://cdn.jsdelivr.net/npm/three@0.115.0/exampl
 import { OBJLoader } from 'https://cdn.jsdelivr.net/npm/three@0.115.0/examples/jsm/loaders/OBJLoader.js';
 import { MeshSurfaceSampler } from 'https://cdn.jsdelivr.net/npm/three@0.115.0/examples/jsm/math/MeshSurfaceSampler.js';
 
-// soundcloud widget section
-var widget = SC.Widget(scWidget);
-widget.bind(SC.Widget.Events.PLAY, ()=>{
+// play button section
+document.getElementById("playBtn").addEventListener("click", () => {
+  window.open("https://soundcloud.com/tracks/1677457809", "_blank");
   veil.style.display = "none";
   scWidget.style.display = "none";
-  /*scWidget.style.height = "20vh";
-  scWidget.style.left = "0px";
-  scWidget.style.top = "0px";*/
   sequence();
 });
 ////////////////////////////
@@ -203,7 +200,7 @@ ctx.fillStyle = "#f00";
 ctx.textAlign = "center";
 ctx.textBaseline = "middle";
 ctx.font = "bold 56px Arial";
-ctx.fillText("SM", cnvs.width * 0.5, cnvs.height * 0.5);
+ctx.fillText("CSM", cnvs.width * 0.5, cnvs.height * 0.5);
 var tex2020 = new THREE.CanvasTexture(cnvs); // displays "SM"
 /////////////////////////////////////////////////////////////////
 
