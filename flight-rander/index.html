@@ -3,236 +3,171 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CSM // COVERT RADAR_OS</title>
-    
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <link href="https://fonts.googleapis.com/css2?family=VT323&family=Share+Tech+Mono&display=swap" rel="stylesheet">
-
+    <title>Live Flight Tracker | CSM</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
     <style>
-        :root {
-            --primary: #00ff00; /* Neon Green */
-            --accent: #ff00ff;  /* Neon Pink */
-            --bg: #050505;
-            --terminal-bg: rgba(0, 0, 0, 0.9);
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
+
+        body {
+            background: #0f172a;
+            color: white;
+            overflow: hidden; /* স্ক্রল বন্ধ রাখার জন্য */
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
         }
 
-        body, html { margin: 0; padding: 0; height: 100%; background: var(--bg); font-family: 'VT323', monospace; color: var(--primary); overflow: hidden; }
-        
-        #map { height: 100vh; width: 100%; z-index: 1; }
-
-        /* --- Overlay Effects (Click Fix) --- */
-        #scanlines, .glitch {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            pointer-events: none; /* এটি সবচেয়ে গুরুত্বপূর্ণ: ম্যাপে ক্লিক করার বাধা সরিয়ে দেয় */
-            z-index: 5000;
+        /* Background Animation */
+        .bg-glow {
+            position: absolute;
+            width: 300px;
+            height: 300px;
+            background: rgba(37, 99, 235, 0.2);
+            filter: blur(100px);
+            border-radius: 50%;
+            z-index: -1;
         }
 
-        #scanlines {
-            background: repeating-linear-gradient(to bottom, transparent 0%, transparent 1px, rgba(0, 0, 0, 0.3) 1px, rgba(0, 0, 0, 0.3) 2px);
-            opacity: 0.3;
+        .container {
+            text-align: center;
+            transition: all 0.5s ease;
+            z-index: 10;
         }
 
-        /* --- UI Elements --- */
-        .status-bar {
-            position: absolute; top: 0; left: 0; right: 0; height: 30px;
-            background: var(--terminal-bg); z-index: 6000;
-            display: flex; justify-content: space-between; align-items: center;
-            padding: 0 15px; border-bottom: 2px solid var(--accent);
-            text-shadow: 0 0 5px var(--primary);
+        h1 { font-size: 2rem; margin-bottom: 10px; color: #38bdf8; }
+        p { font-size: 0.9rem; margin-bottom: 20px; opacity: 0.8; }
+
+        .btn {
+            background: #2563eb;
+            color: white;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 50px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.3s;
+            box-shadow: 0 4px 15px rgba(37, 99, 235, 0.4);
         }
 
-        .controls-panel {
-            position: absolute; top: 45px; right: 15px; z-index: 6000;
-            background: var(--terminal-bg); border: 1px solid var(--primary);
-            padding: 10px; border-radius: 5px; box-shadow: 0 0 15px var(--primary);
+        .btn:hover { background: #1d4ed8; transform: scale(1.05); }
+
+        /* Iframe Container - Stylish Window */
+        #map-container {
+            display: none;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 80vh;
+            background: #1e293b;
+            border-radius: 30px 30px 0 0;
+            box-shadow: 0 -10px 40px rgba(0,0,0,0.5);
+            transform: translateY(100%);
+            transition: transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+            z-index: 100;
         }
 
-        .controls-panel input {
-            background: transparent; border: 1px solid var(--primary);
-            color: var(--primary); padding: 5px; margin-bottom: 5px;
-            width: 140px; font-family: 'VT323'; outline: none;
+        #map-container.active {
+            display: block;
+            transform: translateY(0);
         }
 
-        .controls-panel button {
-            background: var(--primary); border: none; color: black;
-            padding: 5px; width: 100%; cursor: pointer; font-weight: bold;
+        .map-header {
+            padding: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
         }
 
-        /* --- Terminal --- */
-        #terminal-output {
-            position: absolute; bottom: 0; left: 0; width: 100%; height: 140px;
-            background: var(--terminal-bg); z-index: 5000;
-            font-family: 'Share Tech Mono', monospace; font-size: 13px;
-            padding: 10px; border-top: 2px solid var(--accent);
-            overflow-y: auto; text-shadow: 0 0 3px var(--primary);
+        .close-btn {
+            background: #ef4444;
+            color: white;
+            border: none;
+            padding: 5px 15px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 12px;
         }
 
-        /* --- Flight Card (Z-Index Fixed) --- */
-        #flight-card {
-            position: absolute; bottom: -500px; left: 50%; transform: translateX(-50%);
-            background: var(--terminal-bg); color: var(--primary);
-            transition: bottom 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            z-index: 7000; padding: 20px; border: 2px solid var(--accent);
-            width: 90%; max-width: 420px; box-shadow: 0 0 20px var(--accent);
-        }
-        #flight-card.active { bottom: 160px; }
-
-        .data-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 15px; }
-        .data-box { border: 1px solid var(--primary); padding: 8px; background: rgba(0, 255, 0, 0.05); }
-
-        /* --- Aircraft Markers --- */
-        .plane-marker { 
-            filter: drop-shadow(0 0 5px var(--primary));
-            cursor: pointer !important;
+        iframe {
+            width: 100%;
+            height: calc(100% - 60px);
+            border: none;
         }
 
-        .leaflet-marker-icon { z-index: 10000 !important; } /* বিমানকে সবার উপরে রাখার জন্য */
+        .footer {
+            margin-top: 40px;
+            font-size: 0.8rem;
+            opacity: 0.6;
+        }
+
+        .dev-name { color: #38bdf8; font-weight: 600; }
+
+        #status { font-size: 0.8rem; margin-top: 15px; color: #facc15; }
     </style>
 </head>
 <body>
 
-    <div id="scanlines"></div>
-    <div class="glitch"></div>
+    <div class="bg-glow"></div>
 
-    <div class="status-bar">
-        <span>// CSM_COVERT_OS: ACTIVE</span>
-        <span id="system-time">// 00:00:00</span>
-    </div>
-
-    <div class="controls-panel">
-        <input type="text" id="searchBox" placeholder="CALLSIGN_ID">
-        <button onclick="searchFlight()">SCAN TARGET</button>
-    </div>
-
-    <div id="map"></div>
-
-    <div id="flight-card">
-        <div style="display:flex; justify-content:space-between; align-items:center">
-            <span id="c-call" style="font-size:26px; color:var(--accent); font-weight:bold;">N/A</span>
-            <span onclick="closeCard()" style="cursor:pointer; color:var(--accent)">[ CLOSE ]</span>
-        </div>
-        <div id="c-icao24" style="font-size:14px; opacity:0.8; font-family:'Share Tech Mono'">ADDR: #000000</div>
+    <div class="container" id="main-content">
+        <h1>Live Flight Radar</h1>
+        <p>আপনার রিয়েল-টাইম লোকেশন অনুযায়ী ফ্লাইট দেখুন</p>
+        <button class="btn" onclick="openMap()">ম্যাপ লোড করুন</button>
+        <div id="status"></div>
         
-        <div class="data-grid">
-            <div class="data-box"><div style="font-size:10px; opacity:0.6">ALTITUDE</div><span id="c-alt">-</span></div>
-            <div class="data-box"><div style="font-size:10px; opacity:0.6">G-SPEED</div><span id="c-speed">-</span></div>
-            <div class="data-box"><div style="font-size:10px; opacity:0.6">HEADING</div><span id="c-track">-</span></div>
-            <div class="data-box"><div style="font-size:10px; opacity:0.6">V-RATE</div><span id="c-vert">-</span></div>
-            <div class="data-box" style="grid-column: span 2;"><div style="font-size:10px; opacity:0.6">ORIGIN</div><span id="c-country">-</span></div>
+        <div class="footer">
+            Project by <span class="dev-name">Csm Mohasin Alam</span>
         </div>
-        <div style="text-align:center; margin-top:15px; font-size:12px; color:var(--accent)">// DATA_DECRYPTED_SUCCESSFULLY //</div>
     </div>
 
-    <div id="terminal-output">
-        <span style="color:var(--accent)">[SYSTEM] CSM ELITE RADAR INITIALIZED...</span><br>
-        <span>[SYSTEM] ACCESSING SATELLITE FEED...</span><br>
+    <div id="map-container">
+        <div class="map-header">
+            <span>Live Radar View</span>
+            <button class="close-btn" onclick="closeMap()">বন্ধ করুন</button>
+        </div>
+        <iframe id="flight-iframe" src=""></iframe>
     </div>
 
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
-        let map, planeLayer;
-        let activePlanes = {};
-        const COLOR = "#00ff00";
+        function openMap() {
+            const status = document.getElementById('status');
+            const mapContainer = document.getElementById('map-container');
+            const iframe = document.getElementById('flight-iframe');
 
-        function log(msg) {
-            const t = document.getElementById('terminal-output');
-            t.innerHTML += `> ${msg}<br>`;
-            t.scrollTop = t.scrollHeight;
-        }
-
-        async function init() {
-            const base = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png');
-            map = L.map('map', { zoomControl: false, layers: [base] }).setView([23.81, 90.41], 9);
-            planeLayer = L.layerGroup().addTo(map);
-
-            setInterval(() => {
-                document.getElementById('system-time').innerText = `// ${new Date().toLocaleTimeString()}`;
-            }, 1000);
-
-            fetchData();
-            setInterval(fetchData, 10000);
-            log("[OK] SATELLITE LINK ESTABLISHED.");
-        }
-
-        function getIcon(track, zoom) {
-            const size = zoom * 2.5;
-            return L.divIcon({
-                html: `<div class="plane-marker" style="transform: rotate(${track}deg)">
-                    <svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="${COLOR}">
-                        <path d="M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z"/>
-                    </svg></div>`,
-                iconSize: [size, size],
-                className: ''
-            });
-        }
-
-        async function fetchData() {
-            const c = map.getCenter();
-            const r = 3.5;
-            const url = `https://opensky-network.org/api/states/all?lamin=${c.lat-r}&lamax=${c.lat+r}&lomin=${c.lng-r}&lomax=${c.lng+r}`;
-
-            try {
-                const res = await fetch(url);
-                const data = await res.json();
-                updateMarkers(data.states || []);
-            } catch (e) { log("[ERR] STREAM_INTERRUPTED."); }
-        }
-
-        function updateMarkers(states) {
-            const ids = new Set();
-            const zoom = map.getZoom();
-
-            states.forEach(s => {
-                const [icao, call, country, , , lon, lat, alt, , vel, track, vert] = s;
-                if (!lat || !lon) return;
-                ids.add(icao);
-
-                if (activePlanes[icao]) {
-                    activePlanes[icao].setLatLng([lat, lon]);
-                    activePlanes[icao].setIcon(getIcon(track, zoom));
-                    activePlanes[icao].data = s;
-                } else {
-                    const m = L.marker([lat, lon], { icon: getIcon(track, zoom) }).addTo(planeLayer);
-                    m.on('click', () => {
-                        document.getElementById('c-call').innerText = call ? "// " + call.trim() : "// PRIVATE";
-                        document.getElementById('c-icao24').innerText = "ADDR: #" + icao.toUpperCase();
-                        document.getElementById('c-alt').innerText = alt ? Math.round(alt*3.28).toLocaleString() + " FT" : "GROUND";
-                        document.getElementById('c-speed').innerText = Math.round(vel*1.94) + " KTS";
-                        document.getElementById('c-track').innerText = Math.round(track) + " DEG";
-                        document.getElementById('c-vert').innerText = Math.round(vert*196) + " FPM";
-                        document.getElementById('c-country').innerText = country;
-                        document.getElementById('flight-card').classList.add('active');
-                        log(`[TARGET_ACQUIRED] ${icao.toUpperCase()}`);
-                    });
-                    activePlanes[icao] = m;
-                    activePlanes[icao].data = s;
-                    log(`[NEW_SIGNAL] ADDR_${icao.toUpperCase()}`);
-                }
-            });
-
-            for (let id in activePlanes) {
-                if (!ids.has(id)) {
-                    planeLayer.removeLayer(activePlanes[id]);
-                    delete activePlanes[id];
-                }
+            if (navigator.geolocation) {
+                status.textContent = "লোকেশন পারমিশন নেওয়া হচ্ছে...";
+                
+                navigator.geolocation.getCurrentPosition((position) => {
+                    const lat = position.coords.latitude;
+                    const lon = position.coords.longitude;
+                    
+                    // Flightradar24 এর লিঙ্ক তৈরি
+                    const mapUrl = `https://www.flightradar24.com/${lat.toFixed(2)},${lon.toFixed(2)}/10`;
+                    
+                    iframe.src = mapUrl;
+                    status.textContent = "";
+                    
+                    // স্লাইড অ্যানিমেশন শুরু
+                    mapContainer.classList.add('active');
+                }, (error) => {
+                    status.textContent = "লোকেশন পাওয়া যায়নি। দয়া করে পারমিশন দিন।";
+                });
+            } else {
+                status.textContent = "আপনার ব্রাউজার এটি সাপোর্ট করে না।";
             }
         }
 
-        function searchFlight() {
-            const q = document.getElementById('searchBox').value.toUpperCase().trim();
-            for (let id in activePlanes) {
-                if (id.toUpperCase() === q || (activePlanes[id].data[1] || "").trim() === q) {
-                    map.flyTo(activePlanes[id].getLatLng(), 11);
-                    activePlanes[id].fire('click');
-                    return;
-                }
-            }
-            log(`[SCAN_FAILED] TARGET ${q} NOT IN RANGE.`);
+        function closeMap() {
+            const mapContainer = document.getElementById('map-container');
+            mapContainer.classList.remove('active');
+            setTimeout(() => {
+                document.getElementById('flight-iframe').src = "";
+            }, 600);
         }
-
-        function closeCard() { document.getElementById('flight-card').classList.remove('active'); }
-
-        window.onload = init;
     </script>
 </body>
 </html>
