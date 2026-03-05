@@ -85,24 +85,7 @@ body.cur-link #cursor-ring .cd{transform:translate(-50%,-50%) scale(0)}
 ══════════════════════════════════════════════════════════ */
 #scroll-prog{position:fixed;top:0;left:0;height:2px;z-index:9999;background:linear-gradient(90deg,var(--accent-d),var(--accent));width:0;transition:width .08s linear}
 
-/* ══════════════════════════════════════════════════════════
-   PRELOADER
-══════════════════════════════════════════════════════════ */
-#preloader{
-  position:fixed;inset:0;z-index:999999;background:var(--cream);
-  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;
-  transition:opacity .8s ease,transform .8s ease
-}
-#preloader.gone{opacity:0;transform:translateY(-20px);pointer-events:none}
-.pl-logo{font-family:var(--fd);font-size:clamp(28px,5vw,52px);font-weight:300;color:var(--ink);letter-spacing:.06em;overflow:hidden}
-.pl-logo span{display:inline-block;opacity:0;transform:translateY(60px);animation:plChar .7s var(--ease) forwards}
-.pl-logo span:nth-child(1){animation-delay:.05s}.pl-logo span:nth-child(2){animation-delay:.12s}.pl-logo span:nth-child(3){animation-delay:.19s}.pl-logo span:nth-child(4){animation-delay:.26s}.pl-logo span:nth-child(5){animation-delay:.33s}.pl-logo span:nth-child(6){animation-delay:.4s}.pl-logo span:nth-child(7){animation-delay:.47s}.pl-logo span:nth-child(8){animation-delay:.54s}.pl-logo span:nth-child(9){animation-delay:.61s}.pl-logo span:nth-child(10){animation-delay:.68s}.pl-logo span:nth-child(11){animation-delay:.75s}.pl-logo span:nth-child(12){animation-delay:.82s}.pl-logo span:nth-child(13){animation-delay:.89s}.pl-logo span:nth-child(14){animation-delay:.96s}
-@keyframes plChar{to{opacity:1;transform:translateY(0)}}
-.pl-bar{width:140px;height:1px;background:var(--border);overflow:hidden;margin-top:8px}
-.pl-bar-f{height:100%;width:0%;background:var(--accent);animation:plFill 1.8s ease .4s forwards}
-@keyframes plFill{to{width:100%}}
-.pl-tag{font-family:var(--fm);font-size:11px;color:var(--ink-muted);letter-spacing:.18em;text-transform:uppercase}
-.pl-count{font-family:var(--fm);font-size:28px;color:var(--accent);letter-spacing:.05em}
+
 
 /* ══════════════════════════════════════════════════════════
    PAGE TRANSITION CURTAIN
@@ -1135,17 +1118,7 @@ footer{border-top:1px solid var(--border);padding:clamp(28px,4vw,44px) clamp(16p
 <!-- CURSOR -->
 <div id="cursor-ring"><div class="cr"></div><div class="cd"></div></div>
 
-<!-- PRELOADER -->
-<div id="preloader">
-  <div class="pl-logo">
-    <span>C</span><span>S</span><span>M</span><span>&nbsp;</span>
-    <span>M</span><span>o</span><span>h</span><span>a</span><span>s</span><span>i</span><span>n</span><span>&nbsp;</span>
-    <span>A</span><span>l</span><span>a</span><span>m</span>
-  </div>
-  <div class="pl-bar"><div class="pl-bar-f"></div></div>
-  <div class="pl-count" id="pl-count">0%</div>
-  <div class="pl-tag">Initializing Portfolio</div>
-</div>
+
 
 <!-- PAGE TRANSITION CURTAIN -->
 <div id="curtain">
@@ -1615,21 +1588,6 @@ footer{border-top:1px solid var(--border);padding:clamp(28px,4vw,44px) clamp(16p
 </div>
 
 <script>
-/* ═══════════════════════════════════════════════════════════
-   PRELOADER
-═══════════════════════════════════════════════════════════ */
-const plCount = document.getElementById('pl-count');
-let pct = 0;
-const plTimer = setInterval(()=>{
-  pct += Math.random()*8+4;
-  if(pct>=100){pct=100;clearInterval(plTimer)}
-  plCount.textContent = Math.floor(pct)+'%';
-},80);
-window.addEventListener('load',()=>{
-  setTimeout(()=>document.getElementById('preloader').classList.add('gone'),2100);
-  setTimeout(()=>document.getElementById('wip-badge').classList.add('show'),3000);
-});
-
 /* ═══════════════════════════════════════════════════════════
    CURSOR — smooth lag + trail
 ═══════════════════════════════════════════════════════════ */
@@ -2368,7 +2326,10 @@ function curtainOut(){
     s.style.transform='translateY(-100%)';
   });
 }
-setTimeout(curtainOut,2300);
+setTimeout(curtainOut,100);
+window.addEventListener('load',()=>{
+  setTimeout(()=>document.getElementById('wip-badge').classList.add('show'),800);
+});
 
 /* ═══════════════════════════════════════════════════════════
    EASTER EGG — Konami Code
