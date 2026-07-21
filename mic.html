@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Mic → Speaker Live</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: radial-gradient(circle at 50% 0%, #1b1f3b, #0a0c1a 70%);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    color: #eef0ff;
+  }
+  .card {
+    width: 100%;
+    max-width: 420px;
+    padding: 32px 24px;
+    text-align: center;
+  }
+  h1 {
+    font-size: 22px;
+    margin: 0 0 6px;
+    font-weight: 600;
+  }
+  p.sub {
+    color: #9aa0c3;
+    font-size: 14px;
+    margin: 0 0 32px;
+  }
+  #micBtn {
+    width: 160px;
+    height: 160px;
+    border-radius: 50%;
+    border: none;
+    background: linear-gradient(145deg, #5b6cff, #7d4bff);
+    color: white;
+    font-size: 17px;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 0 0 0 rgba(123, 91, 255, 0.6);
+    transition: transform 0.15s ease, box-shadow 0.3s ease;
+  }
+  #micBtn:active { transform: scale(0.96); }
+  #micBtn.live {
+    background: linear-gradient(145deg, #ff5b7d, #ff4b4b);
+    animation: pulse 1.6s infinite;
+  }
+  @keyframes pulse {
+    0%   { box-shadow: 0 0 0 0 rgba(255, 75, 75, 0.5); }
+    70%  { box-shadow: 0 0 0 22px rgba(255, 75, 75, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(255, 75, 75, 0); }
+  }
+  .meter-wrap {
+    margin: 28px auto 8px;
+    width: 100%;
+    height: 10px;
+    background: #1e2242;
+    border-radius: 6px;
+    overflow: hidden;
+  }
+  #meter {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, #5b6cff, #7d4bff, #ff4b4b);
+    transition: width 0.06s linear;
+  }
+  .status {
+    font-size: 13px;
+    color: #7f86ad;
+    margin-top: 4px;
+    min-height: 18px;
+  }
+  .controls {
+    margin-top: 28px;
+    text-align: left;
+  }
+  .row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 14px;
+    font-size: 14px;
+    color: #c7cbec;
+  }
+  input[type="range"] {
+    width: 55%;
+    accent-color: #7d4bff;
+  }
+  select {
+    background: #1e2242;
+    color: #eef0ff;
+    border: 1px solid #33386b;
+    border-radius: 8px;
+    padding: 6px 8px;
+    font-size: 13px;
+    max-width: 55%;
+  }
+  .warn {
+    margin-top: 22px;
+    font-size: 12px;
+    line-height: 1.6;
+    color: #8b90b8;
+    background: #14172c;
+    border-radius: 10px;
+    padding: 12px 14px;
+    text-align: left;
+  }
+</style>
+</head>
+<body>
+  <div class="card">
+    <h1>🎙️ Mic → Speaker</h1>
+    <p class="sub">ফোনের মাইক থেকে সরাসরি কানেক্টেড স্পিকারে রিয়েল-টাইম অডিও</p>
+
+    <button id="micBtn">শুরু করুন</button>
+
+    <div class="meter-wrap"><div id="meter"></div></div>
+    <div class="status" id="status">মাইক বন্ধ আছে</div>
+
+    <div class="controls">
+      <div class="row">
+        <span>ভলিউম (গেইন)</span>
+        <input type="range" id="gain" min="0" max="3" step="0.05" value="1">
+      </div>
+      <div class="row">
+        <span>মাইক্রোফোন</span>
+        <select id="micSelect"><option>ডিভাইস লোড হচ্ছে...</option></select>
+      </div>
+      <div class="row">
+        <span>Echo/Noise ফিল্টার</span>
+        <input type="checkbox" id="filterToggle" checked>
+      </div>
+    </div>
+
+    <div class="warn">
+      ⚠️ ভালো ফল পেতে ফোন আর ব্লুটুথ স্পিকার একটু দূরে রাখুন, 
+  </div>
+
+<script>
+let audioCtx, micStream, sourceNode, gainNode, filterNode, analyser;
+let isLive = false;
+const micBtn = document.getElementById('micBtn');
+const statusEl = document.getElementById('status');
+const gainSlider = document.getElementById('gain');
+const micSelect = document.getElementById('micSelect');
+const filterToggle = document.getElementById('filterToggle');
+const meter = document.getElementById('meter');
+let meterRAF;
+
+async function listMics() {
+  try {
+    const devices = await navigator.mediaDevices.enumerateDevices();
+    const mics = devices.filter(d => d.kind === 'audioinput');
+    micSelect.innerHTML = '';
+    if (mics.length === 0) {
+      micSelect.innerHTML = '<option>কোনো মাইক পাওয়া যায়নি</option>';
+      return;
+    }
+    mics.forEach((m, i) => {
+      const opt = document.createElement('option');
+      opt.value = m.deviceId;
+      opt.textContent = m.label || `Microphone ${i + 1}`;
+      micSelect.appendChild(opt);
+    });
+  } catch (e) {
+    micSelect.innerHTML = '<option>ডিভাইস লিস্ট আনা যায়নি</option>';
+  }
+}
+
+async function startMic() {
+  try {
+    const deviceId = micSelect.value;
+    const constraints = {
+      audio: {
+        deviceId: deviceId ? { exact: deviceId } : undefined,
+        echoCancellation: filterToggle.checked,
+        noiseSuppression: filterToggle.checked,
+        autoGainControl: false,
+        latency: 0
+      }
+    };
+
+    micStream = await navigator.mediaDevices.getUserMedia(constraints);
+    await listMics(); // labels become available after permission
+
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)({ latencyHint: 'interactive' });
+    if (audioCtx.state === 'suspended') await audioCtx.resume();
+
+    sourceNode = audioCtx.createMediaStreamSource(micStream);
+
+    gainNode = audioCtx.createGain();
+    gainNode.gain.value = parseFloat(gainSlider.value);
+
+    analyser = audioCtx.createAnalyser();
+    analyser.fftSize = 256;
+
+    sourceNode.connect(gainNode);
+    gainNode.connect(analyser);
+    analyser.connect(audioCtx.destination);
+
+    isLive = true;
+    micBtn.textContent = 'বন্ধ করুন';
+    micBtn.classList.add('live');
+    statusEl.textContent = '🔴 লাইভ — স্পিকারে অডিও যাচ্ছে';
+    drawMeter();
+  } catch (err) {
+    statusEl.textContent = 'মাইক অ্যাক্সেস পাওয়া যায়নি: পারমিশন চেক করুন';
+    console.error(err);
+  }
+}
+
+function stopMic() {
+  isLive = false;
+  cancelAnimationFrame(meterRAF);
+  meter.style.width = '0%';
+  if (micStream) micStream.getTracks().forEach(t => t.stop());
+  if (audioCtx) audioCtx.close();
+  micBtn.textContent = 'শুরু করুন';
+  micBtn.classList.remove('live');
+  statusEl.textContent = 'মাইক বন্ধ আছে';
+}
+
+function drawMeter() {
+  if (!isLive) return;
+  const data = new Uint8Array(analyser.frequencyBinCount);
+  analyser.getByteFrequencyData(data);
+  const avg = data.reduce((a, b) => a + b, 0) / data.length;
+  meter.style.width = Math.min(100, (avg / 128) * 100) + '%';
+  meterRAF = requestAnimationFrame(drawMeter);
+}
+
+micBtn.addEventListener('click', () => {
+  if (!isLive) startMic();
+  else stopMic();
+});
+
+gainSlider.addEventListener('input', () => {
+  if (gainNode) gainNode.gain.value = parseFloat(gainSlider.value);
+});
+
+filterToggle.addEventListener('change', () => {
+  if (isLive) { stopMic(); startMic(); }
+});
+
+micSelect.addEventListener('change', () => {
+  if (isLive) { stopMic(); startMic(); }
+});
+
+navigator.mediaDevices.addEventListener?.('devicechange', listMics);
+listMics();
+</script>
+</body>
+</html>
