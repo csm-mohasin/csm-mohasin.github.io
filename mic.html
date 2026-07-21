@@ -132,40 +132,77 @@
         <select id="micSelect"><option>ডিভাইস লোড হচ্ছে...</option></select>
       </div>
       <div class="row">
+        <span>আউটপুট (স্পিকার)</span>
+        <select id="outputSelect"><option>ডিভাইস লোড হচ্ছে...</option></select>
+      </div>
+      <div class="row">
         <span>Echo/Noise ফিল্টার</span>
-        <input type="checkbox" id="filterToggle" checked>
+        <input type="checkbox" id="filterToggle">
       </div>
     </div>
 
+    <div class="warn" id="sinkWarn" style="display:none;">
+      ⚠️ এই ব্রাউজারে আউটপুট ডিভাইস সরাসরি বেছে নেওয়া সাপোর্ট করছে না। Chrome for Android ব্যবহার করো, এবং শুরু করার আগে ফোনের সিস্টেম সেটিংস থেকে Bluetooth speaker কে media output হিসেবে কানেক্ট করা আছে কিনা দেখে নাও।
+    </div>
     <div class="warn">
-      ⚠️ ভালো ফল পেতে ফোন আর ব্লুটুথ স্পিকার একটু দূরে রাখুন, 
+      ⚠️ ফোন আর ব্লুটুথ স্পিকার একটু দূরে রাখো, নাহলে feedback (শোঁ শোঁ শব্দ) হতে পারে।
+    </div>
   </div>
 
 <script>
-let audioCtx, micStream, sourceNode, gainNode, filterNode, analyser;
+let audioCtx, micStream, sourceNode, gainNode, filterNode, analyser, destNode, outputAudioEl;
 let isLive = false;
+let sinkSupported = true;
 const micBtn = document.getElementById('micBtn');
 const statusEl = document.getElementById('status');
 const gainSlider = document.getElementById('gain');
 const micSelect = document.getElementById('micSelect');
+const outputSelect = document.getElementById('outputSelect');
 const filterToggle = document.getElementById('filterToggle');
+const sinkWarn = document.getElementById('sinkWarn');
 const meter = document.getElementById('meter');
 let meterRAF;
 
-async function listMics() {
+async function listDevices() {
   try {
     const devices = await navigator.mediaDevices.enumerateDevices();
     const mics = devices.filter(d => d.kind === 'audioinput');
+    const outputs = devices.filter(d => d.kind === 'audiooutput');
+
     micSelect.innerHTML = '';
     if (mics.length === 0) {
       micSelect.innerHTML = '<option>কোনো মাইক পাওয়া যায়নি</option>';
+    } else {
+      mics.forEach((m, i) => {
+        const opt = document.createElement('option');
+        opt.value = m.deviceId;
+        opt.textContent = m.label || `Microphone ${i + 1}`;
+        micSelect.appendChild(opt);
+      });
+    }
+
+    // check setSinkId support
+    sinkSupported = typeof HTMLMediaElement !== 'undefined' && 'setSinkId' in HTMLMediaElement.prototype;
+    sinkWarn.style.display = sinkSupported ? 'none' : 'block';
+
+    outputSelect.innerHTML = '';
+    if (!sinkSupported) {
+      outputSelect.innerHTML = '<option>সাপোর্ট নেই</option>';
+      outputSelect.disabled = true;
       return;
     }
-    mics.forEach((m, i) => {
+    if (outputs.length === 0) {
+      outputSelect.innerHTML = '<option>ডিভাইস পাওয়া যায়নি</option>';
+      return;
+    }
+    outputs.forEach((o, i) => {
       const opt = document.createElement('option');
-      opt.value = m.deviceId;
-      opt.textContent = m.label || `Microphone ${i + 1}`;
-      micSelect.appendChild(opt);
+      opt.value = o.deviceId;
+      const label = o.label || `Speaker ${i + 1}`;
+      opt.textContent = label;
+      // guess bluetooth by label keywords, preselect if found
+      if (/bluetooth|headset|hands.?free|earbud/i.test(label)) opt.selected = true;
+      outputSelect.appendChild(opt);
     });
   } catch (e) {
     micSelect.innerHTML = '<option>ডিভাইস লিস্ট আনা যায়নি</option>';
@@ -180,13 +217,12 @@ async function startMic() {
         deviceId: deviceId ? { exact: deviceId } : undefined,
         echoCancellation: filterToggle.checked,
         noiseSuppression: filterToggle.checked,
-        autoGainControl: false,
-        latency: 0
+        autoGainControl: false
       }
     };
 
     micStream = await navigator.mediaDevices.getUserMedia(constraints);
-    await listMics(); // labels become available after permission
+    await listDevices(); // labels become available after permission
 
     audioCtx = new (window.AudioContext || window.webkitAudioContext)({ latencyHint: 'interactive' });
     if (audioCtx.state === 'suspended') await audioCtx.resume();
@@ -199,14 +235,32 @@ async function startMic() {
     analyser = audioCtx.createAnalyser();
     analyser.fftSize = 256;
 
+    // route through a MediaStreamDestination + <audio> element so we can
+    // explicitly pick the output device with setSinkId (needed to force Bluetooth)
+    destNode = audioCtx.createMediaStreamDestination();
+
     sourceNode.connect(gainNode);
     gainNode.connect(analyser);
-    analyser.connect(audioCtx.destination);
+    analyser.connect(destNode);
+
+    outputAudioEl = new Audio();
+    outputAudioEl.srcObject = destNode.stream;
+    outputAudioEl.autoplay = true;
+
+    if (sinkSupported && outputSelect.value) {
+      try {
+        await outputAudioEl.setSinkId(outputSelect.value);
+      } catch (sinkErr) {
+        console.warn('setSinkId failed:', sinkErr);
+      }
+    }
+
+    await outputAudioEl.play();
 
     isLive = true;
     micBtn.textContent = 'বন্ধ করুন';
     micBtn.classList.add('live');
-    statusEl.textContent = '🔴 লাইভ — স্পিকারে অডিও যাচ্ছে';
+    statusEl.textContent = '🔴 লাইভ — অডিও পাঠানো হচ্ছে';
     drawMeter();
   } catch (err) {
     statusEl.textContent = 'মাইক অ্যাক্সেস পাওয়া যায়নি: পারমিশন চেক করুন';
@@ -219,6 +273,7 @@ function stopMic() {
   cancelAnimationFrame(meterRAF);
   meter.style.width = '0%';
   if (micStream) micStream.getTracks().forEach(t => t.stop());
+  if (outputAudioEl) { outputAudioEl.pause(); outputAudioEl.srcObject = null; }
   if (audioCtx) audioCtx.close();
   micBtn.textContent = 'শুরু করুন';
   micBtn.classList.remove('live');
@@ -251,8 +306,15 @@ micSelect.addEventListener('change', () => {
   if (isLive) { stopMic(); startMic(); }
 });
 
-navigator.mediaDevices.addEventListener?.('devicechange', listMics);
-listMics();
+outputSelect.addEventListener('change', async () => {
+  if (isLive && sinkSupported && outputAudioEl) {
+    try { await outputAudioEl.setSinkId(outputSelect.value); }
+    catch (e) { console.warn('setSinkId failed:', e); }
+  }
+});
+
+navigator.mediaDevices.addEventListener?.('devicechange', listDevices);
+listDevices();
 </script>
 </body>
 </html>
