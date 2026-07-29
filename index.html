@@ -2,6 +2,37 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"/>
+
+<script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
+<script>
+  window.OneSignalDeferred = window.OneSignalDeferred || [];
+  OneSignalDeferred.push(async function(OneSignal) {
+    await OneSignal.init({
+      appId: "f2ad6d79-f34a-4855-9493-ad6224d01f7c",
+      promptOptions: {
+        slidedown: {
+          prompts: [
+            {
+              type: "push",
+              autoPrompt: true,
+              text: {
+                actionMessage: "আপনি কি নতুন আপডেট এবং notification পেতে চান?",
+                acceptButtonText: "হ্যাঁ",
+                cancelButtonText: "না",
+              },
+              delay: {
+                pageViews: 1,
+                timeDelay: 3, // 3 সেকেন্ড পর popup আসবে
+              },
+            },
+          ],
+        },
+      },
+    });
+  });
+</script>
+
+   
    <!-- Primary Meta Tags -->
 <title>CSM Mohasin Alam | Professional Frontend Web Developer</title>
 <meta name="title" content="CSM Mohasin Alam | Professional Frontend Web Developer">
