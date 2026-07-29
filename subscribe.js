@@ -1,6 +1,7 @@
+
 // ⚠️ নিচের দুইটা মান আপনার নিজের দিয়ে বদলাতে হবে
-const WORKER_URL = 'https://push-notify-worker.YOUR-SUBDOMAIN.workers.dev';
-const VAPID_PUBLIC_KEY = 'YOUR_VAPID_PUBLIC_KEY_HERE';
+const WORKER_URL = 'https://noti.csm-mohasin.workers.dev/';
+const VAPID_PUBLIC_KEY = 'BPvwHPGtHPiAgo3ixgYI_7xn0wVXOgQmEr44h12qD3ggKOtoX4VSwVQTMJ0Crm8icYBDJcwdnLu-cRcXmbT0jpo';
 
 function urlBase64ToUint8Array(base64String) {
   const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
