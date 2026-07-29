@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Notification পাঠান</title>
+<meta name="robots" content="noindex, nofollow" />
+<style>
+  body { font-family: system-ui, sans-serif; max-width: 480px; margin: 40px auto; padding: 0 16px; background: #0d1117; color: #e6edf3; }
+  h1 { font-size: 20px; }
+  label { display: block; margin-top: 16px; font-size: 14px; color: #9198a1; }
+  input, textarea { width: 100%; padding: 10px; margin-top: 6px; background: #161b22; border: 1px solid #30363d; border-radius: 6px; color: #e6edf3; font-size: 15px; box-sizing: border-box; }
+  textarea { min-height: 90px; resize: vertical; }
+  button { margin-top: 20px; width: 100%; padding: 12px; background: #238636; color: white; border: none; border-radius: 6px; font-size: 15px; cursor: pointer; }
+  button:disabled { opacity: 0.6; }
+  #result { margin-top: 16px; padding: 12px; border-radius: 6px; font-size: 14px; display: none; }
+  .success { background: #1a7f37; display: block !important; }
+  .error { background: #a12622; display: block !important; }
+</style>
+</head>
+<body>
+  <h1>🔔 Push Notification পাঠান</h1>
+
+  <label>Admin Password</label>
+  <input type="password" id="password" placeholder="Worker এ সেট করা ADMIN_PASSWORD" />
+
+  <label>Title</label>
+  <input type="text" id="title" placeholder="যেমন: নতুন আপডেট এসেছে" />
+
+  <label>Message</label>
+  <textarea id="body" placeholder="নোটিফিকেশনের মূল লেখা"></textarea>
+
+  <label>Launch URL (ঐচ্ছিক)</label>
+  <input type="text" id="url" placeholder="https://mohasin.bro.bd" />
+
+  <button id="sendBtn" onclick="sendNotification()">Send করুন</button>
+
+  <div id="result"></div>
+
+<script>
+  // ⚠️ আপনার Worker এর URL এখানে বসান
+  const WORKER_URL = 'https://noti.csm-mohasin.workers.dev';
+
+  async function sendNotification() {
+    const password = document.getElementById('password').value;
+    const title = document.getElementById('title').value.trim();
+    const body = document.getElementById('body').value.trim();
+    const url = document.getElementById('url').value.trim();
+    const resultEl = document.getElementById('result');
+    const btn = document.getElementById('sendBtn');
+
+    if (!password || !title || !body) {
+      resultEl.className = 'error';
+      resultEl.textContent = 'Password, Title এবং Message দেওয়া বাধ্যতামূলক';
+      return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = 'পাঠানো হচ্ছে...';
+
+    try {
+      const res = await fetch(`${WORKER_URL}/send`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${password}`,
+        },
+        body: JSON.stringify({ title, body, url }),
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        resultEl.className = 'success';
+        resultEl.textContent = `✅ পাঠানো হয়েছে: ${data.sent} জনকে | ব্যর্থ: ${data.failed} | Expired সরানো হয়েছে: ${data.removed}`;
+      } else {
+        resultEl.className = 'error';
+        resultEl.textContent = `❌ ${data.error || 'কিছু একটা সমস্যা হয়েছে'}`;
+      }
+    } catch (err) {
+      resultEl.className = 'error';
+      resultEl.textContent = '❌ Worker এ পৌঁছানো যায়নি, URL চেক করুন';
+    }
+
+    btn.disabled = false;
+    btn.textContent = 'Send করুন';
+  }
+</script>
+</body>
+</html>
