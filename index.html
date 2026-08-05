@@ -1200,6 +1200,16 @@ footer{border-top:1px solid var(--border);padding:clamp(28px,4vw,44px) clamp(16p
     0 0 70px rgba(192, 132, 252, 0.35);
   transition: all 0.5s ease;
   will-change: border-radius, transform, box-shadow;
+  position: relative;
+  overflow: hidden;
+}
+
+.author-img-real{
+  position:absolute;inset:0;width:100%;height:100%;
+  object-fit:cover;border-radius:inherit;
+  -webkit-user-select:none;user-select:none;
+  -webkit-touch-callout:none;
+  pointer-events:none;
 }
 
 .photo-outer:hover .custom-author-image {
@@ -1313,7 +1323,7 @@ footer{border-top:1px solid var(--border);padding:clamp(28px,4vw,44px) clamp(16p
 <br><br><uc>  <div class="author-photo-widget">
 
       <center> <div class="custom-image">  
-        <div class="custom-author-image"></center>
+        <div class="custom-author-image"><img src="https://mohasin.bro.bd/3d/3.png" alt="CSM Mohasin Alam - Frontend Web Developer from Bangladesh" class="author-img-real" loading="eager" draggable="false" oncontextmenu="return false" onmousedown="return false"></center>
 </div>
     </div>
     <h1 class="hero-h1">
