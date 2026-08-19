@@ -1,0 +1,1046 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Waveform — Audio Editor</title>
+<style>
+  :root{
+    --bg:#05070c;
+    --bg2:#0a0e17;
+    --panel:#0d121e;
+    --panel2:#111827;
+    --line:#1c2333;
+    --cyan:#4dfcd4;
+    --violet:#a78bfa;
+    --warn:#ff6b7a;
+    --text:#e7edf7;
+    --dim:#7b8aa6;
+    --mono:'SFMono-Regular',Consolas,'JetBrains Mono',Menlo,monospace;
+    --sans:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Inter,sans-serif;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html,body{height:100%;}
+  body{
+    margin:0; background:
+      radial-gradient(circle at 15% 0%, rgba(79,124,255,.08), transparent 45%),
+      radial-gradient(circle at 85% 100%, rgba(167,139,250,.08), transparent 45%),
+      var(--bg);
+    color:var(--text); font-family:var(--sans);
+    min-height:100%; overflow-x:hidden;
+  }
+  ::selection{ background:rgba(77,252,212,.3); }
+
+  /* ---------- topbar ---------- */
+  .topbar{
+    display:flex; align-items:center; justify-content:space-between;
+    padding:14px 18px; border-bottom:1px solid var(--line);
+    background:rgba(10,14,23,.7); backdrop-filter:blur(10px);
+    position:sticky; top:0; z-index:50;
+  }
+  .brand{ display:flex; align-items:center; gap:10px; }
+  .brand .dot{
+    width:10px;height:10px;border-radius:50%;
+    background:linear-gradient(135deg,var(--cyan),var(--violet));
+    box-shadow:0 0 12px var(--cyan);
+  }
+  .brand h1{ font-size:16px; font-weight:700; letter-spacing:.3px; margin:0; }
+  .brand span{ color:var(--dim); font-size:11px; font-family:var(--mono); }
+  .file-pill{
+    font-family:var(--mono); font-size:11px; color:var(--dim);
+    border:1px solid var(--line); padding:6px 10px; border-radius:20px;
+    max-width:44vw; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+  }
+
+  /* ---------- dropzone ---------- */
+  #dropzone{
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    text-align:center; gap:18px; padding:60px 20px; min-height:70vh;
+  }
+  #dropzone.drag{ background:rgba(77,252,212,.05); }
+  .drop-ring{
+    width:110px;height:110px;border-radius:50%;
+    border:1.5px dashed var(--line);
+    display:flex;align-items:center;justify-content:center;
+    position:relative;
+  }
+  .drop-ring::before{
+    content:''; position:absolute; inset:-1.5px; border-radius:50%;
+    padding:1.5px; background:conic-gradient(from 0deg, var(--cyan), var(--violet), var(--cyan));
+    -webkit-mask:linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor; mask-composite: exclude;
+    animation:spin 6s linear infinite; opacity:.7;
+  }
+  @keyframes spin{ to{ transform:rotate(360deg); } }
+  .drop-ring svg{ width:38px; height:38px; stroke:var(--cyan); }
+  #dropzone h2{ font-size:20px; margin:0; font-weight:700; }
+  #dropzone p{ color:var(--dim); margin:0; font-size:13.5px; max-width:340px; line-height:1.6; }
+  .pick-btn{
+    margin-top:6px; padding:12px 26px; border-radius:12px; border:none;
+    background:linear-gradient(135deg,var(--cyan),var(--violet)); color:#04070c;
+    font-weight:700; font-size:14px; cursor:pointer;
+    box-shadow:0 8px 24px -8px rgba(77,252,212,.5);
+  }
+  .offline-tag{
+    display:inline-flex; align-items:center; gap:6px;
+    font-family:var(--mono); font-size:10.5px; color:var(--dim);
+    border:1px solid var(--line); padding:5px 10px; border-radius:20px;
+  }
+  .offline-tag .b{ width:6px;height:6px;border-radius:50%; background:var(--cyan); }
+
+  /* ---------- editor ---------- */
+  #editor{ padding:16px; display:flex; flex-direction:column; gap:14px; }
+
+  .toolbar{
+    display:flex; flex-direction:column; gap:8px;
+    background:var(--panel); border:1px solid var(--line); border-radius:16px;
+    padding:10px 12px;
+  }
+  .toolbar-row{
+    display:flex; align-items:center; gap:8px;
+    overflow-x:auto; -webkit-overflow-scrolling:touch; scrollbar-width:none;
+  }
+  .toolbar-row::-webkit-scrollbar{ display:none; }
+  .toolbar .grp{ display:flex; align-items:center; gap:6px; flex:none; }
+  .toolbar .sep{ width:1px; align-self:stretch; background:var(--line); margin:2px 2px; flex:none; }
+  .btn{
+    display:inline-flex; align-items:center; gap:6px;
+    background:var(--panel2); border:1px solid var(--line); color:var(--text);
+    padding:9px 12px; border-radius:10px; font-size:12.5px; font-weight:600;
+    cursor:pointer; transition:.15s; white-space:nowrap;
+  }
+  .btn svg{ width:15px;height:15px; stroke:currentColor; flex:none; }
+  .btn:hover{ border-color:var(--cyan); color:var(--cyan); }
+  .btn:active{ transform:scale(.96); }
+  .btn.primary{ background:linear-gradient(135deg,var(--cyan),var(--violet)); color:#04070c; border:none; }
+  .btn.primary:hover{ color:#04070c; opacity:.9; }
+  .btn.warn{ color:var(--warn); }
+  .btn.warn:hover{ border-color:var(--warn); }
+  .btn:disabled{ opacity:.35; pointer-events:none; }
+  .btn.icon-only{ padding:9px; }
+
+  .time-read{
+    font-family:var(--mono); font-size:12.5px; color:var(--cyan);
+    background:#04070c; border:1px solid var(--line); padding:8px 10px; border-radius:10px;
+    min-width:150px; text-align:center; letter-spacing:.5px;
+  }
+  .time-read b{ color:var(--dim); font-weight:400; margin:0 3px; }
+
+  .zoomctl{ display:flex; align-items:center; gap:6px; }
+  .zoomctl input[type=range]{
+    -webkit-appearance:none; width:100px; height:3px; background:var(--line); border-radius:3px; outline:none;
+  }
+  .zoomctl input[type=range]::-webkit-slider-thumb{
+    -webkit-appearance:none; width:14px;height:14px;border-radius:50%;
+    background:var(--cyan); box-shadow:0 0 8px var(--cyan); cursor:pointer;
+  }
+
+  /* ---------- waveform ---------- */
+  .selbar{
+    display:flex; align-items:center; gap:6px; flex-wrap:nowrap;
+    overflow-x:auto; -webkit-overflow-scrolling:touch; scrollbar-width:none;
+    background:var(--panel); border:1px solid var(--line); border-radius:14px;
+    padding:9px 10px;
+  }
+  .selbar::-webkit-scrollbar{ display:none; }
+  .selbar .lab{ font-family:var(--mono); font-size:10.5px; color:var(--dim); flex:none; }
+  .selbar .val{ font-family:var(--mono); font-size:12.5px; color:var(--cyan); min-width:82px; text-align:center; flex:none; }
+  .selbar .nudge{
+    width:28px; height:28px; border-radius:8px; border:1px solid var(--line);
+    background:var(--panel2); color:var(--text); font-weight:700; font-size:15px;
+    flex:none; cursor:pointer; display:flex; align-items:center; justify-content:center;
+  }
+  .selbar .nudge:hover{ border-color:var(--cyan); color:var(--cyan); }
+  .selbar .divider{ width:1px; align-self:stretch; background:var(--line); flex:none; }
+  .selbar .clearsel{
+    margin-left:auto; flex:none; font-family:var(--mono); font-size:11px; color:var(--warn);
+    background:transparent; border:1px solid var(--line); border-radius:8px; padding:6px 10px; cursor:pointer;
+  }
+  .selbar.empty .val, .selbar.empty .nudge{ opacity:.3; pointer-events:none; }
+    background:var(--panel); border:1px solid var(--line); border-radius:16px;
+    overflow:hidden; position:relative;
+  }
+  .ruler{
+    height:24px; font-family:var(--mono); font-size:10px; color:var(--dim);
+    position:relative; border-bottom:1px solid var(--line); overflow:hidden;
+    background:var(--panel2);
+  }
+  .wave-scroll{
+    overflow-x:auto; overflow-y:hidden; position:relative;
+    -webkit-overflow-scrolling:touch;
+  }
+  .wave-inner{ position:relative; height:200px; }
+  #waveCanvas{ display:block; touch-action:none; }
+  #selOverlay{
+    position:absolute; top:0; bottom:0; left:0; width:0;
+    background:linear-gradient(180deg, rgba(77,252,212,.14), rgba(167,139,250,.14));
+    border-left:1.5px solid var(--cyan); border-right:1.5px solid var(--violet);
+    display:none; pointer-events:none;
+  }
+  .handle{
+    position:absolute; top:-14px; bottom:-14px; width:34px; left:-17px;
+    cursor:ew-resize; pointer-events:auto; touch-action:none;
+    display:flex; flex-direction:column; align-items:center;
+  }
+  .handle.right{ left:auto; right:-17px; }
+  .handle i{
+    flex:1; width:3px; margin-top:26px;
+    background:linear-gradient(180deg,var(--cyan),var(--violet));
+    box-shadow:0 0 8px rgba(77,252,212,.6);
+  }
+  .handle .grip{
+    width:26px; height:26px; border-radius:8px; flex:none;
+    background:linear-gradient(135deg,var(--cyan),var(--violet));
+    box-shadow:0 3px 10px -2px rgba(77,252,212,.7);
+    display:flex; align-items:center; justify-content:center;
+    color:#04070c; font-size:13px; font-weight:900;
+  }
+  .handle:active .grip{ transform:scale(1.12); }
+  .handle .tip{
+    position:absolute; top:-30px; left:50%; transform:translateX(-50%);
+    background:#04070c; border:1px solid var(--cyan); color:var(--cyan);
+    font-family:var(--mono); font-size:10px; padding:3px 6px; border-radius:6px;
+    white-space:nowrap; opacity:0; pointer-events:none; transition:opacity .1s;
+  }
+  .handle.active .tip{ opacity:1; }
+  #playhead{
+    position:absolute; top:0; bottom:0; width:1.5px; background:#fff;
+    box-shadow:0 0 8px #fff; left:0; pointer-events:none;
+    transition:left .05s linear;
+  }
+  #playhead::before{
+    content:''; position:absolute; top:-1px; left:-4px; width:9px;height:9px;
+    background:#fff; border-radius:50% 50% 50% 0; transform:rotate(45deg);
+  }
+  .wave-inner.smooth #playhead{ transition:left .12s linear; }
+  .wave-empty-hint{
+    position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+    color:var(--dim); font-size:12px; font-family:var(--mono); pointer-events:none;
+  }
+
+  /* ---------- clips panel ---------- */
+  .clips-panel{
+    background:var(--panel); border:1px solid var(--line); border-radius:16px;
+    padding:12px; display:none; flex-direction:column; gap:8px;
+  }
+  .clips-panel.show{ display:flex; }
+  .clips-title{ font-size:11.5px; color:var(--dim); font-family:var(--mono); letter-spacing:.5px; text-transform:uppercase; }
+  .clip-row{
+    display:flex; align-items:center; justify-content:space-between; gap:8px;
+    background:var(--panel2); border:1px solid var(--line); border-radius:10px; padding:8px 10px;
+  }
+  .clip-row .lbl{ font-size:12.5px; font-weight:600; }
+  .clip-row .meta{ font-family:var(--mono); font-size:10.5px; color:var(--dim); }
+  .clip-actions{ display:flex; gap:6px; }
+
+  footer{ text-align:center; color:var(--dim); font-size:10.5px; font-family:var(--mono); padding:20px 0 8px; }
+
+  @media(max-width:640px){
+    .file-pill{ display:none; }
+    .toolbar{ justify-content:center; }
+    .time-read{ min-width:130px; font-size:11px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="brand">
+    <div class="dot"></div>
+    <div>
+      <h1>Waveform</h1>
+    </div>
+    <span>audio editor · offline</span>
+  </div>
+  <div class="file-pill" id="filePill">কোনো ফাইল লোড হয়নি</div>
+</div>
+
+<div id="dropzone">
+  <div class="drop-ring">
+    <svg viewBox="0 0 24 24" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/>
+    </svg>
+  </div>
+  <h2>Audio file drag & drop করুন</h2>
+  <p>অথবা নিচে থেকে ফাইল বেছে নিন। Cut, split, trim করে waveform দেখে দেখে এডিট করে ডাউনলোড করে ফেলুন — সব কিছু আপনার ডিভাইসেই হবে, কোনো সার্ভারে যাবে না।</p>
+  <button class="pick-btn" id="pickBtn">ফাইল বেছে নিন</button>
+  <input type="file" id="fileInput" accept="audio/*" hidden>
+  <div class="offline-tag"><span class="b"></span> 100% অফলাইন · কোনো আপলোড নেই</div>
+</div>
+
+<main id="editor" hidden>
+  <div class="toolbar">
+    <div class="toolbar-row">
+      <div class="grp">
+        <button class="btn icon-only" id="playBtn" title="Play/Pause">
+          <svg id="playIcon" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+        </button>
+        <button class="btn icon-only" id="stopBtn" title="Stop">
+          <svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="6" width="12" height="12" rx="1"/></svg>
+        </button>
+      </div>
+      <div class="time-read"><span id="curTime">00:00.000</span><b>/</b><span id="totalTime">00:00.000</span></div>
+      <div class="sep"></div>
+      <div class="grp zoomctl">
+        <button class="btn icon-only" id="zoomOutBtn">−</button>
+        <input type="range" id="zoomRange" min="0" max="100" value="35">
+        <button class="btn icon-only" id="zoomInBtn">+</button>
+        <button class="btn icon-only" id="zoomFitBtn" title="সিলেকশনে জুম করুন">⤢</button>
+      </div>
+    </div>
+    <div class="toolbar-row">
+      <div class="grp">
+        <button class="btn warn" id="cutBtn" title="সিলেক্ট করা অংশ মসৃণভাবে কেটে ফেলুন">✂ Cut</button>
+        <button class="btn" id="trimBtn" title="সিলেকশন ছাড়া বাকিটা ফেলে দিন">Trim</button>
+        <button class="btn" id="splitBtn" title="দুই ভাগে ভাগ করুন">Split</button>
+        <button class="btn icon-only" id="undoBtn" title="Undo">↺</button>
+        <button class="btn icon-only" id="resetBtn" title="Reset">⟲</button>
+      </div>
+      <div class="grp" style="margin-left:auto">
+        <button class="btn primary" id="downloadBtn">⬇ Download</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="selbar empty" id="selBar">
+    <span class="lab">Start</span>
+    <button class="nudge" id="sMinus">−</button>
+    <span class="val" id="valStart">--:--.---</span>
+    <button class="nudge" id="sPlus">+</button>
+    <div class="divider"></div>
+    <span class="lab">End</span>
+    <button class="nudge" id="eMinus">−</button>
+    <span class="val" id="valEnd">--:--.---</span>
+    <button class="nudge" id="ePlus">+</button>
+    <div class="divider"></div>
+    <span class="lab">রাখবে</span>
+    <span class="val" id="valDur">--:--.---</span>
+    <button class="clearsel" id="clearSelBtn">✕ Clear</button>
+  </div>
+
+  <div class="wave-panel">
+    <div class="ruler" id="ruler"></div>
+    <div class="wave-scroll" id="waveScroll">
+      <div class="wave-inner" id="waveInner">
+        <canvas id="waveCanvas"></canvas>
+        <div id="selOverlay">
+          <div class="handle left" id="handleLeft"><div class="tip" id="tipLeft">00:00.000</div><div class="grip">‹</div><i></i></div>
+          <div class="handle right" id="handleRight"><div class="tip" id="tipRight">00:00.000</div><div class="grip">›</div><i></i></div>
+        </div>
+        <div id="playhead"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="clips-panel" id="clipsPanel">
+    <div class="clips-title">Split clips</div>
+    <div id="clipsList"></div>
+  </div>
+</main>
+
+<footer>Termux / GitHub Pages friendly · single-file · no CDN · no network calls</footer>
+
+<script>
+(function(){
+  "use strict";
+
+  // ---------------- state ----------------
+  let audioCtx = null;
+  let originalBuffer = null;   // first-ever loaded buffer
+  let currentBuffer = null;    // working buffer
+  let history = [];            // undo stack of AudioBuffers
+  let sourceNode = null;
+  let isPlaying = false;
+  let playStartCtxTime = 0;    // audioCtx.currentTime when playback started
+  let playStartOffset = 0;     // offset within buffer where playback started
+  let rafId = null;
+
+  let pxPerSec = 120;          // zoom level
+  const MIN_PX = 8, MAX_PX = 4000;
+
+  let selStart = null, selEnd = null; // seconds
+  let dragging = false, dragStartX = 0, dragMoved = false;
+
+  let clips = []; // {buffer, name}
+
+  // ---------------- dom ----------------
+  const $ = id => document.getElementById(id);
+  const dropzone = $('dropzone'), editor = $('editor'), filePill = $('filePill');
+  const fileInput = $('fileInput'), pickBtn = $('pickBtn');
+  const waveCanvas = $('waveCanvas'), waveScroll = $('waveScroll'), waveInner = $('waveInner');
+  const selOverlay = $('selOverlay'), playhead = $('playhead'), ruler = $('ruler');
+  const curTimeEl = $('curTime'), totalTimeEl = $('totalTime');
+  const playBtn = $('playBtn'), playIcon = $('playIcon'), stopBtn = $('stopBtn');
+  const trimBtn = $('trimBtn'), cutBtn = $('cutBtn'), splitBtn = $('splitBtn');
+  const undoBtn = $('undoBtn'), resetBtn = $('resetBtn'), downloadBtn = $('downloadBtn');
+  const zoomRange = $('zoomRange'), zoomInBtn = $('zoomInBtn'), zoomOutBtn = $('zoomOutBtn');
+  const clipsPanel = $('clipsPanel'), clipsList = $('clipsList');
+
+  function getCtx(){
+    if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    return audioCtx;
+  }
+
+  // ---------------- utils ----------------
+  function fmtTime(s){
+    if(!isFinite(s) || s<0) s=0;
+    const m = Math.floor(s/60);
+    const sec = Math.floor(s%60);
+    const ms = Math.floor((s - Math.floor(s))*1000);
+    return String(m).padStart(2,'0')+':'+String(sec).padStart(2,'0')+'.'+String(ms).padStart(3,'0');
+  }
+
+  function zoomFromSlider(v){
+    // slider 0-100 -> exponential pxPerSec between MIN_PX and MAX_PX
+    const t = v/100;
+    return Math.round(MIN_PX * Math.pow(MAX_PX/MIN_PX, t));
+  }
+  function sliderFromZoom(px){
+    const t = Math.log(px/MIN_PX)/Math.log(MAX_PX/MIN_PX);
+    return Math.round(t*100);
+  }
+
+  // ---------------- file loading ----------------
+  pickBtn.addEventListener('click', ()=> fileInput.click());
+  fileInput.addEventListener('change', e=>{
+    if(e.target.files && e.target.files[0]) loadFile(e.target.files[0]);
+  });
+  ['dragenter','dragover'].forEach(ev=>{
+    dropzone.addEventListener(ev, e=>{ e.preventDefault(); dropzone.classList.add('drag'); });
+  });
+  ['dragleave','drop'].forEach(ev=>{
+    dropzone.addEventListener(ev, e=>{ e.preventDefault(); dropzone.classList.remove('drag'); });
+  });
+  dropzone.addEventListener('drop', e=>{
+    const f = e.dataTransfer.files && e.dataTransfer.files[0];
+    if(f) loadFile(f);
+  });
+  // allow dropping onto editor too (replace file)
+  document.body.addEventListener('dragover', e=> e.preventDefault());
+  document.body.addEventListener('drop', e=>{
+    if(!editor.hidden){
+      e.preventDefault();
+      const f = e.dataTransfer.files && e.dataTransfer.files[0];
+      if(f) loadFile(f);
+    }
+  });
+
+  function loadFile(file){
+    stopPlayback();
+    const reader = new FileReader();
+    reader.onload = function(ev){
+      getCtx().decodeAudioData(ev.target.result.slice(0), function(buffer){
+        originalBuffer = buffer;
+        currentBuffer = buffer;
+        history = [];
+        clips = [];
+        renderClips();
+        selStart = selEnd = null;
+        filePill.textContent = file.name + '  ·  ' + fmtTime(buffer.duration) + '  ·  ' + buffer.sampleRate + 'Hz';
+        dropzone.style.display = 'none';
+        editor.hidden = false;
+        pxPerSec = clampZoomToFit(buffer.duration);
+        zoomRange.value = sliderFromZoom(pxPerSec);
+        redrawAll();
+        updateButtons();
+      }, function(err){
+        alert('এই ফাইলটা decode করা গেলো না। অন্য একটা audio file try করুন।');
+      });
+    };
+    reader.readAsArrayBuffer(file);
+  }
+
+  function clampZoomToFit(duration){
+    const wrapWidth = waveScroll.clientWidth || 800;
+    let px = wrapWidth / Math.max(duration, 0.001);
+    return Math.max(MIN_PX, Math.min(MAX_PX, Math.round(px)));
+  }
+
+  // ---------------- waveform rendering ----------------
+  function computePeaks(buffer, width){
+    const chans = [];
+    for(let c=0;c<buffer.numberOfChannels;c++) chans.push(buffer.getChannelData(c));
+    const total = buffer.length;
+    const samplesPerPixel = total / width;
+    const peaks = new Float32Array(width*2);
+    for(let x=0;x<width;x++){
+      const start = Math.floor(x*samplesPerPixel);
+      let end = Math.floor((x+1)*samplesPerPixel);
+      if(end<=start) end = start+1;
+      if(end>total) end = total;
+      let min=1, max=-1;
+      for(let i=start;i<end;i++){
+        let v=0;
+        for(let c=0;c<chans.length;c++) v += chans[c][i];
+        v /= chans.length;
+        if(v<min) min=v;
+        if(v>max) max=v;
+      }
+      if(min>max){ min=0; max=0; }
+      peaks[x*2]=min; peaks[x*2+1]=max;
+    }
+    return peaks;
+  }
+
+  function drawWaveform(){
+    if(!currentBuffer) return;
+    const duration = currentBuffer.duration;
+    const cssWidth = Math.max(waveScroll.clientWidth, Math.round(duration*pxPerSec));
+    const cssHeight = 200;
+    const dpr = Math.min(window.devicePixelRatio||1, 2);
+
+    waveInner.style.width = cssWidth+'px';
+    waveCanvas.style.width = cssWidth+'px';
+    waveCanvas.style.height = cssHeight+'px';
+    waveCanvas.width = Math.round(cssWidth*dpr);
+    waveCanvas.height = Math.round(cssHeight*dpr);
+
+    const ctx = waveCanvas.getContext('2d');
+    ctx.setTransform(dpr,0,0,dpr,0,0);
+    ctx.clearRect(0,0,cssWidth,cssHeight);
+
+    const mid = cssHeight/2;
+    const peaks = computePeaks(currentBuffer, cssWidth);
+
+    const grad = ctx.createLinearGradient(0,0,0,cssHeight);
+    grad.addColorStop(0, '#4dfcd4');
+    grad.addColorStop(1, '#a78bfa');
+    ctx.strokeStyle = grad;
+    ctx.lineWidth = 1;
+
+    ctx.beginPath();
+    for(let x=0;x<cssWidth;x++){
+      const min = peaks[x*2], max = peaks[x*2+1];
+      const y1 = mid - max*(mid-6);
+      const y2 = mid - min*(mid-6);
+      ctx.moveTo(x+0.5, y1);
+      ctx.lineTo(x+0.5, y2);
+    }
+    ctx.stroke();
+
+    // center line
+    ctx.strokeStyle = 'rgba(255,255,255,.06)';
+    ctx.beginPath();
+    ctx.moveTo(0, mid); ctx.lineTo(cssWidth, mid);
+    ctx.stroke();
+
+    drawRuler(cssWidth, duration);
+    positionOverlays();
+  }
+
+  function drawRuler(width, duration){
+    ruler.innerHTML = '';
+    ruler.style.width = width+'px';
+    // choose a nice step
+    const target = 80; // px between labels roughly
+    const rawStep = target/pxPerSec;
+    const steps = [0.1,0.2,0.5,1,2,5,10,15,30,60,120,300,600];
+    let step = steps[steps.length-1];
+    for(const s of steps){ if(s>=rawStep){ step=s; break; } }
+    for(let t=0; t<=duration+step; t+=step){
+      const x = t*pxPerSec;
+      if(x>width) break;
+      const tick = document.createElement('div');
+      tick.style.cssText = 'position:absolute;top:0;bottom:0;left:'+x+'px;width:1px;background:rgba(255,255,255,.08);';
+      ruler.appendChild(tick);
+      const lbl = document.createElement('div');
+      lbl.textContent = t<60 ? t.toFixed(step<1?1:0)+'s' : fmtTime(t).slice(0,5);
+      lbl.style.cssText = 'position:absolute;top:5px;left:'+(x+4)+'px;white-space:nowrap;';
+      ruler.appendChild(lbl);
+    }
+  }
+
+  function positionOverlays(){
+    if(selStart!=null && selEnd!=null){
+      const s = Math.min(selStart, selEnd), e = Math.max(selStart, selEnd);
+      selOverlay.style.left = (s*pxPerSec)+'px';
+      selOverlay.style.width = Math.max(1,(e-s)*pxPerSec)+'px';
+      selOverlay.style.display = 'block';
+    } else {
+      selOverlay.style.display = 'none';
+    }
+    const cur = getCurrentTime();
+    playhead.style.left = (cur*pxPerSec)+'px';
+    updateSelBar();
+    updateDownloadLabel();
+  }
+
+  function updateDownloadLabel(){
+    downloadBtn.textContent = hasSelection() ? '⬇ Selected অংশ Download' : '⬇ Download';
+  }
+
+  function redrawAll(){
+    drawWaveform();
+    updateTimeReadout();
+  }
+
+  window.addEventListener('resize', ()=>{ if(currentBuffer) drawWaveform(); });
+
+  // ---------------- selection (pointer) ----------------
+  function xToTime(clientX){
+    const rect = waveCanvas.getBoundingClientRect();
+    const x = clientX - rect.left + waveScroll.scrollLeft;
+    let t = x/pxPerSec;
+    return Math.max(0, Math.min(currentBuffer.duration, t));
+  }
+
+  waveCanvas.addEventListener('pointerdown', e=>{
+    if(!currentBuffer) return;
+    dragging = true; dragMoved = false;
+    dragStartX = e.clientX;
+    const t = xToTime(e.clientX);
+    selStart = t; selEnd = t;
+    waveCanvas.setPointerCapture(e.pointerId);
+    positionOverlays();
+  });
+  waveCanvas.addEventListener('pointermove', e=>{
+    if(!dragging || !currentBuffer) return;
+    if(Math.abs(e.clientX-dragStartX)>3) dragMoved = true;
+    selEnd = xToTime(e.clientX);
+    positionOverlays();
+    updateTimeReadout();
+  });
+  window.addEventListener('pointerup', e=>{
+    if(!dragging) return;
+    dragging = false;
+    if(!dragMoved){
+      // treat as tap-to-seek, clear selection
+      const t = xToTime(e.clientX);
+      selStart = null; selEnd = null;
+      seek(t);
+      positionOverlays();
+    }
+    updateTimeReadout();
+    updateButtons();
+  });
+
+  function updateSelBar(){
+    const bar = $('selBar');
+    if(selStart==null || selEnd==null){
+      bar.classList.add('empty');
+      $('valStart').textContent = '--:--.---';
+      $('valEnd').textContent = '--:--.---';
+      $('valDur').textContent = '--:--.---';
+      return;
+    }
+    bar.classList.remove('empty');
+    const s = Math.min(selStart,selEnd), e = Math.max(selStart,selEnd);
+    $('valStart').textContent = fmtTime(s);
+    $('valEnd').textContent = fmtTime(e);
+    $('valDur').textContent = fmtTime(e-s);
+    $('tipLeft').textContent = fmtTime(s);
+    $('tipRight').textContent = fmtTime(e);
+  }
+
+  function nudgeStep(){
+    return currentBuffer ? Math.max(0.02, 6/pxPerSec) : 0.1;
+  }
+  $('sMinus').addEventListener('click', ()=>{ if(selStart==null) return; selStart = Math.max(0, selStart-nudgeStep()); positionOverlays(); updateSelBar(); });
+  $('sPlus').addEventListener('click', ()=>{ if(selStart==null) return; selStart = Math.min(selEnd-0.01, selStart+nudgeStep()); positionOverlays(); updateSelBar(); });
+  $('eMinus').addEventListener('click', ()=>{ if(selEnd==null) return; selEnd = Math.max(selStart+0.01, selEnd-nudgeStep()); positionOverlays(); updateSelBar(); });
+  $('ePlus').addEventListener('click', ()=>{ if(selEnd==null) return; selEnd = Math.min(currentBuffer.duration, selEnd+nudgeStep()); positionOverlays(); updateSelBar(); });
+  $('clearSelBtn').addEventListener('click', ()=>{ selStart = selEnd = null; positionOverlays(); updateSelBar(); });
+
+  // ---------------- draggable selection handles ----------------
+  const handleLeft = $('handleLeft'), handleRight = $('handleRight');
+  function bindHandle(el, side){
+    el.addEventListener('pointerdown', e=>{
+      e.stopPropagation();
+      el.setPointerCapture(e.pointerId);
+      el.classList.add('active');
+      const move = ev=>{
+        const t = xToTime(ev.clientX);
+        if(side==='left') selStart = Math.min(t, selEnd-0.005);
+        else selEnd = Math.max(t, selStart+0.005);
+        positionOverlays(); updateTimeReadout();
+      };
+      const up = ev=>{
+        el.classList.remove('active');
+        window.removeEventListener('pointermove', move);
+        window.removeEventListener('pointerup', up);
+      };
+      window.addEventListener('pointermove', move);
+      window.addEventListener('pointerup', up);
+    });
+  }
+  bindHandle(handleLeft,'left');
+  bindHandle(handleRight,'right');
+
+  // ---------------- pinch to zoom (mobile) ----------------
+  let pinchStartDist = null, pinchStartPx = null, pinchAnchorTime = 0;
+  waveScroll.addEventListener('touchstart', e=>{
+    if(e.touches.length===2){
+      e.preventDefault();
+      const [a,b] = e.touches;
+      pinchStartDist = Math.hypot(a.clientX-b.clientX, a.clientY-b.clientY);
+      pinchStartPx = pxPerSec;
+      const midX = (a.clientX+b.clientX)/2;
+      pinchAnchorTime = xToTime(midX);
+    }
+  }, {passive:false});
+  waveScroll.addEventListener('touchmove', e=>{
+    if(e.touches.length===2 && pinchStartDist && currentBuffer){
+      e.preventDefault();
+      const [a,b] = e.touches;
+      const dist = Math.hypot(a.clientX-b.clientX, a.clientY-b.clientY);
+      const ratio = dist/pinchStartDist;
+      pxPerSec = Math.max(MIN_PX, Math.min(MAX_PX, Math.round(pinchStartPx*ratio)));
+      zoomRange.value = sliderFromZoom(pxPerSec);
+      drawWaveform();
+      const rect = waveScroll.getBoundingClientRect();
+      waveScroll.scrollLeft = pinchAnchorTime*pxPerSec - (waveScroll.clientWidth/2);
+    }
+  }, {passive:false});
+  waveScroll.addEventListener('touchend', e=>{ if(e.touches.length<2) pinchStartDist = null; });
+
+  // zoom smoothly to fit current selection in view
+  $('zoomFitBtn').addEventListener('click', ()=>{
+    if(!hasSelection() || !currentBuffer) return;
+    const s = Math.min(selStart,selEnd), e = Math.max(selStart,selEnd);
+    const dur = Math.max(0.05, e-s);
+    const target = Math.max(MIN_PX, Math.min(MAX_PX, Math.round((waveScroll.clientWidth*0.85)/dur)));
+    pxPerSec = target;
+    zoomRange.value = sliderFromZoom(pxPerSec);
+    drawWaveform();
+    waveScroll.scrollLeft = s*pxPerSec - waveScroll.clientWidth*0.07;
+  });
+
+  // ---------------- playback ----------------
+  function getCurrentTime(){
+    if(!currentBuffer) return 0;
+    if(isPlaying){
+      const t = playStartOffset + (getCtx().currentTime - playStartCtxTime);
+      return Math.min(t, currentBuffer.duration);
+    }
+    return playStartOffset;
+  }
+
+  function seek(t){
+    playStartOffset = Math.max(0, Math.min(currentBuffer.duration, t));
+    if(isPlaying){ stopSource(); startSource(playStartOffset); }
+    updateTimeReadout();
+  }
+
+  function startSource(offset){
+    const ctx = getCtx();
+    sourceNode = ctx.createBufferSource();
+    sourceNode.buffer = currentBuffer;
+    sourceNode.connect(ctx.destination);
+    sourceNode.onended = ()=>{
+      if(isPlaying){
+        const dur = currentBuffer.duration;
+        if(getCurrentTime() >= dur-0.02){
+          isPlaying = false;
+          playStartOffset = 0;
+          setPlayIcon(false);
+          cancelAnimationFrame(rafId);
+          positionOverlays(); updateTimeReadout();
+        }
+      }
+    };
+    sourceNode.start(0, offset);
+    playStartCtxTime = ctx.currentTime;
+    playStartOffset = offset;
+  }
+  function stopSource(){
+    if(sourceNode){
+      try{ sourceNode.onended = null; sourceNode.stop(); }catch(e){}
+      sourceNode = null;
+    }
+  }
+
+  function playPause(){
+    if(!currentBuffer) return;
+    if(isPlaying){
+      playStartOffset = getCurrentTime();
+      stopSource();
+      isPlaying = false;
+      setPlayIcon(false);
+      cancelAnimationFrame(rafId);
+    } else {
+      const ctx = getCtx();
+      if(ctx.state==='suspended') ctx.resume();
+      let start = playStartOffset;
+      if(selStart!=null && selEnd!=null && Math.abs(selEnd-selStart)>0.02){
+        const s = Math.min(selStart,selEnd);
+        if(start < s || start >= Math.max(selStart,selEnd)) start = s;
+      }
+      startSource(start);
+      isPlaying = true;
+      setPlayIcon(true);
+      tick();
+    }
+  }
+  function stopPlayback(){
+    stopSource();
+    isPlaying = false;
+    playStartOffset = 0;
+    setPlayIcon(false);
+    cancelAnimationFrame(rafId);
+    positionOverlays(); updateTimeReadout();
+  }
+  function setPlayIcon(playing){
+    playIcon.innerHTML = playing
+      ? '<rect x="6" y="5" width="4" height="14" rx="1"/><rect x="14" y="5" width="4" height="14" rx="1"/>'
+      : '<path d="M8 5v14l11-7z"/>';
+  }
+  function tick(){
+    if(!isPlaying) return;
+    const cur = getCurrentTime();
+    // auto-stop at selection end during preview
+    if(selStart!=null && selEnd!=null && Math.abs(selEnd-selStart)>0.02){
+      const e = Math.max(selStart, selEnd);
+      if(cur >= e-0.01){ stopPlayback(); return; }
+    }
+    positionOverlays();
+    updateTimeReadout();
+    autoScrollToPlayhead();
+    rafId = requestAnimationFrame(tick);
+  }
+  function autoScrollToPlayhead(){
+    const cur = getCurrentTime();
+    const x = cur*pxPerSec;
+    const left = waveScroll.scrollLeft, right = left+waveScroll.clientWidth;
+    if(x<left || x>right-40) waveScroll.scrollLeft = x - waveScroll.clientWidth*0.2;
+  }
+
+  playBtn.addEventListener('click', playPause);
+  stopBtn.addEventListener('click', stopPlayback);
+
+  function updateTimeReadout(){
+    curTimeEl.textContent = fmtTime(getCurrentTime());
+    totalTimeEl.textContent = currentBuffer ? fmtTime(currentBuffer.duration) : '00:00.000';
+  }
+
+  // ---------------- zoom ----------------
+  zoomRange.addEventListener('input', ()=>{
+    pxPerSec = zoomFromSlider(+zoomRange.value);
+    if(currentBuffer) drawWaveform();
+  });
+  zoomInBtn.addEventListener('click', ()=>{
+    zoomRange.value = Math.min(100, +zoomRange.value + 8);
+    pxPerSec = zoomFromSlider(+zoomRange.value);
+    drawWaveform();
+  });
+  zoomOutBtn.addEventListener('click', ()=>{
+    zoomRange.value = Math.max(0, +zoomRange.value - 8);
+    pxPerSec = zoomFromSlider(+zoomRange.value);
+    drawWaveform();
+  });
+
+  // ---------------- buffer ops ----------------
+  // find nearest zero-crossing near a sample index so cuts don't click
+  function nearestZeroCrossing(buffer, sampleIdx, window){
+    window = window || Math.round(buffer.sampleRate*0.008); // ~8ms search radius
+    const ch = buffer.getChannelData(0);
+    const lo = Math.max(1, sampleIdx-window), hi = Math.min(ch.length-1, sampleIdx+window);
+    let best = sampleIdx, bestDist = Infinity;
+    for(let i=lo;i<hi;i++){
+      if((ch[i-1]<0 && ch[i]>=0) || (ch[i-1]>=0 && ch[i]<0)){
+        const d = Math.abs(i-sampleIdx);
+        if(d<bestDist){ bestDist=d; best=i; }
+      }
+    }
+    return best;
+  }
+  // tiny linear fade at the very start/end of a buffer to avoid audible clicks
+  function applyMicroFade(buffer, ms){
+    ms = ms==null ? 3 : ms;
+    const n = Math.min(buffer.length, Math.round(buffer.sampleRate*ms/1000));
+    if(n<2) return buffer;
+    for(let c=0;c<buffer.numberOfChannels;c++){
+      const d = buffer.getChannelData(c);
+      for(let i=0;i<n;i++) d[i] *= i/n;
+      for(let i=0;i<n;i++) d[d.length-1-i] *= i/n;
+    }
+    return buffer;
+  }
+
+  function sliceBuffer(buffer, startSample, endSample){
+    startSample = Math.max(0, startSample);
+    endSample = Math.min(buffer.length, endSample);
+    const len = Math.max(0, endSample-startSample);
+    const ctx = getCtx();
+    const nb = ctx.createBuffer(buffer.numberOfChannels, Math.max(len,1), buffer.sampleRate);
+    for(let c=0;c<buffer.numberOfChannels;c++){
+      const src = buffer.getChannelData(c).subarray(startSample, endSample);
+      nb.copyToChannel(new Float32Array(src), c);
+    }
+    return nb;
+  }
+  function concatBuffers(a,b){
+    const ctx = getCtx();
+    const numCh = Math.max(a.numberOfChannels, b.numberOfChannels);
+    const len = a.length + b.length;
+    const nb = ctx.createBuffer(numCh, len, a.sampleRate);
+    for(let c=0;c<numCh;c++){
+      const combined = new Float32Array(len);
+      if(c<a.numberOfChannels) combined.set(a.getChannelData(c),0);
+      if(c<b.numberOfChannels) combined.set(b.getChannelData(c), a.length);
+      nb.copyToChannel(combined, c);
+    }
+    return nb;
+  }
+
+  function pushHistory(){
+    history.push(currentBuffer);
+    if(history.length>25) history.shift();
+  }
+
+  function hasSelection(){
+    return selStart!=null && selEnd!=null && Math.abs(selEnd-selStart) > 0.005;
+  }
+  function selBounds(){
+    const sr = currentBuffer.sampleRate;
+    let s = Math.floor(Math.min(selStart,selEnd)*sr);
+    let e = Math.floor(Math.max(selStart,selEnd)*sr);
+    s = nearestZeroCrossing(currentBuffer, s);
+    e = nearestZeroCrossing(currentBuffer, e);
+    if(e<=s) e = s+1;
+    return [s,e];
+  }
+
+  cutBtn.addEventListener('click', ()=>{
+    if(!hasSelection()) return alert('আগে waveform-এ drag করে একটা অংশ সিলেক্ট করুন।');
+    const [s,e] = selBounds();
+    pushHistory();
+    let nb;
+    if(s<=0) nb = sliceBuffer(currentBuffer, e, currentBuffer.length);
+    else if(e>=currentBuffer.length) nb = sliceBuffer(currentBuffer, 0, s);
+    else nb = concatBuffers(sliceBuffer(currentBuffer,0,s), sliceBuffer(currentBuffer,e,currentBuffer.length));
+    currentBuffer = applyMicroFade(nb);
+    selStart = selEnd = null;
+    stopPlayback();
+    drawWaveform(); updateButtons();
+  });
+
+  trimBtn.addEventListener('click', ()=>{
+    if(!hasSelection()) return alert('আগে waveform-এ drag করে একটা অংশ সিলেক্ট করুন।');
+    const [s,e] = selBounds();
+    pushHistory();
+    currentBuffer = applyMicroFade(sliceBuffer(currentBuffer, s, e));
+    selStart = selEnd = null;
+    stopPlayback();
+    drawWaveform(); updateButtons();
+  });
+
+  splitBtn.addEventListener('click', ()=>{
+    if(!currentBuffer) return;
+    const sr = currentBuffer.sampleRate;
+    let splitAt = hasSelection() ? Math.min(selStart,selEnd) : getCurrentTime();
+    let s = Math.floor(splitAt*sr);
+    s = nearestZeroCrossing(currentBuffer, s);
+    if(s<=0 || s>=currentBuffer.length) return alert('স্প্লিট পয়েন্টটা শুরু বা শেষে হতে পারবে না। একটু ভেতরে সিলেক্ট করুন।');
+    const left = applyMicroFade(sliceBuffer(currentBuffer, 0, s));
+    const right = applyMicroFade(sliceBuffer(currentBuffer, s, currentBuffer.length));
+    const n = clips.length+1;
+    clips.push({buffer:left, name:'clip-'+n+'a.wav'});
+    clips.push({buffer:right, name:'clip-'+n+'b.wav'});
+    renderClips();
+  });
+
+  undoBtn.addEventListener('click', ()=>{
+    if(history.length===0) return;
+    currentBuffer = history.pop();
+    selStart = selEnd = null;
+    stopPlayback();
+    drawWaveform(); updateButtons();
+  });
+
+  resetBtn.addEventListener('click', ()=>{
+    if(!originalBuffer) return;
+    if(currentBuffer!==originalBuffer) pushHistory();
+    currentBuffer = originalBuffer;
+    selStart = selEnd = null;
+    stopPlayback();
+    drawWaveform(); updateButtons();
+  });
+
+  function updateButtons(){
+    undoBtn.disabled = history.length===0;
+    clipsPanel.classList.toggle('show', clips.length>0);
+  }
+
+  // ---------------- clips list ----------------
+  function renderClips(){
+    clipsList.innerHTML = '';
+    clips.forEach((c,i)=>{
+      const row = document.createElement('div');
+      row.className = 'clip-row';
+      row.innerHTML =
+        '<div><div class="lbl">'+c.name+'</div><div class="meta">'+fmtTime(c.buffer.duration)+'</div></div>' +
+        '<div class="clip-actions">' +
+          '<button class="btn icon-only" data-a="play">▶</button>' +
+          '<button class="btn icon-only" data-a="dl">⬇</button>' +
+          '<button class="btn icon-only warn" data-a="del">✕</button>' +
+        '</div>';
+      row.querySelector('[data-a="play"]').addEventListener('click', ()=>{
+        const ctx = getCtx(); if(ctx.state==='suspended') ctx.resume();
+        const src = ctx.createBufferSource(); src.buffer = c.buffer; src.connect(ctx.destination); src.start();
+      });
+      row.querySelector('[data-a="dl"]').addEventListener('click', ()=> downloadBuffer(c.buffer, c.name));
+      row.querySelector('[data-a="del"]').addEventListener('click', ()=>{
+        clips.splice(i,1); renderClips(); updateButtons();
+      });
+      clipsList.appendChild(row);
+    });
+    updateButtons();
+  }
+
+  // ---------------- export ----------------
+  function bufferToWav(buffer){
+    const numCh = buffer.numberOfChannels;
+    const length = buffer.length*numCh*2 + 44;
+    const ab = new ArrayBuffer(length);
+    const view = new DataView(ab);
+    let pos = 0;
+    function u16(d){ view.setUint16(pos,d,true); pos+=2; }
+    function u32(d){ view.setUint32(pos,d,true); pos+=4; }
+    u32(0x46464952); u32(length-8); u32(0x45564157);
+    u32(0x20746d66); u32(16); u16(1); u16(numCh);
+    u32(buffer.sampleRate); u32(buffer.sampleRate*2*numCh); u16(numCh*2); u16(16);
+    u32(0x61746164); u32(length-pos-4);
+    const chans = []; for(let c=0;c<numCh;c++) chans.push(buffer.getChannelData(c));
+    let idx = 0;
+    while(pos<length){
+      for(let c=0;c<numCh;c++){
+        let s = Math.max(-1, Math.min(1, chans[c][idx]||0));
+        s = s<0 ? s*0x8000 : s*0x7FFF;
+        view.setInt16(pos, s, true); pos+=2;
+      }
+      idx++;
+    }
+    return new Blob([ab], {type:'audio/wav'});
+  }
+
+  function downloadBuffer(buffer, name){
+    const blob = bufferToWav(buffer);
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = name;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(()=> URL.revokeObjectURL(url), 4000);
+  }
+
+  downloadBtn.addEventListener('click', ()=>{
+    if(!currentBuffer) return;
+    if(hasSelection()){
+      const [s,e] = selBounds();
+      const clip = applyMicroFade(sliceBuffer(currentBuffer, s, e));
+      downloadBuffer(clip, 'selected-audio.wav');
+    } else {
+      downloadBuffer(currentBuffer, 'edited-audio.wav');
+    }
+  });
+
+  // keyboard shortcuts (handy on bluetooth-keyboard + phone combo)
+  document.addEventListener('keydown', e=>{
+    if(editor.hidden) return;
+    if(e.code==='Space'){ e.preventDefault(); playPause(); }
+    else if(e.key==='Delete' || e.key==='Backspace'){ if(hasSelection()){ e.preventDefault(); cutBtn.click(); } }
+  });
+
+})();
+</script>
+</body>
+</html>
