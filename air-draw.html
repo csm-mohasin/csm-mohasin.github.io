@@ -192,6 +192,7 @@
       <button class="btn" id="fistToggleBtn"><span class="icon">✊</span>Auto-Pinch</button>
       <button class="btn" id="trailBtn"><span class="icon">✨</span>Glow Trail</button>
       <button class="btn" id="magicBtn"><span class="icon">🔮</span>Magic Web</button>
+      <button class="btn" id="accuracyBtn"><span class="icon">🎯</span>High Accuracy</button>
     </div>
     <div class="row">
       <button class="btn" id="undoBtn"><span class="icon">↩️</span>Undo</button>
@@ -234,6 +235,14 @@
   const mirrorBtn = document.getElementById('mirrorBtn');
   const fistToggleBtn = document.getElementById('fistToggleBtn');
   const magicBtn = document.getElementById('magicBtn');
+  const accuracyBtn = document.getElementById('accuracyBtn');
+
+  // Offscreen canvas used to brighten/contrast-boost each frame before it goes
+  // into the hand model. This helps a lot in dim rooms without costing much,
+  // since it's a single cheap filtered drawImage rather than heavier ML work.
+  const preCanvas = document.createElement('canvas');
+  const preCtx = preCanvas.getContext('2d', { willReadFrequently: false });
+  let highAccuracy = false;
 
   let currentColor = '#00f0ff';
   let brushSize = 8;
@@ -262,6 +271,16 @@
     magicBtn.classList.toggle('active', magicMode);
   });
   magicBtn.classList.add('active');
+
+  accuracyBtn.addEventListener('click', ()=>{
+    highAccuracy = !highAccuracy;
+    accuracyBtn.classList.toggle('active', highAccuracy);
+    hands.setOptions({
+      modelComplexity: highAccuracy ? 1 : 0,
+      minDetectionConfidence: highAccuracy ? 0.5 : 0.65,
+      minTrackingConfidence: highAccuracy ? 0.4 : 0.6
+    });
+  });
 
   // --- Performance: pre-rendered glow sprites instead of per-frame shadowBlur ---
   // shadowBlur forces the canvas to re-rasterize a blur on every single draw call,
@@ -504,8 +523,8 @@
   hands.setOptions({
     maxNumHands: 2,
     modelComplexity: 0,
-    minDetectionConfidence: 0.65,
-    minTrackingConfidence: 0.6
+    minDetectionConfidence: 0.55,
+    minTrackingConfidence: 0.5
   });
   hands.onResults((results)=>{
     const w = fxCanvas.width, h = fxCanvas.height;
@@ -542,7 +561,21 @@
       await video.play();
 
       camera = new Camera(video, {
-        onFrame: async () => { await hands.send({image: video}); },
+        onFrame: async () => {
+          // Boost brightness/contrast before detection — helps a lot in dim rooms.
+          // This is one cheap canvas draw, far lighter than raising model complexity.
+          const vw = video.videoWidth, vh = video.videoHeight;
+          if (vw && vh){
+            if (preCanvas.width !== vw || preCanvas.height !== vh){
+              preCanvas.width = vw; preCanvas.height = vh;
+            }
+            preCtx.filter = 'brightness(1.45) contrast(1.2) saturate(1.05)';
+            preCtx.drawImage(video, 0, 0, vw, vh);
+            await hands.send({image: preCanvas});
+          } else {
+            await hands.send({image: video});
+          }
+        },
         width: 640,
         height: 480
       });
