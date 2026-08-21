@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>AirDraw — Finger Tracking Canvas</title>
+<style>
+  :root{
+    --bg:#05060a;
+    --panel:#0b0e17;
+    --neon-cyan:#00f0ff;
+    --neon-pink:#ff2ec4;
+    --neon-lime:#c6ff3a;
+    --muted:#6b7280;
+    --line:rgba(0,240,255,0.15);
+  }
+  *{box-sizing:border-box;}
+  html,body{
+    margin:0;padding:0;height:100%;
+    background:var(--bg);
+    font-family:'Courier New',monospace;
+    color:#e6f7ff;
+    overflow:hidden;
+    -webkit-tap-highlight-color:transparent;
+  }
+  #stage{
+    position:relative;
+    width:100vw;height:100vh;
+    display:flex;align-items:center;justify-content:center;
+  }
+  video{
+    position:absolute;
+    top:0;left:0;width:100%;height:100%;
+    object-fit:cover;
+    transform:scaleX(-1);
+    opacity:0.55;
+    filter:saturate(1.1) contrast(1.05);
+  }
+  #drawCanvas, #fxCanvas{
+    position:absolute;
+    top:0;left:0;width:100%;height:100%;
+    transform:scaleX(-1);
+  }
+  #fxCanvas{ pointer-events:none; }
+
+  #scan{
+    position:absolute;inset:0;
+    background:repeating-linear-gradient(
+      to bottom, rgba(0,240,255,0.03) 0px, rgba(0,240,255,0.03) 1px,
+      transparent 2px, transparent 4px);
+    pointer-events:none;
+    mix-blend-mode:screen;
+  }
+
+  #brand{
+    position:absolute; top:10px; left:14px;
+    font-size:11px; letter-spacing:1px; color:var(--neon-cyan);
+    opacity:0.75; text-shadow:0 0 8px rgba(0,240,255,0.6);
+    z-index:20;
+  }
+  #brand b{color:var(--neon-pink); text-shadow:0 0 8px rgba(255,46,196,0.7);}
+
+  #status{
+    position:absolute; top:10px; right:14px;
+    font-size:11px; padding:5px 10px;
+    border:1px solid var(--line);
+    border-radius:20px;
+    background:rgba(5,6,10,0.6);
+    backdrop-filter:blur(6px);
+    z-index:20;
+    letter-spacing:0.5px;
+    transition:all .2s;
+  }
+  #status.live{ color:var(--neon-lime); border-color:rgba(198,255,58,0.4); box-shadow:0 0 12px rgba(198,255,58,0.25);}
+  #status.off{ color:var(--muted); }
+  #status.draw{ color:var(--neon-pink); border-color:rgba(255,46,196,0.5); box-shadow:0 0 14px rgba(255,46,196,0.35);}
+
+  #dock{
+    position:absolute; bottom:0; left:0; right:0;
+    z-index:30;
+    display:flex; flex-direction:column;
+    align-items:center;
+    padding:10px 12px calc(14px + env(safe-area-inset-bottom));
+    background:linear-gradient(to top, rgba(5,6,10,0.95), rgba(5,6,10,0.55) 70%, transparent);
+  }
+  #hint{
+    font-size:11px; color:var(--muted); margin-bottom:10px; text-align:center;
+    letter-spacing:0.4px;
+  }
+  #hint span{color:var(--neon-cyan);}
+
+  .row{
+    display:flex; gap:10px; align-items:center; justify-content:center;
+    flex-wrap:wrap; width:100%; max-width:520px;
+  }
+
+  .btn{
+    background:var(--panel);
+    border:1px solid var(--line);
+    color:#dff9ff;
+    padding:10px 14px;
+    border-radius:12px;
+    font-family:inherit;
+    font-size:12px;
+    letter-spacing:0.5px;
+    display:flex; align-items:center; gap:6px;
+    -webkit-user-select:none; user-select:none;
+    transition:transform .12s, box-shadow .12s, border-color .12s;
+  }
+  .btn:active{ transform:scale(0.94); }
+  .btn.active{
+    border-color:var(--neon-cyan);
+    box-shadow:0 0 14px rgba(0,240,255,0.35);
+    color:var(--neon-cyan);
+  }
+  .icon{font-size:14px;}
+
+  .swatch{
+    width:26px;height:26px;border-radius:50%;
+    border:2px solid rgba(255,255,255,0.2);
+    display:inline-block;
+    box-shadow:0 0 6px currentColor;
+  }
+  .swatch.selected{ border-color:#fff; transform:scale(1.15); }
+
+  #colorRow{ margin-bottom:8px; }
+  #brushRange{
+    width:120px; accent-color:var(--neon-cyan);
+  }
+
+  #startOverlay{
+    position:absolute; inset:0; z-index:50;
+    background:radial-gradient(ellipse at center, #0b0e17 0%, #05060a 80%);
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    gap:18px; text-align:center; padding:24px;
+  }
+  #startOverlay h1{
+    font-size:22px; margin:0;
+    letter-spacing:2px;
+    background:linear-gradient(90deg,var(--neon-cyan),var(--neon-pink));
+    -webkit-background-clip:text; background-clip:text; color:transparent;
+    text-shadow:0 0 30px rgba(0,240,255,0.3);
+  }
+  #startOverlay p{
+    font-size:12.5px; color:#9fb3bd; max-width:320px; line-height:1.6; margin:0;
+  }
+  #startBtn{
+    background:transparent;
+    border:1px solid var(--neon-cyan);
+    color:var(--neon-cyan);
+    padding:14px 30px;
+    border-radius:30px;
+    font-size:13px; letter-spacing:1.5px;
+    box-shadow:0 0 20px rgba(0,240,255,0.25);
+    font-family:inherit;
+  }
+  #startBtn:active{ transform:scale(0.96); }
+  #loadingText{ font-size:11px; color:var(--neon-lime); display:none; letter-spacing:1px;}
+  #errorText{ font-size:11.5px; color:var(--neon-pink); display:none; max-width:320px; line-height:1.6;}
+
+  #creditFooter{
+    font-size:9.5px; color:#3a4550; margin-top:6px; letter-spacing:0.5px;
+  }
+</style>
+</head>
+<body>
+
+<div id="stage">
+  <video id="video" playsinline autoplay muted></video>
+  <canvas id="drawCanvas"></canvas>
+  <canvas id="fxCanvas"></canvas>
+  <div id="scan"></div>
+
+  <div id="brand">AIR<b>DRAW</b> · CSM MOHASIN ALAM</div>
+  <div id="status" class="off">CAM OFF</div>
+
+  <div id="dock">
+    <div id="hint">তর্জনী (<span>index finger</span>) তুলে আঁকো · Magic Web অন করে <span>দুই হাত</span> দেখাও — আঙুলে আঙুলে জাদুর আলো জ্বলবে</div>
+
+    <div class="row" id="colorRow">
+      <span class="swatch selected" data-color="#00f0ff" style="color:#00f0ff;background:#00f0ff"></span>
+      <span class="swatch" data-color="#ff2ec4" style="color:#ff2ec4;background:#ff2ec4"></span>
+      <span class="swatch" data-color="#c6ff3a" style="color:#c6ff3a;background:#c6ff3a"></span>
+      <span class="swatch" data-color="#ffb800" style="color:#ffb800;background:#ffb800"></span>
+      <span class="swatch" data-color="#ffffff" style="color:#ffffff;background:#ffffff"></span>
+    </div>
+
+    <div class="row">
+      <label class="btn" style="gap:8px;">
+        <span class="icon">✏️</span>
+        <input type="range" id="brushRange" min="2" max="30" value="8">
+      </label>
+      <button class="btn" id="fistToggleBtn"><span class="icon">✊</span>Auto-Pinch</button>
+      <button class="btn" id="trailBtn"><span class="icon">✨</span>Glow Trail</button>
+      <button class="btn" id="magicBtn"><span class="icon">🔮</span>Magic Web</button>
+    </div>
+    <div class="row">
+      <button class="btn" id="undoBtn"><span class="icon">↩️</span>Undo</button>
+      <button class="btn" id="clearBtn"><span class="icon">🗑️</span>Clear</button>
+      <button class="btn" id="mirrorBtn"><span class="icon">🔁</span>Mirror UI</button>
+      <button class="btn" id="saveBtn"><span class="icon">💾</span>Save PNG</button>
+    </div>
+    <div id="creditFooter">Built by CSM Mohasin Alam</div>
+  </div>
+
+  <div id="startOverlay">
+    <h1>◆ AIRDRAW ◆</h1>
+    <p>Webcam এ তোমার হাত দেখিয়ে বাতাসে আঁকো। তর্জনী উঁচু করলেই লাইন আঁকা শুরু হবে — কোনো মাউস বা টাচ লাগবে না।</p>
+    <button id="startBtn">ক্যামেরা চালু করো ▶</button>
+    <div id="loadingText">মডেল লোড হচ্ছে... হাত খুঁজছি</div>
+    <div id="errorText"></div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+
+<script>
+(function(){
+  const video = document.getElementById('video');
+  const drawCanvas = document.getElementById('drawCanvas');
+  const fxCanvas = document.getElementById('fxCanvas');
+  const dctx = drawCanvas.getContext('2d');
+  const fctx = fxCanvas.getContext('2d');
+  const statusEl = document.getElementById('status');
+  const startOverlay = document.getElementById('startOverlay');
+  const startBtn = document.getElementById('startBtn');
+  const loadingText = document.getElementById('loadingText');
+  const errorText = document.getElementById('errorText');
+  const brushRange = document.getElementById('brushRange');
+  const undoBtn = document.getElementById('undoBtn');
+  const clearBtn = document.getElementById('clearBtn');
+  const saveBtn = document.getElementById('saveBtn');
+  const trailBtn = document.getElementById('trailBtn');
+  const mirrorBtn = document.getElementById('mirrorBtn');
+  const fistToggleBtn = document.getElementById('fistToggleBtn');
+  const magicBtn = document.getElementById('magicBtn');
+
+  let currentColor = '#00f0ff';
+  let brushSize = 8;
+  let glowTrail = true;
+  let mirrorUI = false; // controls whether the on-screen panel logic flips, drawing itself always mirrors with video
+  let pinchLockedDrawing = false; // if true, drawing state is toggled by pinch gesture instead of "finger up"
+  let isDrawing = false;
+  let lastX = null, lastY = null;
+  let strokes = []; // for undo: array of {points:[], color, size}
+  let currentStroke = null;
+  let pinchWasClosed = false;
+  let magicMode = true; // two-hand finger-to-finger neon web
+  let sparkles = []; // {x,y,life,color,vx,vy}
+  let webPulse = 0; // animates the energy flowing along connector lines
+
+  // fingertip landmark indices + a signature neon color per finger
+  const FINGER_TIPS = [
+    { tip: 4,  pip: 3,  color: '#ff2ec4', name:'thumb'  },
+    { tip: 8,  pip: 6,  color: '#00f0ff', name:'index'  },
+    { tip: 12, pip: 10, color: '#c6ff3a', name:'middle' },
+    { tip: 16, pip: 14, color: '#ffb800', name:'ring'   },
+    { tip: 20, pip: 18, color: '#b18cff', name:'pinky'  }
+  ];
+
+  magicBtn.addEventListener('click', ()=>{
+    magicMode = !magicMode;
+    magicBtn.classList.toggle('active', magicMode);
+  });
+  magicBtn.classList.add('active');
+
+  function resizeCanvases(){
+    const w = window.innerWidth, h = window.innerHeight;
+    [drawCanvas, fxCanvas].forEach(c=>{
+      const prev = document.createElement('canvas');
+      prev.width = c.width; prev.height = c.height;
+      prev.getContext('2d').drawImage(c,0,0);
+      c.width = w; c.height = h;
+      if (c === drawCanvas) dctx.drawImage(prev,0,0,w,h);
+    });
+  }
+  window.addEventListener('resize', resizeCanvases);
+  resizeCanvases();
+
+  document.querySelectorAll('.swatch').forEach(sw=>{
+    sw.addEventListener('click', ()=>{
+      document.querySelectorAll('.swatch').forEach(s=>s.classList.remove('selected'));
+      sw.classList.add('selected');
+      currentColor = sw.dataset.color;
+    });
+  });
+
+  brushRange.addEventListener('input', e=>{ brushSize = parseInt(e.target.value,10); });
+
+  function redrawAll(){
+    dctx.clearRect(0,0,drawCanvas.width,drawCanvas.height);
+    strokes.forEach(s=>{
+      dctx.strokeStyle = s.color;
+      dctx.lineWidth = s.size;
+      dctx.lineCap = 'round';
+      dctx.lineJoin = 'round';
+      dctx.beginPath();
+      s.points.forEach((p,i)=>{
+        if(i===0) dctx.moveTo(p.x,p.y); else dctx.lineTo(p.x,p.y);
+      });
+      dctx.stroke();
+    });
+  }
+
+  undoBtn.addEventListener('click', ()=>{
+    strokes.pop();
+    redrawAll();
+  });
+  clearBtn.addEventListener('click', ()=>{
+    strokes = [];
+    dctx.clearRect(0,0,drawCanvas.width,drawCanvas.height);
+  });
+  trailBtn.addEventListener('click', ()=>{
+    glowTrail = !glowTrail;
+    trailBtn.classList.toggle('active', glowTrail);
+  });
+  trailBtn.classList.add('active');
+
+  mirrorBtn.addEventListener('click', ()=>{
+    mirrorUI = !mirrorUI;
+    mirrorBtn.classList.toggle('active', mirrorUI);
+  });
+
+  fistToggleBtn.addEventListener('click', ()=>{
+    pinchLockedDrawing = !pinchLockedDrawing;
+    fistToggleBtn.classList.toggle('active', pinchLockedDrawing);
+  });
+
+  saveBtn.addEventListener('click', ()=>{
+    const out = document.createElement('canvas');
+    out.width = drawCanvas.width; out.height = drawCanvas.height;
+    const octx = out.getContext('2d');
+    octx.fillStyle = '#05060a';
+    octx.fillRect(0,0,out.width,out.height);
+    octx.drawImage(drawCanvas,0,0);
+    octx.font = '11px monospace';
+    octx.fillStyle = 'rgba(0,240,255,0.7)';
+    octx.fillText('AirDraw · CSM Mohasin Alam', 10, out.height-10);
+    const a = document.createElement('a');
+    a.download = 'airdraw-' + Date.now() + '.png';
+    a.href = out.toDataURL('image/png');
+    a.click();
+  });
+
+  function dist(a,b){
+    return Math.hypot(a.x-b.x, a.y-b.y);
+  }
+
+  function fingerExtended(lm, tipIdx, pipIdx){
+    // finger considered extended if tip is meaningfully above (smaller y) the pip joint
+    return lm[tipIdx].y < lm[pipIdx].y - 0.02;
+  }
+
+  function spawnSparkles(px, py, color, count){
+    for(let i=0;i<count;i++){
+      const ang = Math.random()*Math.PI*2;
+      const spd = 0.6 + Math.random()*1.8;
+      sparkles.push({
+        x: px, y: py,
+        vx: Math.cos(ang)*spd, vy: Math.sin(ang)*spd - 0.4,
+        life: 1, color, size: 1.5 + Math.random()*2.5
+      });
+    }
+    if (sparkles.length > 400) sparkles.splice(0, sparkles.length-400);
+  }
+
+  function updateAndDrawSparkles(){
+    for(let i=sparkles.length-1;i>=0;i--){
+      const s = sparkles[i];
+      s.x += s.vx; s.y += s.vy;
+      s.vy += 0.03; // gentle gravity drift
+      s.life -= 0.025;
+      if (s.life <= 0){ sparkles.splice(i,1); continue; }
+      fctx.globalAlpha = Math.max(s.life, 0);
+      fctx.beginPath();
+      fctx.arc(s.x, s.y, s.size * s.life, 0, Math.PI*2);
+      fctx.fillStyle = s.color;
+      fctx.shadowBlur = 12;
+      fctx.shadowColor = s.color;
+      fctx.fill();
+    }
+    fctx.globalAlpha = 1;
+    fctx.shadowBlur = 0;
+  }
+
+  function drawFingerCursor(px, py, color, shouldDraw){
+    fctx.beginPath();
+    fctx.arc(px, py, shouldDraw ? brushSize*1.4 : 9, 0, Math.PI*2);
+    fctx.fillStyle = shouldDraw ? color : 'rgba(255,255,255,0.45)';
+    fctx.globalAlpha = 0.9;
+    fctx.shadowBlur = shouldDraw ? 20 : 6;
+    fctx.shadowColor = color;
+    fctx.fill();
+    fctx.globalAlpha = 1;
+    fctx.shadowBlur = 0;
+  }
+
+  function processDrawingHand(lm, w, h){
+    const indexTip = lm[8];
+    const thumbTip = lm[4];
+    const px = indexTip.x * w;
+    const py = indexTip.y * h;
+
+    const indexUp = fingerExtended(lm, 8, 6);
+    const middleUp = fingerExtended(lm, 12, 10);
+    const ringUp = fingerExtended(lm, 16, 14);
+
+    const pinchDist = dist(indexTip, thumbTip);
+    const isPinching = pinchDist < 0.045;
+
+    let shouldDraw;
+    if (pinchLockedDrawing){
+      if (isPinching && !pinchWasClosed){
+        isDrawing = !isDrawing;
+      }
+      pinchWasClosed = isPinching;
+      shouldDraw = isDrawing;
+    } else {
+      shouldDraw = indexUp && !middleUp && !ringUp && !isPinching;
+    }
+
+    drawFingerCursor(px, py, currentColor, shouldDraw);
+
+    if (shouldDraw){
+      statusEl.textContent = 'DRAWING';
+      statusEl.className = 'draw';
+      if (!currentStroke){
+        currentStroke = { color: currentColor, size: brushSize, points: [] };
+        strokes.push(currentStroke);
+        lastX = px; lastY = py;
+      }
+      currentStroke.points.push({x:px, y:py});
+      dctx.strokeStyle = currentColor;
+      dctx.lineWidth = brushSize;
+      dctx.lineCap = 'round';
+      dctx.lineJoin = 'round';
+      dctx.shadowBlur = glowTrail ? brushSize*1.5 : 0;
+      dctx.shadowColor = currentColor;
+      dctx.beginPath();
+      dctx.moveTo(lastX, lastY);
+      dctx.lineTo(px, py);
+      dctx.stroke();
+      lastX = px; lastY = py;
+    } else {
+      statusEl.textContent = 'HAND DETECTED';
+      statusEl.className = 'live';
+      currentStroke = null;
+      lastX = null; lastY = null;
+    }
+  }
+
+  function drawMagicWeb(lmA, lmB, w, h){
+    webPulse += 0.12;
+    const pulse = (Math.sin(webPulse) + 1) / 2; // 0..1
+
+    FINGER_TIPS.forEach((f, idx)=>{
+      const a = lmA[f.tip], b = lmB[f.tip];
+      const ax = a.x*w, ay = a.y*h;
+      const bx = b.x*w, by = b.y*h;
+
+      // curved energy line with slight bow for a "magic" feel
+      const midx = (ax+bx)/2, midy = (ay+by)/2 - 25*Math.sin(webPulse + idx);
+
+      fctx.beginPath();
+      fctx.moveTo(ax, ay);
+      fctx.quadraticCurveTo(midx, midy, bx, by);
+      fctx.lineWidth = 2 + pulse*2;
+      fctx.strokeStyle = f.color;
+      fctx.shadowBlur = 18 + pulse*12;
+      fctx.shadowColor = f.color;
+      fctx.globalAlpha = 0.85;
+      fctx.stroke();
+      fctx.globalAlpha = 1;
+      fctx.shadowBlur = 0;
+
+      // a traveling energy pulse along the curve
+      const t = (webPulse*0.3 + idx*0.15) % 1;
+      const qx = (1-t)*(1-t)*ax + 2*(1-t)*t*midx + t*t*bx;
+      const qy = (1-t)*(1-t)*ay + 2*(1-t)*t*midy + t*t*by;
+      fctx.beginPath();
+      fctx.arc(qx, qy, 4, 0, Math.PI*2);
+      fctx.fillStyle = '#ffffff';
+      fctx.shadowBlur = 16;
+      fctx.shadowColor = f.color;
+      fctx.fill();
+      fctx.shadowBlur = 0;
+
+      // endpoint glow + occasional sparkle spawn at fingertips
+      [[ax,ay],[bx,by]].forEach(([fx,fy])=>{
+        fctx.beginPath();
+        fctx.arc(fx, fy, 6 + pulse*3, 0, Math.PI*2);
+        fctx.fillStyle = f.color;
+        fctx.shadowBlur = 20;
+        fctx.shadowColor = f.color;
+        fctx.globalAlpha = 0.8;
+        fctx.fill();
+        fctx.globalAlpha = 1;
+        fctx.shadowBlur = 0;
+      });
+      if (Math.random() < 0.5) spawnSparkles(ax, ay, f.color, 1);
+      if (Math.random() < 0.5) spawnSparkles(bx, by, f.color, 1);
+    });
+
+    statusEl.textContent = '✨ MAGIC WEB ACTIVE';
+    statusEl.className = 'draw';
+  }
+
+  function noHand(){
+    statusEl.textContent = 'SEARCHING...';
+    statusEl.className = 'off';
+    currentStroke = null;
+    lastX = null; lastY = null;
+  }
+
+  const hands = new Hands({
+    locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`
+  });
+  hands.setOptions({
+    maxNumHands: 2,
+    modelComplexity: 1,
+    minDetectionConfidence: 0.65,
+    minTrackingConfidence: 0.6
+  });
+  hands.onResults((results)=>{
+    const w = fxCanvas.width, h = fxCanvas.height;
+    fctx.clearRect(0,0,w,h);
+
+    const handList = results.multiHandLandmarks || [];
+
+    if (handList.length === 0){
+      noHand();
+    } else if (handList.length === 1){
+      processDrawingHand(handList[0], w, h);
+    } else {
+      // two hands: primary hand (first) still draws, and if magic mode is on,
+      // a neon web connects every finger of hand A to the same finger of hand B
+      processDrawingHand(handList[0], w, h);
+      if (magicMode){
+        drawMagicWeb(handList[0], handList[1], w, h);
+      }
+    }
+
+    updateAndDrawSparkles();
+  });
+
+  let camera = null;
+
+  async function startApp(){
+    loadingText.style.display = 'block';
+    errorText.style.display = 'none';
+    startBtn.style.display = 'none';
+    try{
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: 'user', width: { ideal: 960 }, height: { ideal: 720 } },
+        audio: false
+      });
+      video.srcObject = stream;
+      await video.play();
+
+      camera = new Camera(video, {
+        onFrame: async () => { await hands.send({image: video}); },
+        width: 960,
+        height: 720
+      });
+      camera.start();
+
+      startOverlay.style.display = 'none';
+    } catch(err){
+      loadingText.style.display = 'none';
+      startBtn.style.display = 'inline-block';
+      errorText.style.display = 'block';
+      errorText.textContent = 'ক্যামেরা চালু করা যায়নি: ' + (err.message || err) + '। ব্রাউজারের ক্যামেরা পারমিশন চেক করো, এবং এই পেজটা https:// (যেমন GitHub Pages) থেকে খোলা কিনা দেখো — file:// থেকে খুললে অনেক ব্রাউজারে ক্যামেরা কাজ করে না।';
+    }
+  }
+
+  startBtn.addEventListener('click', startApp);
+})();
+</script>
+</body>
+</html>
