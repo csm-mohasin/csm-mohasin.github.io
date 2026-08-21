@@ -246,7 +246,6 @@
   let currentStroke = null;
   let pinchWasClosed = false;
   let magicMode = true; // two-hand finger-to-finger neon web
-  let sparkles = []; // {x,y,life,color,vx,vy}
   let webPulse = 0; // animates the energy flowing along connector lines
 
   // fingertip landmark indices + a signature neon color per finger
@@ -381,32 +380,6 @@
     return lm[tipIdx].y < lm[pipIdx].y - 0.02;
   }
 
-  function spawnSparkles(px, py, color, count){
-    if (sparkles.length > 120) return; // hard cap so old phones never choke
-    for(let i=0;i<count;i++){
-      const ang = Math.random()*Math.PI*2;
-      const spd = 0.6 + Math.random()*1.8;
-      sparkles.push({
-        x: px, y: py,
-        vx: Math.cos(ang)*spd, vy: Math.sin(ang)*spd - 0.4,
-        life: 1, color, size: 2 + Math.random()*3
-      });
-    }
-  }
-
-  function updateAndDrawSparkles(){
-    for(let i=sparkles.length-1;i>=0;i--){
-      const s = sparkles[i];
-      s.x += s.vx; s.y += s.vy;
-      s.vy += 0.03;
-      s.life -= 0.04;
-      if (s.life <= 0){ sparkles.splice(i,1); continue; }
-      fctx.globalAlpha = Math.max(s.life, 0);
-      drawGlow(fctx, s.x, s.y, s.size * 3, s.color);
-      fctx.globalAlpha = 1;
-    }
-  }
-
   function drawFingerCursor(px, py, color, shouldDraw){
     drawGlow(fctx, px, py, shouldDraw ? brushSize*2 : 14, shouldDraw ? color : 'rgba(255,255,255,0.5)');
     fctx.beginPath();
@@ -469,14 +442,25 @@
     }
   }
 
+  let colorPhase = 0; // drives the smooth fade/hue-cycle of the magic web lines
+
+  function fadingColor(offsetDeg){
+    // smooth continuous hue rotation, rounded to keep the glow-sprite cache small
+    const hue = Math.round((colorPhase + offsetDeg) / 6) * 6 % 360;
+    return `hsl(${hue}, 100%, 60%)`;
+  }
+
   function drawMagicWeb(lmA, lmB, w, h){
     webPulse += 0.12;
+    colorPhase = (colorPhase + 1.2) % 360;
     const pulse = (Math.sin(webPulse) + 1) / 2; // 0..1
 
     FINGER_TIPS.forEach((f, idx)=>{
       const a = lmA[f.tip], b = lmB[f.tip];
       const ax = a.x*w, ay = a.y*h;
       const bx = b.x*w, by = b.y*h;
+
+      const color = fadingColor(idx * 55); // each finger offset so the web fades like a rainbow wave
 
       // curved energy line with slight bow for a "magic" feel
       const midx = (ax+bx)/2, midy = (ay+by)/2 - 25*Math.sin(webPulse + idx);
@@ -488,7 +472,7 @@
       fctx.moveTo(ax, ay);
       fctx.quadraticCurveTo(midx, midy, bx, by);
       fctx.lineWidth = 8 + pulse*4;
-      fctx.strokeStyle = f.color;
+      fctx.strokeStyle = color;
       fctx.globalAlpha = 0.25;
       fctx.stroke();
 
@@ -498,18 +482,9 @@
       fctx.globalCompositeOperation = 'source-over';
       fctx.globalAlpha = 1;
 
-      // a traveling energy pulse along the curve
-      const t = (webPulse*0.3 + idx*0.15) % 1;
-      const qx = (1-t)*(1-t)*ax + 2*(1-t)*t*midx + t*t*bx;
-      const qy = (1-t)*(1-t)*ay + 2*(1-t)*t*midy + t*t*by;
-      drawGlow(fctx, qx, qy, 10, '#ffffff');
-
-      // endpoint glow at each fingertip
-      drawGlow(fctx, ax, ay, 14 + pulse*4, f.color);
-      drawGlow(fctx, bx, by, 14 + pulse*4, f.color);
-
-      if (Math.random() < 0.15) spawnSparkles(ax, ay, f.color, 1);
-      if (Math.random() < 0.15) spawnSparkles(bx, by, f.color, 1);
+      // side glow bubbles at each fingertip only
+      drawGlow(fctx, ax, ay, 14 + pulse*4, color);
+      drawGlow(fctx, bx, by, 14 + pulse*4, color);
     });
 
     statusEl.textContent = '✨ MAGIC WEB ACTIVE';
@@ -550,8 +525,6 @@
         drawMagicWeb(handList[0], handList[1], w, h);
       }
     }
-
-    updateAndDrawSparkles();
   });
 
   let camera = null;
