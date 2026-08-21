@@ -34,7 +34,6 @@
     object-fit:cover;
     transform:scaleX(-1);
     opacity:0.55;
-    filter:saturate(1.1) contrast(1.05);
   }
   #drawCanvas, #fxCanvas{
     position:absolute;
@@ -46,10 +45,10 @@
   #scan{
     position:absolute;inset:0;
     background:repeating-linear-gradient(
-      to bottom, rgba(0,240,255,0.03) 0px, rgba(0,240,255,0.03) 1px,
-      transparent 2px, transparent 4px);
+      to bottom, rgba(0,240,255,0.02) 0px, rgba(0,240,255,0.02) 2px,
+      transparent 3px, transparent 6px);
     pointer-events:none;
-    mix-blend-mode:screen;
+    opacity:0.6;
   }
 
   #brand{
@@ -265,6 +264,36 @@
   });
   magicBtn.classList.add('active');
 
+  // --- Performance: pre-rendered glow sprites instead of per-frame shadowBlur ---
+  // shadowBlur forces the canvas to re-rasterize a blur on every single draw call,
+  // which is very slow on phone GPUs. Drawing a cached radial-gradient sprite with
+  // 'lighter' composite gives a near-identical neon look for a fraction of the cost.
+  const glowSpriteCache = {};
+  function getGlowSprite(color, radius){
+    const key = color + '_' + radius;
+    if (glowSpriteCache[key]) return glowSpriteCache[key];
+    const size = radius * 2;
+    const c = document.createElement('canvas');
+    c.width = size; c.height = size;
+    const g = c.getContext('2d');
+    const grad = g.createRadialGradient(radius, radius, 0, radius, radius, radius);
+    grad.addColorStop(0, color);
+    grad.addColorStop(0.4, color);
+    grad.addColorStop(1, 'rgba(0,0,0,0)');
+    g.fillStyle = grad;
+    g.beginPath();
+    g.arc(radius, radius, radius, 0, Math.PI*2);
+    g.fill();
+    glowSpriteCache[key] = c;
+    return c;
+  }
+  function drawGlow(ctx, x, y, radius, color){
+    const sprite = getGlowSprite(color, radius);
+    ctx.globalCompositeOperation = 'lighter';
+    ctx.drawImage(sprite, x - radius, y - radius);
+    ctx.globalCompositeOperation = 'source-over';
+  }
+
   function resizeCanvases(){
     const w = window.innerWidth, h = window.innerHeight;
     [drawCanvas, fxCanvas].forEach(c=>{
@@ -353,47 +382,37 @@
   }
 
   function spawnSparkles(px, py, color, count){
+    if (sparkles.length > 120) return; // hard cap so old phones never choke
     for(let i=0;i<count;i++){
       const ang = Math.random()*Math.PI*2;
       const spd = 0.6 + Math.random()*1.8;
       sparkles.push({
         x: px, y: py,
         vx: Math.cos(ang)*spd, vy: Math.sin(ang)*spd - 0.4,
-        life: 1, color, size: 1.5 + Math.random()*2.5
+        life: 1, color, size: 2 + Math.random()*3
       });
     }
-    if (sparkles.length > 400) sparkles.splice(0, sparkles.length-400);
   }
 
   function updateAndDrawSparkles(){
     for(let i=sparkles.length-1;i>=0;i--){
       const s = sparkles[i];
       s.x += s.vx; s.y += s.vy;
-      s.vy += 0.03; // gentle gravity drift
-      s.life -= 0.025;
+      s.vy += 0.03;
+      s.life -= 0.04;
       if (s.life <= 0){ sparkles.splice(i,1); continue; }
       fctx.globalAlpha = Math.max(s.life, 0);
-      fctx.beginPath();
-      fctx.arc(s.x, s.y, s.size * s.life, 0, Math.PI*2);
-      fctx.fillStyle = s.color;
-      fctx.shadowBlur = 12;
-      fctx.shadowColor = s.color;
-      fctx.fill();
+      drawGlow(fctx, s.x, s.y, s.size * 3, s.color);
+      fctx.globalAlpha = 1;
     }
-    fctx.globalAlpha = 1;
-    fctx.shadowBlur = 0;
   }
 
   function drawFingerCursor(px, py, color, shouldDraw){
+    drawGlow(fctx, px, py, shouldDraw ? brushSize*2 : 14, shouldDraw ? color : 'rgba(255,255,255,0.5)');
     fctx.beginPath();
-    fctx.arc(px, py, shouldDraw ? brushSize*1.4 : 9, 0, Math.PI*2);
-    fctx.fillStyle = shouldDraw ? color : 'rgba(255,255,255,0.45)';
-    fctx.globalAlpha = 0.9;
-    fctx.shadowBlur = shouldDraw ? 20 : 6;
-    fctx.shadowColor = color;
+    fctx.arc(px, py, shouldDraw ? brushSize*0.5 : 4, 0, Math.PI*2);
+    fctx.fillStyle = shouldDraw ? color : 'rgba(255,255,255,0.8)';
     fctx.fill();
-    fctx.globalAlpha = 1;
-    fctx.shadowBlur = 0;
   }
 
   function processDrawingHand(lm, w, h){
@@ -435,7 +454,7 @@
       dctx.lineWidth = brushSize;
       dctx.lineCap = 'round';
       dctx.lineJoin = 'round';
-      dctx.shadowBlur = glowTrail ? brushSize*1.5 : 0;
+      dctx.shadowBlur = glowTrail ? brushSize*0.8 : 0;
       dctx.shadowColor = currentColor;
       dctx.beginPath();
       dctx.moveTo(lastX, lastY);
@@ -462,44 +481,35 @@
       // curved energy line with slight bow for a "magic" feel
       const midx = (ax+bx)/2, midy = (ay+by)/2 - 25*Math.sin(webPulse + idx);
 
+      // cheap glow: a soft wide translucent stroke under a thin bright stroke,
+      // avoids shadowBlur entirely
+      fctx.globalCompositeOperation = 'lighter';
       fctx.beginPath();
       fctx.moveTo(ax, ay);
       fctx.quadraticCurveTo(midx, midy, bx, by);
-      fctx.lineWidth = 2 + pulse*2;
+      fctx.lineWidth = 8 + pulse*4;
       fctx.strokeStyle = f.color;
-      fctx.shadowBlur = 18 + pulse*12;
-      fctx.shadowColor = f.color;
-      fctx.globalAlpha = 0.85;
+      fctx.globalAlpha = 0.25;
       fctx.stroke();
+
+      fctx.lineWidth = 2 + pulse*1.5;
+      fctx.globalAlpha = 0.95;
+      fctx.stroke();
+      fctx.globalCompositeOperation = 'source-over';
       fctx.globalAlpha = 1;
-      fctx.shadowBlur = 0;
 
       // a traveling energy pulse along the curve
       const t = (webPulse*0.3 + idx*0.15) % 1;
       const qx = (1-t)*(1-t)*ax + 2*(1-t)*t*midx + t*t*bx;
       const qy = (1-t)*(1-t)*ay + 2*(1-t)*t*midy + t*t*by;
-      fctx.beginPath();
-      fctx.arc(qx, qy, 4, 0, Math.PI*2);
-      fctx.fillStyle = '#ffffff';
-      fctx.shadowBlur = 16;
-      fctx.shadowColor = f.color;
-      fctx.fill();
-      fctx.shadowBlur = 0;
+      drawGlow(fctx, qx, qy, 10, '#ffffff');
 
-      // endpoint glow + occasional sparkle spawn at fingertips
-      [[ax,ay],[bx,by]].forEach(([fx,fy])=>{
-        fctx.beginPath();
-        fctx.arc(fx, fy, 6 + pulse*3, 0, Math.PI*2);
-        fctx.fillStyle = f.color;
-        fctx.shadowBlur = 20;
-        fctx.shadowColor = f.color;
-        fctx.globalAlpha = 0.8;
-        fctx.fill();
-        fctx.globalAlpha = 1;
-        fctx.shadowBlur = 0;
-      });
-      if (Math.random() < 0.5) spawnSparkles(ax, ay, f.color, 1);
-      if (Math.random() < 0.5) spawnSparkles(bx, by, f.color, 1);
+      // endpoint glow at each fingertip
+      drawGlow(fctx, ax, ay, 14 + pulse*4, f.color);
+      drawGlow(fctx, bx, by, 14 + pulse*4, f.color);
+
+      if (Math.random() < 0.15) spawnSparkles(ax, ay, f.color, 1);
+      if (Math.random() < 0.15) spawnSparkles(bx, by, f.color, 1);
     });
 
     statusEl.textContent = '✨ MAGIC WEB ACTIVE';
@@ -518,7 +528,7 @@
   });
   hands.setOptions({
     maxNumHands: 2,
-    modelComplexity: 1,
+    modelComplexity: 0,
     minDetectionConfidence: 0.65,
     minTrackingConfidence: 0.6
   });
@@ -560,8 +570,8 @@
 
       camera = new Camera(video, {
         onFrame: async () => { await hands.send({image: video}); },
-        width: 960,
-        height: 720
+        width: 640,
+        height: 480
       });
       camera.start();
 
