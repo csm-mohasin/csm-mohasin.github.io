@@ -1,0 +1,101 @@
+<!-- এই ফাইলটা admin-notify.html নামে সাইটে আপলোড করুন (লিংক কাউকে শেয়ার করবেন না) -->
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Notification Panel</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    background: #0a0e14; color: #00ffc8; font-family: 'Courier New', monospace;
+    display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; padding: 16px;
+  }
+  .box { width: 100%; max-width: 420px; background: #111820; border: 1px solid #00ffc8; border-radius: 8px; padding: 20px; box-shadow: 0 0 20px rgba(0,255,200,0.15); }
+  h2 { margin-top: 0; text-align: center; text-shadow: 0 0 8px #00ffc8; }
+  input, textarea { width: 100%; padding: 10px; margin: 6px 0 12px; background: #0a0e14; color: #00ffc8; border: 1px solid #00ffc8; border-radius: 4px; font-family: inherit; }
+  button { width: 100%; padding: 12px; background: #00ffc8; color: #0a0e14; border: none; border-radius: 4px; font-weight: bold; cursor: pointer; }
+  button:active { transform: scale(0.98); }
+  #status { text-align: center; margin-top: 10px; min-height: 20px; }
+  #pinScreen input { text-align: center; font-size: 20px; letter-spacing: 8px; }
+</style>
+</head>
+<body>
+
+<div class="box" id="pinScreen">
+  <h2>🔒 Admin Access</h2>
+  <input type="password" id="pinInput" placeholder="PIN দিন" inputmode="numeric">
+  <button onclick="checkPin()">Unlock</button>
+  <div id="pinError" style="color:#ff5555; text-align:center;"></div>
+</div>
+
+<div class="box" id="panel" style="display:none;">
+  <h2>📢 Send Notification</h2>
+  <input type="text" id="title" placeholder="Title">
+  <textarea id="body" rows="3" placeholder="Message"></textarea>
+  <input type="text" id="icon" placeholder="Icon URL (optional)">
+  <input type="text" id="link" placeholder="Click Link (optional, default: home)">
+  <button onclick="sendNotification()">🚀 Send Now</button>
+  <div id="status"></div>
+</div>
+
+<script>
+// ⚠️ এখানে নিজের ইচ্ছামত একটা PIN বসান (৪-৬ ডিজিট)
+const ADMIN_PIN = "2240"; // <-- Worker এর ADMIN_PIN এর সাথে same
+
+// ⚠️ আপনার Cloudflare Worker এর URL বসান
+const WORKER_URL = "https://send.csmmohasinalam.workers.dev/";
+
+function checkPin() {
+  const val = document.getElementById('pinInput').value;
+  if (val === ADMIN_PIN) {
+    document.getElementById('pinScreen').style.display = 'none';
+    document.getElementById('panel').style.display = 'block';
+    sessionStorage.setItem('admin_ok', '1'); // চলতি ব্রাউজার সেশনে মনে রাখবে
+  } else {
+    document.getElementById('pinError').innerText = 'ভুল PIN';
+  }
+}
+
+// আগে থেকে unlock করা থাকলে আবার PIN চাইবে না (একই সেশনে)
+if (sessionStorage.getItem('admin_ok') === '1') {
+  document.getElementById('pinScreen').style.display = 'none';
+  document.getElementById('panel').style.display = 'block';
+}
+
+async function sendNotification() {
+  const title = document.getElementById('title').value.trim();
+  const body = document.getElementById('body').value.trim();
+  const icon = document.getElementById('icon').value.trim();
+  const link = document.getElementById('link').value.trim();
+  const statusEl = document.getElementById('status');
+
+  if (!title || !body) {
+    statusEl.innerText = '⚠️ Title এবং Message দিন';
+    return;
+  }
+
+  statusEl.innerText = '⏳ পাঠানো হচ্ছে...';
+
+  try {
+    const res = await fetch(WORKER_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-Admin-Pin': ADMIN_PIN },
+      body: JSON.stringify({ title, body, icon, link })
+    });
+    const data = await res.json();
+
+    if (res.ok) {
+      statusEl.innerText = `✅ পাঠানো হয়েছে (${data.sent || 0} জনকে)`;
+      document.getElementById('title').value = '';
+      document.getElementById('body').value = '';
+    } else {
+      statusEl.innerText = '❌ Error: ' + (data.error || 'unknown');
+    }
+  } catch (err) {
+    statusEl.innerText = '❌ Failed: ' + err.message;
+  }
+}
+</script>
+</body>
+</html>
