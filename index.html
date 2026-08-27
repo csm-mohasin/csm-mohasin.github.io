@@ -1775,6 +1775,47 @@ footer{border-top:1px solid var(--border);padding:clamp(28px,4vw,44px) clamp(16p
 
 </div>
 
+   <!-- এই কোডটুকু আপনার index.html এর </body> ট্যাগের ঠিক আগে বসান -->
+
+<style>
+  #enable-notif-btn {
+    position: fixed;
+    bottom: 20px;
+    left: 20px;
+    z-index: 9999;
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: #0a0e14;
+    border: 1px solid #00ffc8;
+    color: #00ffc8;
+    font-size: 22px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 0 12px rgba(0, 255, 200, 0.5), 0 2px 8px rgba(0,0,0,0.4);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+  #enable-notif-btn:active {
+    transform: scale(0.92);
+  }
+  #enable-notif-btn.subscribed {
+    border-color: #00ff88;
+    color: #00ff88;
+    box-shadow: 0 0 12px rgba(0, 255, 136, 0.6), 0 2px 8px rgba(0,0,0,0.4);
+  }
+  /* ছোট স্ক্রিনে navbar/footer এর সাথে ওভারল্যাপ এড়াতে চাইলে bottom বাড়ান */
+  @media (max-width: 480px) {
+    #enable-notif-btn { bottom: 16px; left: 16px; width: 50px; height: 50px; font-size: 20px; }
+  }
+</style>
+
+<button id="enable-notif-btn" title="Notification চালু করুন">🔔</button>
+
+<script type="module" src="notification-subscribe.js"></script>
+
+
 <script>
 /* ═══════════════════════════════════════════════════════════
    CURSOR — smooth lag + trail
