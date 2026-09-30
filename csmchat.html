@@ -1,0 +1,989 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CSM Chat — Master Admin Console</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Firebase SDK (v9 compat) -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+
+    <style>
+        :root {
+            --bg-base: #060B14;
+            --bg-surface: rgba(10, 25, 47, 0.7);
+            --bg-card: rgba(16, 36, 68, 0.45);
+            --border-glass: rgba(0, 229, 255, 0.25);
+            --border-subtle: rgba(255, 255, 255, 0.08);
+            --cyan-neon: #00E5FF;
+            --electric-blue: #0072FF;
+            --violet-accent: #9D4EDD;
+            --danger-red: #EF4444;
+            --success-green: #10B981;
+            --warning-amber: #F59E0B;
+            --text-primary: #F8FAFC;
+            --text-secondary: #94A3B8;
+            --text-muted: #64748B;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        body {
+            background-color: var(--bg-base);
+            color: var(--text-primary);
+            min-height: 100vh;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* Dynamic Liquid Ambient Glow Orbs */
+        .ambient-glow {
+            position: fixed;
+            border-radius: 50%;
+            filter: blur(120px);
+            z-index: 0;
+            pointer-events: none;
+            opacity: 0.35;
+        }
+        .glow-1 {
+            width: 450px;
+            height: 450px;
+            background: radial-gradient(circle, var(--cyan-neon), transparent);
+            top: -100px;
+            left: -100px;
+        }
+        .glow-2 {
+            width: 550px;
+            height: 550px;
+            background: radial-gradient(circle, var(--electric-blue), transparent);
+            bottom: -150px;
+            right: -100px;
+        }
+        .glow-3 {
+            width: 400px;
+            height: 400px;
+            background: radial-gradient(circle, var(--violet-accent), transparent);
+            top: 40%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        .container {
+            position: relative;
+            z-index: 1;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 24px;
+        }
+
+        /* Glass Cards */
+        .glass-panel {
+            background: var(--bg-surface);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--border-glass);
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+        }
+
+        /* Top Header */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 28px;
+            margin-bottom: 24px;
+        }
+
+        .logo-group {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .logo-icon {
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, var(--cyan-neon), var(--electric-blue));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            color: #030712;
+            box-shadow: 0 0 20px rgba(0, 229, 255, 0.4);
+        }
+
+        .logo-text h1 {
+            font-size: 22px;
+            font-weight: 800;
+            background: linear-gradient(90deg, #FFFFFF, var(--cyan-neon));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: 0.5px;
+        }
+
+        .logo-text p {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        .header-meta {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            background: rgba(16, 185, 129, 0.12);
+            border: 1px solid rgba(16, 185, 129, 0.35);
+            border-radius: 30px;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--success-green);
+        }
+
+        .pulse-dot {
+            width: 8px;
+            height: 8px;
+            background-color: var(--success-green);
+            border-radius: 50%;
+            box-shadow: 0 0 10px var(--success-green);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+            70% { transform: scale(1.1); box-shadow: 0 0 0 10px rgba(16, 185, 129, 0); }
+            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+        }
+
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 18px;
+            margin-bottom: 28px;
+        }
+
+        .stat-card {
+            padding: 20px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            transition: transform 0.2s ease, border-color 0.2s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-3px);
+            border-color: var(--cyan-neon);
+        }
+
+        .stat-info h3 {
+            font-size: 28px;
+            font-weight: 800;
+            color: var(--text-primary);
+            margin-bottom: 4px;
+        }
+
+        .stat-info span {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-secondary);
+        }
+
+        .stat-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+        .icon-blue { background: rgba(0, 229, 255, 0.15); color: var(--cyan-neon); border: 1px solid rgba(0, 229, 255, 0.3); }
+        .icon-purple { background: rgba(157, 78, 221, 0.15); color: var(--violet-accent); border: 1px solid rgba(157, 78, 221, 0.3); }
+        .icon-green { background: rgba(16, 185, 129, 0.15); color: var(--success-green); border: 1px solid rgba(16, 185, 129, 0.3); }
+        .icon-amber { background: rgba(245, 158, 11, 0.15); color: var(--warning-amber); border: 1px solid rgba(245, 158, 11, 0.3); }
+
+        /* Controls / Search Bar */
+        .controls-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 16px;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 24px;
+            margin-bottom: 20px;
+        }
+
+        .search-box {
+            position: relative;
+            flex: 1;
+            min-width: 280px;
+            max-width: 500px;
+        }
+
+        .search-box i {
+            position: absolute;
+            left: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+            font-size: 15px;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 12px 16px 12px 44px;
+            background: rgba(10, 25, 47, 0.8);
+            border: 1px solid var(--border-glass);
+            border-radius: 12px;
+            color: var(--text-primary);
+            font-size: 14px;
+            outline: none;
+            transition: all 0.2s ease;
+        }
+
+        .search-input:focus {
+            border-color: var(--cyan-neon);
+            box-shadow: 0 0 15px rgba(0, 229, 255, 0.3);
+        }
+
+        .filter-buttons {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .btn-filter {
+            padding: 8px 16px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border-subtle);
+            border-radius: 10px;
+            color: var(--text-secondary);
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn-filter.active, .btn-filter:hover {
+            background: linear-gradient(135deg, var(--cyan-neon), var(--electric-blue));
+            color: #030712;
+            border-color: transparent;
+            font-weight: 700;
+        }
+
+        /* Users Table Area */
+        .table-container {
+            overflow-x: auto;
+            padding: 8px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0 10px;
+        }
+
+        thead th {
+            padding: 12px 20px;
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            color: var(--text-muted);
+            text-align: left;
+            border-bottom: 1px solid var(--border-subtle);
+        }
+
+        tbody tr {
+            background: var(--bg-card);
+            transition: transform 0.15s ease, background 0.15s ease;
+        }
+
+        tbody tr:hover {
+            background: rgba(16, 36, 68, 0.7);
+            transform: scale(1.002);
+        }
+
+        tbody td {
+            padding: 16px 20px;
+            font-size: 14px;
+            vertical-align: middle;
+        }
+
+        tbody tr td:first-child {
+            border-top-left-radius: 14px;
+            border-bottom-left-radius: 14px;
+        }
+        tbody tr td:last-child {
+            border-top-right-radius: 14px;
+            border-bottom-right-radius: 14px;
+        }
+
+        /* User Profile Avatar in Table */
+        .user-identity {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .user-avatar-wrap {
+            position: relative;
+            width: 46px;
+            height: 46px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+
+        .user-avatar {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid var(--cyan-neon);
+            background: #030712;
+        }
+
+        .user-online-dot {
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            border: 2px solid var(--bg-base);
+            background-color: var(--success-green);
+        }
+        .user-online-dot.offline {
+            background-color: var(--text-muted);
+        }
+
+        .user-names h4 {
+            font-size: 15px;
+            font-weight: 700;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .user-names span {
+            font-size: 12px;
+            color: var(--cyan-neon);
+            font-weight: 600;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        /* Verified Badge Component */
+        .verified-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--cyan-neon), var(--electric-blue));
+            border: 1px solid rgba(255, 255, 255, 0.9);
+            box-shadow: 0 0 10px rgba(0, 229, 255, 0.6);
+            color: #030712;
+            font-size: 10px;
+        }
+
+        .status-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 700;
+        }
+        .pill-verified {
+            background: rgba(0, 229, 255, 0.15);
+            color: var(--cyan-neon);
+            border: 1px solid rgba(0, 229, 255, 0.4);
+        }
+        .pill-unverified {
+            background: rgba(100, 116, 139, 0.15);
+            color: var(--text-muted);
+            border: 1px solid rgba(100, 116, 139, 0.3);
+        }
+
+        /* Action Buttons */
+        .actions-group {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn-action {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 14px;
+            border-radius: 10px;
+            font-size: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            border: none;
+            transition: all 0.2s ease;
+        }
+
+        .btn-verify {
+            background: linear-gradient(135deg, var(--cyan-neon), var(--electric-blue));
+            color: #030712;
+            box-shadow: 0 2px 10px rgba(0, 229, 255, 0.3);
+        }
+        .btn-verify:hover {
+            box-shadow: 0 4px 16px rgba(0, 229, 255, 0.6);
+            transform: translateY(-2px);
+        }
+
+        .btn-unverify {
+            background: rgba(245, 158, 11, 0.2);
+            color: var(--warning-amber);
+            border: 1px solid rgba(245, 158, 11, 0.4);
+        }
+        .btn-unverify:hover {
+            background: var(--warning-amber);
+            color: #030712;
+            transform: translateY(-2px);
+        }
+
+        .btn-delete {
+            background: rgba(239, 68, 68, 0.15);
+            color: var(--danger-red);
+            border: 1px solid rgba(239, 68, 68, 0.35);
+        }
+        .btn-delete:hover {
+            background: var(--danger-red);
+            color: #FFFFFF;
+            box-shadow: 0 4px 14px rgba(239, 68, 68, 0.4);
+            transform: translateY(-2px);
+        }
+
+        /* Empty & Loading States */
+        .loading-wrap, .empty-wrap {
+            text-align: center;
+            padding: 60px 20px;
+        }
+
+        .spinner {
+            border: 3px solid rgba(0, 229, 255, 0.1);
+            border-top: 3px solid var(--cyan-neon);
+            border-radius: 50%;
+            width: 44px;
+            height: 44px;
+            animation: spin 0.8s linear infinite;
+            margin: 0 auto 16px auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Modal Dialog */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.75);
+            backdrop-filter: blur(8px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+        }
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal-card {
+            background: #0B1528;
+            border: 1px solid var(--border-glass);
+            border-radius: 20px;
+            padding: 28px;
+            width: 90%;
+            max-width: 460px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
+            text-align: center;
+        }
+
+        .modal-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: rgba(239, 68, 68, 0.2);
+            color: var(--danger-red);
+            font-size: 26px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 16px auto;
+            border: 1px solid rgba(239, 68, 68, 0.4);
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 12px;
+            margin-top: 24px;
+        }
+
+        .modal-buttons button {
+            flex: 1;
+            padding: 12px;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            border: none;
+        }
+
+        .btn-cancel {
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--text-primary);
+        }
+        .btn-confirm-delete {
+            background: var(--danger-red);
+            color: #FFFFFF;
+        }
+
+        /* Toast notifications */
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: var(--bg-surface);
+            border: 1px solid var(--cyan-neon);
+            backdrop-filter: blur(12px);
+            padding: 14px 22px;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-primary);
+            z-index: 999;
+            transform: translateY(100px);
+            opacity: 0;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .toast.show {
+            transform: translateY(0);
+            opacity: 1;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Ambient glowing backgrounds -->
+    <div class="ambient-glow glow-1"></div>
+    <div class="ambient-glow glow-2"></div>
+    <div class="ambient-glow glow-3"></div>
+
+    <div class="container">
+        <!-- Header -->
+        <header class="glass-panel">
+            <div class="logo-group">
+                <div class="logo-icon">
+                    <i class="fa-solid fa-shield-halved"></i>
+                </div>
+                <div class="logo-text">
+                    <h1>CSM Chat • Master Admin Console</h1>
+                    <p>Live Firebase Realtime Database Control & Verification</p>
+                </div>
+            </div>
+
+            <div class="header-meta">
+                <div class="status-badge">
+                    <div class="pulse-dot"></div>
+                    <span>Firebase Live Synchronized</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- Stats Overview Cards -->
+        <div class="stats-grid">
+            <div class="glass-panel stat-card">
+                <div class="stat-info">
+                    <h3 id="statTotalUsers">0</h3>
+                    <span>Total Registered Users</span>
+                </div>
+                <div class="stat-icon icon-blue">
+                    <i class="fa-solid fa-users"></i>
+                </div>
+            </div>
+
+            <div class="glass-panel stat-card">
+                <div class="stat-info">
+                    <h3 id="statVerifiedUsers">0</h3>
+                    <span>Verified Profiles</span>
+                </div>
+                <div class="stat-icon icon-purple">
+                    <i class="fa-solid fa-circle-check"></i>
+                </div>
+            </div>
+
+            <div class="glass-panel stat-card">
+                <div class="stat-info">
+                    <h3 id="statOnlineUsers">0</h3>
+                    <span>Currently Active</span>
+                </div>
+                <div class="stat-icon icon-green">
+                    <i class="fa-solid fa-signal"></i>
+                </div>
+            </div>
+
+            <div class="glass-panel stat-card">
+                <div class="stat-info">
+                    <h3 id="statTotalMessages">0</h3>
+                    <span>Active Chat Channels</span>
+                </div>
+                <div class="stat-icon icon-amber">
+                    <i class="fa-solid fa-comments"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- Controls: Search & Filters -->
+        <div class="glass-panel controls-row">
+            <div class="search-box">
+                <i class="fa-solid fa-magnifying-glass"></i>
+                <input type="text" id="searchInput" class="search-input" placeholder="Search by name, @username, or email...">
+            </div>
+
+            <div class="filter-buttons">
+                <button class="btn-filter active" data-filter="all">All Users</button>
+                <button class="btn-filter" data-filter="verified">Verified Only</button>
+                <button class="btn-filter" data-filter="unverified">Unverified</button>
+                <button class="btn-filter" data-filter="online">Online Now</button>
+            </div>
+        </div>
+
+        <!-- Users Table -->
+        <div class="glass-panel table-container">
+            <div id="loadingIndicator" class="loading-wrap">
+                <div class="spinner"></div>
+                <p style="color: var(--text-secondary); font-size: 14px;">Streaming records from Firebase Realtime Database...</p>
+            </div>
+
+            <table id="usersTable" style="display: none;">
+                <thead>
+                    <tr>
+                        <th>User Profile</th>
+                        <th>Email Address</th>
+                        <th>Bio / Location</th>
+                        <th>Status</th>
+                        <th>Registered Date</th>
+                        <th style="text-align: right;">Admin Controls</th>
+                    </tr>
+                </thead>
+                <tbody id="usersTableBody">
+                    <!-- Dynamic user rows populated via Firebase -->
+                </tbody>
+            </table>
+
+            <div id="emptyIndicator" class="empty-wrap" style="display: none;">
+                <i class="fa-regular fa-folder-open" style="font-size: 40px; color: var(--text-muted); margin-bottom: 12px;"></i>
+                <p style="color: var(--text-secondary); font-size: 15px;">No matching users found.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Confirm Delete Modal -->
+    <div id="deleteModal" class="modal-overlay">
+        <div class="modal-card">
+            <div class="modal-icon">
+                <i class="fa-solid fa-trash-can"></i>
+            </div>
+            <h3 style="font-size: 20px; font-weight: 800; margin-bottom: 8px;">Permanently Delete Account?</h3>
+            <p style="color: var(--text-secondary); font-size: 14px;" id="deleteModalText">
+                Are you sure you want to remove this user from the system?
+            </p>
+            <div class="modal-buttons">
+                <button class="btn-cancel" onclick="closeDeleteModal()">Cancel</button>
+                <button class="btn-confirm-delete" id="btnConfirmDelete">Confirm Delete</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="toast">
+        <i class="fa-solid fa-circle-check" style="color: var(--cyan-neon);"></i>
+        <span id="toastMessage">Action completed successfully</span>
+    </div>
+
+    <!-- Firebase Admin Logic -->
+    <script>
+        // Official Firebase Configuration for CSM Chat
+        const firebaseConfig = {
+            apiKey: "AIzaSyDhyBH6MrDKC_j4m-gOrT3ylW-WgygGEs8",
+            authDomain: "mail-67221.firebaseapp.com",
+            databaseURL: "https://mail-67221-default-rtdb.firebaseio.com",
+            projectId: "mail-67221",
+            storageBucket: "mail-67221.firebasestorage.app",
+            messagingSenderId: "680609475208",
+            appId: "1:680609475208:web:724ccd0377a51cfd214d3d"
+        };
+
+        // Initialize Firebase
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
+        const db = firebase.database();
+
+        let allUsersMap = {};
+        let currentFilter = 'all';
+        let currentSearchQuery = '';
+        let pendingDeleteUid = null;
+        let pendingDeleteUsername = null;
+
+        // Show Toast Helper
+        function showToast(msg, isError = false) {
+            const toast = document.getElementById('toast');
+            const toastMsg = document.getElementById('toastMessage');
+            toastMsg.innerText = msg;
+            toast.style.borderColor = isError ? 'var(--danger-red)' : 'var(--cyan-neon)';
+            toast.classList.add('show');
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3200);
+        }
+
+        // Live Real-Time Listener on /users
+        db.ref('users').on('value', (snapshot) => {
+            const data = snapshot.val() || {};
+            allUsersMap = data;
+            document.getElementById('loadingIndicator').style.display = 'none';
+            document.getElementById('usersTable').style.display = 'table';
+            updateStats();
+            renderTable();
+        }, (error) => {
+            console.error("Firebase fetch error:", error);
+            showToast("Firebase Error: " + error.message, true);
+        });
+
+        // Live Channels Listener for Stats
+        db.ref('chats').on('value', (snapshot) => {
+            const chats = snapshot.val() || {};
+            document.getElementById('statTotalMessages').innerText = Object.keys(chats).length;
+        });
+
+        // Update Summary Cards
+        function updateStats() {
+            const users = Object.values(allUsersMap);
+            const total = users.length;
+            const verified = users.filter(u => u.verified === true).length;
+            const online = users.filter(u => u.isOnline === true).length;
+
+            document.getElementById('statTotalUsers').innerText = total;
+            document.getElementById('statVerifiedUsers').innerText = verified;
+            document.getElementById('statOnlineUsers').innerText = online;
+        }
+
+        // Render Users in Table
+        function renderTable() {
+            const tbody = document.getElementById('usersTableBody');
+            tbody.innerHTML = '';
+
+            const users = Object.entries(allUsersMap).map(([id, user]) => ({
+                id,
+                ...user
+            }));
+
+            // Filter logic
+            const filtered = users.filter(user => {
+                const nameMatch = (user.name || '').toLowerCase().includes(currentSearchQuery);
+                const unameMatch = (user.username || '').toLowerCase().includes(currentSearchQuery);
+                const emailMatch = (user.email || '').toLowerCase().includes(currentSearchQuery);
+                const searchMatch = nameMatch || unameMatch || emailMatch;
+
+                if (!searchMatch) return false;
+
+                if (currentFilter === 'verified') return user.verified === true;
+                if (currentFilter === 'unverified') return user.verified !== true;
+                if (currentFilter === 'online') return user.isOnline === true;
+                return true;
+            });
+
+            if (filtered.length === 0) {
+                document.getElementById('emptyIndicator').style.display = 'block';
+                return;
+            } else {
+                document.getElementById('emptyIndicator').style.display = 'none';
+            }
+
+            // Sort newest first
+            filtered.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+
+            filtered.forEach(user => {
+                const tr = document.createElement('tr');
+                const isVerified = user.verified === true;
+                const isOnline = user.isOnline === true;
+                const avatar = user.avatarUrl || `https://api.dicebear.com/7.x/bottts/png?seed=${user.username || 'user'}`;
+                const joinDate = user.createdAt ? new Date(user.createdAt).toLocaleDateString(undefined, {
+                    month: 'short', day: 'numeric', year: 'numeric'
+                }) : 'N/A';
+
+                tr.innerHTML = `
+                    <td>
+                        <div class="user-identity">
+                            <div class="user-avatar-wrap">
+                                <img src="${avatar}" class="user-avatar" alt="${user.name}" onerror="this.src='https://api.dicebear.com/7.x/bottts/png?seed=error'">
+                                <div class="user-online-dot ${isOnline ? '' : 'offline'}" title="${isOnline ? 'Active now' : 'Offline'}"></div>
+                            </div>
+                            <div class="user-names">
+                                <h4>
+                                    ${escapeHtml(user.name || 'Anonymous')}
+                                    ${isVerified ? '<span class="verified-badge"><i class="fa-solid fa-check"></i></span>' : ''}
+                                </h4>
+                                <span>@${escapeHtml(user.username || 'username')}</span>
+                            </div>
+                        </div>
+                    </td>
+                    <td>
+                        <span style="color: var(--text-primary); font-size: 13px;">${escapeHtml(user.email || 'No email')}</span>
+                        <div style="font-size: 11px; color: var(--text-muted);">${escapeHtml(user.phone || '')}</div>
+                    </td>
+                    <td>
+                        <div style="color: var(--text-secondary); font-size: 13px; max-width: 260px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                            ${escapeHtml(user.bio || 'Living in liquid glass ✨')}
+                        </div>
+                        <div style="font-size: 11px; color: var(--cyan-neon); margin-top: 2px;">
+                            ${user.livingLocation ? '<i class="fa-solid fa-location-dot"></i> ' + escapeHtml(user.livingLocation) : ''}
+                        </div>
+                    </td>
+                    <td>
+                        <span class="status-pill ${isVerified ? 'pill-verified' : 'pill-unverified'}">
+                            <i class="fa-solid ${isVerified ? 'fa-shield-halved' : 'fa-circle-xmark'}"></i>
+                            ${isVerified ? 'Verified Profile' : 'Standard'}
+                        </span>
+                    </td>
+                    <td>
+                        <span style="color: var(--text-muted); font-size: 13px;">${joinDate}</span>
+                    </td>
+                    <td style="text-align: right;">
+                        <div class="actions-group" style="justify-content: flex-end;">
+                            ${isVerified 
+                                ? `<button class="btn-action btn-unverify" onclick="toggleVerification('${user.id}', false)">
+                                    <i class="fa-solid fa-xmark"></i> Unverify
+                                   </button>`
+                                : `<button class="btn-action btn-verify" onclick="toggleVerification('${user.id}', true)">
+                                    <i class="fa-solid fa-circle-check"></i> Verify
+                                   </button>`
+                            }
+                            <button class="btn-action btn-delete" onclick="openDeleteModal('${user.id}', '${escapeHtml(user.username || '')}', '${escapeHtml(user.name || '')}')">
+                                <i class="fa-solid fa-trash"></i> Delete
+                            </button>
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // Toggle Verified Profile in Firebase RTDB
+        function toggleVerification(uid, status) {
+            db.ref(`users/${uid}/verified`).set(status)
+                .then(() => {
+                    showToast(status ? "User profile verified!" : "User profile unverified.");
+                })
+                .catch(err => {
+                    showToast("Update failed: " + err.message, true);
+                });
+        }
+
+        // Open Delete Confirmation Modal
+        function openDeleteModal(uid, username, name) {
+            pendingDeleteUid = uid;
+            pendingDeleteUsername = username;
+            document.getElementById('deleteModalText').innerText = 
+                `Are you sure you want to permanently remove @${username} (${name})? This deletes their account and releases their reserved username.`;
+            document.getElementById('deleteModal').classList.add('active');
+        }
+
+        function closeDeleteModal() {
+            pendingDeleteUid = null;
+            pendingDeleteUsername = null;
+            document.getElementById('deleteModal').classList.remove('active');
+        }
+
+        // Confirm Delete User Action
+        document.getElementById('btnConfirmDelete').addEventListener('click', () => {
+            if (!pendingDeleteUid) return;
+
+            const uid = pendingDeleteUid;
+            const username = (pendingDeleteUsername || '').toLowerCase();
+
+            // 1. Remove from /users/{uid}
+            // 2. Remove from /usernames/{username}
+            const updates = {};
+            updates[`users/${uid}`] = null;
+            if (username) {
+                updates[`usernames/${username}`] = null;
+            }
+
+            db.ref().update(updates)
+                .then(() => {
+                    showToast(`User @${username} account permanently deleted.`);
+                    closeDeleteModal();
+                })
+                .catch(err => {
+                    showToast("Delete failed: " + err.message, true);
+                    closeDeleteModal();
+                });
+        });
+
+        // Filter Buttons Listeners
+        document.querySelectorAll('.btn-filter').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                document.querySelectorAll('.btn-filter').forEach(b => b.classList.remove('active'));
+                e.target.classList.add('active');
+                currentFilter = e.target.getAttribute('data-filter');
+                renderTable();
+            });
+        });
+
+        // Search Input Listener
+        document.getElementById('searchInput').addEventListener('input', (e) => {
+            currentSearchQuery = e.target.value.trim().toLowerCase();
+            renderTable();
+        });
+
+        // Escape helper
+        function escapeHtml(str) {
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        }
+    </script>
+</body>
+</html>
