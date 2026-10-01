@@ -597,6 +597,200 @@
             transform: translateY(0);
             opacity: 1;
         }
+
+        /* Main Navigation Bar */
+        .main-nav {
+            display: flex;
+            gap: 12px;
+            padding: 8px 12px;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+        }
+
+        .nav-tab {
+            background: transparent;
+            border: 1px solid transparent;
+            color: var(--text-secondary);
+            padding: 10px 20px;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: all 0.2s ease;
+        }
+
+        .nav-tab:hover {
+            color: var(--text-primary);
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .nav-tab.active {
+            background: linear-gradient(135deg, rgba(0, 229, 255, 0.15), rgba(0, 114, 255, 0.15));
+            border-color: var(--cyan-neon);
+            color: var(--cyan-neon);
+            box-shadow: 0 0 15px rgba(0, 229, 255, 0.25);
+        }
+
+        /* GitHub & Config Grid */
+        .github-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+            gap: 20px;
+            margin-bottom: 24px;
+        }
+
+        .config-card {
+            padding: 24px;
+        }
+
+        .config-card h3 {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .input-dark {
+            width: 100%;
+            padding: 12px 14px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--border-glass);
+            border-radius: 10px;
+            color: var(--text-primary);
+            font-size: 14px;
+            outline: none;
+            box-sizing: border-box;
+            transition: border-color 0.2s;
+        }
+
+        .input-dark:focus {
+            border-color: var(--cyan-neon);
+            box-shadow: 0 0 10px rgba(0, 229, 255, 0.2);
+        }
+
+        .btn-gradient {
+            background: linear-gradient(135deg, var(--cyan-neon), var(--electric-blue));
+            color: #030712;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: all 0.2s ease;
+            box-shadow: 0 0 15px rgba(0, 229, 255, 0.3);
+        }
+
+        .btn-gradient:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 0 25px rgba(0, 229, 255, 0.5);
+        }
+
+        .btn-gradient:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid var(--border-glass);
+            color: var(--text-primary);
+            padding: 12px 18px;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: all 0.2s ease;
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.15);
+            border-color: var(--cyan-neon);
+        }
+
+        .commit-item {
+            padding: 12px 14px;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            margin-bottom: 10px;
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+        }
+
+        .commit-hash {
+            font-family: monospace;
+            background: rgba(0, 229, 255, 0.15);
+            color: var(--cyan-neon);
+            padding: 2px 8px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .switch-toggle {
+            position: relative;
+            display: inline-block;
+            width: 48px;
+            height: 26px;
+        }
+
+        .switch-toggle input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(255, 255, 255, 0.15);
+            transition: .3s;
+            border-radius: 34px;
+            border: 1px solid var(--border-glass);
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: .3s;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider {
+            background-color: var(--danger-red);
+            border-color: var(--danger-red);
+            box-shadow: 0 0 12px rgba(239, 68, 68, 0.5);
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(22px);
+        }
     </style>
 </head>
 <body>
@@ -627,8 +821,23 @@
             </div>
         </header>
 
-        <!-- Stats Overview Cards -->
-        <div class="stats-grid">
+        <!-- Main Navigation Bar -->
+        <div class="glass-panel main-nav">
+            <button class="nav-tab active" id="tabUsersBtn" onclick="switchMainTab('users')">
+                <i class="fa-solid fa-users"></i> Users & Moderation
+            </button>
+            <button class="nav-tab" id="tabGithubBtn" onclick="switchMainTab('github')">
+                <i class="fa-brands fa-github"></i> GitHub & OTA Release Control
+            </button>
+            <button class="nav-tab" id="tabAppConfigBtn" onclick="switchMainTab('config')">
+                <i class="fa-solid fa-sliders"></i> App Remote Config
+            </button>
+        </div>
+
+        <!-- Section: Users & Moderation -->
+        <div id="sectionUsers">
+            <!-- Stats Overview Cards -->
+            <div class="stats-grid">
             <div class="glass-panel stat-card">
                 <div class="stat-info">
                     <h3 id="statTotalUsers">0</h3>
@@ -713,6 +922,167 @@
                 <p style="color: var(--text-secondary); font-size: 15px;">No matching users found.</p>
             </div>
         </div>
+        </div> <!-- End #sectionUsers -->
+
+        <!-- Section: GitHub & Release Control -->
+        <div id="sectionGithub" style="display: none;">
+            <div class="github-grid">
+                <!-- GitHub Repo Connection Card -->
+                <div class="glass-panel config-card">
+                    <h3><i class="fa-brands fa-github" style="color: var(--cyan-neon);"></i> Repository Connector</h3>
+                    <p style="font-size: 13px; color: var(--text-secondary); margin-bottom: 16px;">
+                        Connect to your GitHub repository to monitor commits, view release packages, and trigger automated cloud APK builds via GitHub Actions.
+                    </p>
+                    
+                    <div style="margin-bottom: 14px;">
+                        <label style="font-size: 12px; color: var(--text-muted); display: block; margin-bottom: 6px;">GitHub Repo (owner/repo)</label>
+                        <input type="text" id="ghRepoInput" class="input-dark" value="csm-mohasin/csm-chat" placeholder="e.g. csm-mohasin/csm-chat">
+                    </div>
+
+                    <div style="margin-bottom: 16px;">
+                        <label style="font-size: 12px; color: var(--text-muted); display: block; margin-bottom: 6px;">Personal Access Token (PAT) <span style="color: var(--cyan-neon);">(Optional for private repos or triggers)</span></label>
+                        <input type="password" id="ghTokenInput" class="input-dark" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx">
+                    </div>
+
+                    <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                        <button class="btn-gradient" onclick="saveGithubConfig()">
+                            <i class="fa-solid fa-floppy-disk"></i> Save & Test Connect
+                        </button>
+                        <a id="btnOpenRepo" href="https://github.com/csm-mohasin/csm-chat" target="_blank" class="btn-secondary" style="text-decoration: none;">
+                            <i class="fa-solid fa-arrow-up-right-from-square"></i> Open Repo
+                        </a>
+                    </div>
+
+                    <div id="ghStatusBadge" style="margin-top: 16px; font-size: 13px; color: var(--cyan-neon); display: flex; align-items: center; gap: 8px;">
+                        <div class="pulse-dot"></div> <span id="ghStatusText">Checking GitHub connection...</span>
+                    </div>
+                </div>
+
+                <!-- GitHub Actions Remote APK Build -->
+                <div class="glass-panel config-card">
+                    <h3><i class="fa-solid fa-rocket" style="color: var(--electric-blue);"></i> Cloud APK Build (GitHub Actions)</h3>
+                    <p style="font-size: 13px; color: var(--text-secondary); margin-bottom: 16px;">
+                        Trigger a new cloud build on GitHub Actions. It compiles the Android APK, runs checks, and publishes a new release package.
+                    </p>
+
+                    <div style="margin-bottom: 14px;">
+                        <label style="font-size: 12px; color: var(--text-muted); display: block; margin-bottom: 6px;">New Version Tag</label>
+                        <input type="text" id="buildVersionInput" class="input-dark" value="2.5.0" placeholder="e.g. 2.5.0">
+                    </div>
+
+                    <div style="margin-bottom: 16px;">
+                        <label style="font-size: 12px; color: var(--text-muted); display: block; margin-bottom: 6px;">Release Notes / Changelog</label>
+                        <input type="text" id="buildNotesInput" class="input-dark" value="Liquid Glass UI upgrades, group chat, voice notes & real-time fixes." placeholder="Release notes...">
+                    </div>
+
+                    <button class="btn-gradient" id="btnTriggerBuild" onclick="triggerGithubBuild()" style="width: 100%;">
+                        <i class="fa-solid fa-play"></i> Trigger Cloud APK Build
+                    </button>
+                    
+                    <div style="margin-top: 12px; font-size: 12px; color: var(--text-muted);">
+                        Workflow: <code style="color: var(--cyan-neon);">.github/workflows/build-apk.yml</code>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Second Row: Latest Release + Recent Commits -->
+            <div class="github-grid">
+                <!-- Latest Release Card -->
+                <div class="glass-panel config-card">
+                    <h3><i class="fa-solid fa-box-archive" style="color: var(--success-green);"></i> Latest GitHub Release & APK</h3>
+                    <div id="latestReleaseWrap">
+                        <div style="font-size: 14px; color: var(--text-muted); padding: 10px 0;">Loading release info...</div>
+                    </div>
+                    <div style="margin-top: 16px; display: flex; gap: 10px; flex-wrap: wrap;">
+                        <button class="btn-gradient" onclick="syncReleaseToFirebase()">
+                            <i class="fa-solid fa-cloud-arrow-up"></i> Sync APK to Firebase OTA
+                        </button>
+                        <button class="btn-secondary" onclick="fetchGithubData()">
+                            <i class="fa-solid fa-arrows-rotate"></i> Refresh
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Recent Commits Feed -->
+                <div class="glass-panel config-card">
+                    <h3><i class="fa-solid fa-code-commit" style="color: var(--violet-accent);"></i> Recent GitHub Commits</h3>
+                    <div id="commitsFeed" style="max-height: 280px; overflow-y: auto;">
+                        <div style="font-size: 13px; color: var(--text-muted);">Loading commits...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section: App Remote Config & Maintenance -->
+        <div id="sectionConfig" style="display: none;">
+            <div class="github-grid">
+                <!-- App Version Controller -->
+                <div class="glass-panel config-card">
+                    <h3><i class="fa-solid fa-mobile-screen-button" style="color: var(--cyan-neon);"></i> In-App Version & Update Controller</h3>
+                    <p style="font-size: 13px; color: var(--text-secondary); margin-bottom: 16px;">
+                        Control what app version is considered the latest. All CSM Chat users check this node in Firebase to prompt auto-updates.
+                    </p>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px;">
+                        <div>
+                            <label style="font-size: 12px; color: var(--text-muted); display: block; margin-bottom: 6px;">Version Name</label>
+                            <input type="text" id="cfgVersionName" class="input-dark" placeholder="e.g. 2.5.0">
+                        </div>
+                        <div>
+                            <label style="font-size: 12px; color: var(--text-muted); display: block; margin-bottom: 6px;">Version Code</label>
+                            <input type="number" id="cfgVersionCode" class="input-dark" placeholder="e.g. 25">
+                        </div>
+                    </div>
+
+                    <div style="margin-bottom: 12px;">
+                        <label style="font-size: 12px; color: var(--text-muted); display: block; margin-bottom: 6px;">APK Download Direct URL</label>
+                        <input type="url" id="cfgApkUrl" class="input-dark" placeholder="https://github.com/.../app-debug.apk">
+                    </div>
+
+                    <div style="margin-bottom: 12px;">
+                        <label style="font-size: 12px; color: var(--text-muted); display: block; margin-bottom: 6px;">Update Changelog Message</label>
+                        <textarea id="cfgChangelog" class="input-dark" rows="3" placeholder="What's new in this release..."></textarea>
+                    </div>
+
+                    <div style="margin-bottom: 18px; display: flex; align-items: center; gap: 10px;">
+                        <label class="switch-toggle">
+                            <input type="checkbox" id="cfgForceUpdate">
+                            <span class="slider"></span>
+                        </label>
+                        <span style="font-size: 13px; font-weight: 600; color: var(--text-primary);">Force Update (Require users to update immediately)</span>
+                    </div>
+
+                    <button class="btn-gradient" onclick="saveAppConfigToFirebase()">
+                        <i class="fa-solid fa-cloud-arrow-up"></i> Broadcast Update to Firebase
+                    </button>
+                </div>
+
+                <!-- Maintenance Mode Card -->
+                <div class="glass-panel config-card">
+                    <h3><i class="fa-solid fa-triangle-exclamation" style="color: var(--danger-red);"></i> Server Maintenance Mode</h3>
+                    <p style="font-size: 13px; color: var(--text-secondary); margin-bottom: 16px;">
+                        When activated, all users opening CSM Chat will be greeted with a friendly maintenance screen while backend changes are being made.
+                    </p>
+
+                    <div style="margin-bottom: 18px; display: flex; align-items: center; gap: 12px;">
+                        <label class="switch-toggle">
+                            <input type="checkbox" id="cfgMaintenanceMode" onchange="toggleMaintenanceMode(this.checked)">
+                            <span class="slider"></span>
+                        </label>
+                        <span id="maintenanceStatusLabel" style="font-size: 14px; font-weight: 700; color: var(--success-green);">Maintenance: INACTIVE (App Online)</span>
+                    </div>
+
+                    <div style="margin-bottom: 16px;">
+                        <label style="font-size: 12px; color: var(--text-muted); display: block; margin-bottom: 6px;">Maintenance Notice Banner</label>
+                        <input type="text" id="cfgMaintenanceMsg" class="input-dark" value="CSM Chat is currently undergoing scheduled server upgrades. We'll be back shortly!">
+                    </div>
+
+                    <button class="btn-secondary" onclick="updateMaintenanceMessage()">
+                        <i class="fa-solid fa-pencil"></i> Update Maintenance Message
+                    </button>
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- Confirm Delete Modal -->
@@ -728,6 +1098,27 @@
             <div class="modal-buttons">
                 <button class="btn-cancel" onclick="closeDeleteModal()">Cancel</button>
                 <button class="btn-confirm-delete" id="btnConfirmDelete">Confirm Delete</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Ban User Modal -->
+    <div id="banModal" class="modal-overlay">
+        <div class="modal-card">
+            <div class="modal-icon" style="background: rgba(239, 68, 68, 0.2); color: var(--danger-red);">
+                <i class="fa-solid fa-ban"></i>
+            </div>
+            <h3 style="font-size: 20px; font-weight: 800; margin-bottom: 8px; color: var(--danger-red);">Ban User Account</h3>
+            <p style="color: var(--text-secondary); font-size: 14px; margin-bottom: 16px;" id="banModalText">
+                Are you sure you want to ban this user from CSM Chat?
+            </p>
+            <div style="text-align: left; margin-bottom: 16px;">
+                <label style="font-size: 12px; color: var(--text-muted); display: block; margin-bottom: 6px;">Ban Reason</label>
+                <input type="text" id="banReasonInput" style="width: 100%; padding: 10px 14px; background: rgba(255,255,255,0.06); border: 1px solid var(--border-glass); border-radius: 10px; color: white; outline: none; box-sizing: border-box;" value="Violation of CSM Chat community standards">
+            </div>
+            <div class="modal-buttons">
+                <button class="btn-cancel" onclick="closeBanModal()">Cancel</button>
+                <button class="btn-confirm-delete" id="btnConfirmBan">Ban Account</button>
             </div>
         </div>
     </div>
@@ -758,10 +1149,13 @@
         const db = firebase.database();
 
         let allUsersMap = {};
+        let bannedUsersMap = {};
         let currentFilter = 'all';
         let currentSearchQuery = '';
         let pendingDeleteUid = null;
         let pendingDeleteUsername = null;
+        let pendingBanUid = null;
+        let pendingBanUsername = null;
 
         // Show Toast Helper
         function showToast(msg, isError = false) {
@@ -786,6 +1180,12 @@
         }, (error) => {
             console.error("Firebase fetch error:", error);
             showToast("Firebase Error: " + error.message, true);
+        });
+
+        // Live Real-Time Listener on /bannedUsers
+        db.ref('bannedUsers').on('value', (snapshot) => {
+            bannedUsersMap = snapshot.val() || {};
+            renderTable();
         });
 
         // Live Channels Listener for Stats
@@ -845,6 +1245,7 @@
                 const tr = document.createElement('tr');
                 const isVerified = user.verified === true;
                 const isOnline = user.isOnline === true;
+                const isBanned = !!bannedUsersMap[user.id];
                 const avatar = user.avatarUrl || `https://api.dicebear.com/7.x/bottts/png?seed=${user.username || 'user'}`;
                 const joinDate = user.createdAt ? new Date(user.createdAt).toLocaleDateString(undefined, {
                     month: 'short', day: 'numeric', year: 'numeric'
@@ -879,16 +1280,29 @@
                         </div>
                     </td>
                     <td>
-                        <span class="status-pill ${isVerified ? 'pill-verified' : 'pill-unverified'}">
-                            <i class="fa-solid ${isVerified ? 'fa-shield-halved' : 'fa-circle-xmark'}"></i>
-                            ${isVerified ? 'Verified Profile' : 'Standard'}
-                        </span>
+                        ${isBanned 
+                            ? `<span class="status-pill" style="border-color: var(--danger-red); color: var(--danger-red); background: rgba(239, 68, 68, 0.18);">
+                                <i class="fa-solid fa-ban"></i> BANNED
+                               </span>`
+                            : `<span class="status-pill ${isVerified ? 'pill-verified' : 'pill-unverified'}">
+                                <i class="fa-solid ${isVerified ? 'fa-shield-halved' : 'fa-circle-xmark'}"></i>
+                                ${isVerified ? 'Verified Profile' : 'Standard'}
+                               </span>`
+                        }
                     </td>
                     <td>
                         <span style="color: var(--text-muted); font-size: 13px;">${joinDate}</span>
                     </td>
                     <td style="text-align: right;">
                         <div class="actions-group" style="justify-content: flex-end;">
+                            ${isBanned
+                                ? `<button class="btn-action" style="border-color: var(--success-green); color: var(--success-green);" onclick="unbanUser('${user.id}')">
+                                    <i class="fa-solid fa-unlock"></i> Unban
+                                   </button>`
+                                : `<button class="btn-action" style="border-color: var(--danger-red); color: var(--danger-red);" onclick="openBanModal('${user.id}', '${escapeHtml(user.username || '')}')">
+                                    <i class="fa-solid fa-ban"></i> Ban
+                                   </button>`
+                            }
                             ${isVerified 
                                 ? `<button class="btn-action btn-unverify" onclick="toggleVerification('${user.id}', false)">
                                     <i class="fa-solid fa-xmark"></i> Unverify
@@ -915,6 +1329,51 @@
                 })
                 .catch(err => {
                     showToast("Update failed: " + err.message, true);
+                });
+        }
+
+        // Ban and Unban Helpers
+        function openBanModal(uid, username) {
+            pendingBanUid = uid;
+            pendingBanUsername = username;
+            document.getElementById('banModalText').innerText = 
+                `Are you sure you want to enforce a ban on @${username}? They will be immediately blocked from accessing CSM Chat.`;
+            document.getElementById('banModal').classList.add('active');
+        }
+
+        function closeBanModal() {
+            pendingBanUid = null;
+            pendingBanUsername = null;
+            document.getElementById('banModal').classList.remove('active');
+        }
+
+        document.getElementById('btnConfirmBan').addEventListener('click', () => {
+            if (!pendingBanUid) return;
+            const uid = pendingBanUid;
+            const username = pendingBanUsername;
+            const reason = document.getElementById('banReasonInput').value.trim() || "Violation of CSM Chat community standards";
+
+            db.ref(`bannedUsers/${uid}`).set({
+                userId: uid,
+                reason: reason,
+                bannedAt: Date.now(),
+                bannedBy: "CSM Admin Console"
+            }).then(() => {
+                showToast(`User @${username} has been banned.`);
+                closeBanModal();
+            }).catch(err => {
+                showToast("Ban failed: " + err.message, true);
+                closeBanModal();
+            });
+        });
+
+        function unbanUser(uid) {
+            db.ref(`bannedUsers/${uid}`).remove()
+                .then(() => {
+                    showToast("User ban removed.");
+                })
+                .catch(err => {
+                    showToast("Unban failed: " + err.message, true);
                 });
         }
 
@@ -984,6 +1443,337 @@
                 .replace(/"/g, '&quot;')
                 .replace(/'/g, '&#039;');
         }
+
+        /* ========================================================
+           MAIN NAVIGATION TABS (Users / GitHub / Remote Config)
+           ======================================================== */
+        function switchMainTab(tab) {
+            document.querySelectorAll('.nav-tab').forEach(b => b.classList.remove('active'));
+            document.getElementById('sectionUsers').style.display = 'none';
+            document.getElementById('sectionGithub').style.display = 'none';
+            document.getElementById('sectionConfig').style.display = 'none';
+
+            if (tab === 'users') {
+                document.getElementById('tabUsersBtn').classList.add('active');
+                document.getElementById('sectionUsers').style.display = 'block';
+            } else if (tab === 'github') {
+                document.getElementById('tabGithubBtn').classList.add('active');
+                document.getElementById('sectionGithub').style.display = 'block';
+                fetchGithubData();
+            } else if (tab === 'config') {
+                document.getElementById('tabAppConfigBtn').classList.add('active');
+                document.getElementById('sectionConfig').style.display = 'block';
+            }
+        }
+
+        /* ========================================================
+           GITHUB CONTROL & OTA ENGINE
+           ======================================================== */
+        let cachedLatestRelease = null;
+
+        function getGithubHeaders() {
+            const token = (document.getElementById('ghTokenInput').value || '').trim() || localStorage.getItem('csm_gh_token') || '';
+            const headers = { 'Accept': 'application/vnd.github.v3+json' };
+            if (token) {
+                headers['Authorization'] = `token ${token}`;
+            }
+            return headers;
+        }
+
+        function getRepo() {
+            return (document.getElementById('ghRepoInput').value || '').trim() || 'csm-mohasin/csm-chat';
+        }
+
+        function loadSavedGithubConfig() {
+            const savedRepo = localStorage.getItem('csm_gh_repo');
+            const savedToken = localStorage.getItem('csm_gh_token');
+            if (savedRepo) document.getElementById('ghRepoInput').value = savedRepo;
+            if (savedToken) document.getElementById('ghTokenInput').value = savedToken;
+            updateRepoLinks();
+        }
+
+        function updateRepoLinks() {
+            const repo = getRepo();
+            const btnOpenRepo = document.getElementById('btnOpenRepo');
+            if (btnOpenRepo) btnOpenRepo.href = `https://github.com/${repo}`;
+        }
+
+        function saveGithubConfig() {
+            const repo = getRepo();
+            const token = (document.getElementById('ghTokenInput').value || '').trim();
+            localStorage.setItem('csm_gh_repo', repo);
+            if (token) {
+                localStorage.setItem('csm_gh_token', token);
+            }
+            updateRepoLinks();
+            showToast("GitHub configuration saved. Testing connection...");
+            fetchGithubData();
+        }
+
+        async function fetchGithubData() {
+            const repo = getRepo();
+            const statusText = document.getElementById('ghStatusText');
+            statusText.innerText = `Connecting to github.com/${repo}...`;
+
+            try {
+                // 1. Fetch Repository Details
+                const repoRes = await fetch(`https://api.github.com/repos/${repo}`, { headers: getGithubHeaders() });
+                if (!repoRes.ok) {
+                    throw new Error(`Repo not reachable (${repoRes.status}): ${repoRes.statusText}`);
+                }
+                const repoData = await repoRes.json();
+                statusText.innerText = `Connected: ${repoData.full_name} (${repoData.stargazers_count} ★ • ${repoData.default_branch} branch)`;
+
+                // 2. Fetch Latest Release
+                fetchLatestRelease(repo);
+
+                // 3. Fetch Recent Commits
+                fetchRecentCommits(repo);
+            } catch (err) {
+                console.error("GitHub fetch error:", err);
+                statusText.innerText = `Connection notice: ${err.message}`;
+            }
+        }
+
+        async function fetchLatestRelease(repo) {
+            const wrap = document.getElementById('latestReleaseWrap');
+            try {
+                const res = await fetch(`https://api.github.com/repos/${repo}/releases/latest`, { headers: getGithubHeaders() });
+                if (!res.ok) {
+                    wrap.innerHTML = `<div style="font-size: 13px; color: var(--text-muted);">No published releases found yet on GitHub. Create one via cloud build!</div>`;
+                    return;
+                }
+                const rel = await res.json();
+                cachedLatestRelease = rel;
+
+                const apkAsset = (rel.assets || []).find(a => a.name.endsWith('.apk')) || (rel.assets || [])[0];
+                const apkDownloadUrl = apkAsset ? apkAsset.browser_download_url : rel.html_url;
+                const dateStr = new Date(rel.published_at).toLocaleDateString();
+
+                wrap.innerHTML = `
+                    <div style="background: rgba(255,255,255,0.04); padding: 14px; border-radius: 12px; border: 1px solid var(--border-glass);">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                            <span class="status-pill pill-verified" style="font-size: 13px;">${escapeHtml(rel.tag_name || 'v1.0')}</span>
+                            <span style="font-size: 12px; color: var(--text-muted);">${dateStr}</span>
+                        </div>
+                        <h4 style="font-size: 15px; font-weight: 700; color: var(--text-primary); margin-bottom: 6px;">${escapeHtml(rel.name || rel.tag_name)}</h4>
+                        <p style="font-size: 12px; color: var(--text-secondary); margin-bottom: 12px; max-height: 60px; overflow-y: auto;">
+                            ${escapeHtml(rel.body || 'No release notes.')}
+                        </p>
+                        ${apkAsset ? `
+                            <div style="font-size: 12px; color: var(--cyan-neon); margin-bottom: 10px;">
+                                <i class="fa-solid fa-file-arrow-down"></i> ${escapeHtml(apkAsset.name)} (${(apkAsset.size / (1024 * 1024)).toFixed(1)} MB • ${apkAsset.download_count} downloads)
+                            </div>
+                        ` : ''}
+                        <a href="${apkDownloadUrl}" target="_blank" class="btn-gradient" style="text-decoration: none; padding: 8px 14px; font-size: 12px;">
+                            <i class="fa-solid fa-download"></i> Download APK Package
+                        </a>
+                    </div>
+                `;
+            } catch (e) {
+                wrap.innerHTML = `<div style="font-size: 13px; color: var(--text-muted);">Could not fetch release: ${e.message}</div>`;
+            }
+        }
+
+        async function fetchRecentCommits(repo) {
+            const feed = document.getElementById('commitsFeed');
+            try {
+                const res = await fetch(`https://api.github.com/repos/${repo}/commits?per_page=5`, { headers: getGithubHeaders() });
+                if (!res.ok) {
+                    feed.innerHTML = `<div style="font-size: 13px; color: var(--text-muted);">Commits inaccessible (${res.status}). Provide a token if private.</div>`;
+                    return;
+                }
+                const commits = await res.json();
+                feed.innerHTML = commits.map(c => {
+                    const sha = c.sha.substring(0, 7);
+                    const msg = c.commit.message.split('\n')[0];
+                    const author = c.commit.author.name;
+                    return `
+                        <div class="commit-item">
+                            <span class="commit-hash">${sha}</span>
+                            <div style="flex: 1;">
+                                <div style="font-size: 13px; color: var(--text-primary); font-weight: 600;">${escapeHtml(msg)}</div>
+                                <div style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">by ${escapeHtml(author)}</div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            } catch (e) {
+                feed.innerHTML = `<div style="font-size: 13px; color: var(--text-muted);">Error fetching commits: ${e.message}</div>`;
+            }
+        }
+
+        // Trigger GitHub Actions Workflow Build
+        async function triggerGithubBuild() {
+            const repo = getRepo();
+            const token = (document.getElementById('ghTokenInput').value || '').trim() || localStorage.getItem('csm_gh_token');
+            if (!token) {
+                showToast("Please enter your GitHub Personal Access Token (PAT) with repo scope to dispatch builds!", true);
+                return;
+            }
+
+            const versionName = document.getElementById('buildVersionInput').value.trim() || '2.5.0';
+            const releaseNotes = document.getElementById('buildNotesInput').value.trim() || 'Automated build release';
+            const btn = document.getElementById('btnTriggerBuild');
+
+            btn.disabled = true;
+            btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Dispatching build to GitHub Actions...`;
+
+            try {
+                const res = await fetch(`https://api.github.com/repos/${repo}/actions/workflows/build-apk.yml/dispatches`, {
+                    method: 'POST',
+                    headers: {
+                        'Accept': 'application/vnd.github.v3+json',
+                        'Authorization': `token ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        ref: 'main',
+                        inputs: {
+                            version_name: versionName,
+                            release_notes: releaseNotes
+                        }
+                    })
+                });
+
+                if (res.status === 204 || res.ok) {
+                    showToast("🚀 GitHub Actions APK Build triggered successfully! Check Actions tab in GitHub.");
+                } else {
+                    const errJson = await res.json().catch(() => ({}));
+                    throw new Error(errJson.message || `HTTP ${res.status}`);
+                }
+            } catch (err) {
+                showToast("Build trigger failed: " + err.message, true);
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = `<i class="fa-solid fa-play"></i> Trigger Cloud APK Build`;
+            }
+        }
+
+        // Sync Release APK Link into Firebase Realtime Database
+        function syncReleaseToFirebase() {
+            if (!cachedLatestRelease) {
+                showToast("No GitHub release loaded. Refreshing...", true);
+                fetchGithubData();
+                return;
+            }
+
+            const rel = cachedLatestRelease;
+            const apkAsset = (rel.assets || []).find(a => a.name.endsWith('.apk')) || (rel.assets || [])[0];
+            const apkUrl = apkAsset ? apkAsset.browser_download_url : rel.html_url;
+            const verName = (rel.tag_name || 'v2.5.0').replace(/^v/, '');
+
+            const updates = {
+                versionName: verName,
+                apkUrl: apkUrl,
+                changelog: rel.body || 'New features & fixes from latest GitHub release.',
+                syncedAt: Date.now(),
+                releaseTag: rel.tag_name
+            };
+
+            db.ref('appConfig/latestRelease').update(updates)
+                .then(() => {
+                    showToast(`Synced GitHub Release v${verName} to Firebase OTA node!`);
+                    // Also populate the fields in the App Remote Config section
+                    document.getElementById('cfgVersionName').value = verName;
+                    document.getElementById('cfgApkUrl').value = apkUrl;
+                    document.getElementById('cfgChangelog').value = updates.changelog;
+                })
+                .catch(err => {
+                    showToast("Sync failed: " + err.message, true);
+                });
+        }
+
+        /* ========================================================
+           FIREBASE REALTIME DATABASE REMOTE APP CONFIG
+           ======================================================== */
+        // Listen to /appConfig changes in real time
+        db.ref('appConfig').on('value', (snapshot) => {
+            const data = snapshot.val() || {};
+            const release = data.latestRelease || {};
+
+            if (data.versionName || release.versionName) {
+                document.getElementById('cfgVersionName').value = data.versionName || release.versionName || '';
+            }
+            if (data.versionCode) {
+                document.getElementById('cfgVersionCode').value = data.versionCode;
+            }
+            if (data.apkUrl || release.apkUrl) {
+                document.getElementById('cfgApkUrl').value = data.apkUrl || release.apkUrl || '';
+            }
+            if (data.changelog || release.changelog) {
+                document.getElementById('cfgChangelog').value = data.changelog || release.changelog || '';
+            }
+            if (typeof data.forceUpdate === 'boolean') {
+                document.getElementById('cfgForceUpdate').checked = data.forceUpdate;
+            }
+
+            // Maintenance mode
+            const isMaint = data.maintenanceMode === true;
+            document.getElementById('cfgMaintenanceMode').checked = isMaint;
+            const statusLabel = document.getElementById('maintenanceStatusLabel');
+            if (isMaint) {
+                statusLabel.innerText = "Maintenance: ACTIVE (Users blocked with maintenance screen)";
+                statusLabel.style.color = "var(--danger-red)";
+            } else {
+                statusLabel.innerText = "Maintenance: INACTIVE (App Online)";
+                statusLabel.style.color = "var(--success-green)";
+            }
+
+            if (data.maintenanceMessage) {
+                document.getElementById('cfgMaintenanceMsg').value = data.maintenanceMessage;
+            }
+        });
+
+        function saveAppConfigToFirebase() {
+            const versionName = document.getElementById('cfgVersionName').value.trim();
+            const versionCode = parseInt(document.getElementById('cfgVersionCode').value) || 1;
+            const apkUrl = document.getElementById('cfgApkUrl').value.trim();
+            const changelog = document.getElementById('cfgChangelog').value.trim();
+            const forceUpdate = document.getElementById('cfgForceUpdate').checked;
+
+            if (!apkUrl) {
+                showToast("Please provide an APK Download URL!", true);
+                return;
+            }
+
+            db.ref('appConfig').update({
+                versionName: versionName,
+                versionCode: versionCode,
+                apkUrl: apkUrl,
+                changelog: changelog,
+                forceUpdate: forceUpdate,
+                updatedAt: Date.now()
+            }).then(() => {
+                showToast("App Remote Config broadcasted to all CSM Chat clients!");
+            }).catch(err => {
+                showToast("Failed to update config: " + err.message, true);
+            });
+        }
+
+        function toggleMaintenanceMode(enabled) {
+            db.ref('appConfig/maintenanceMode').set(enabled)
+                .then(() => {
+                    showToast(enabled ? "⚠️ Maintenance mode ACTIVATED." : "✅ App is now LIVE for all users.");
+                })
+                .catch(err => {
+                    showToast("Failed: " + err.message, true);
+                });
+        }
+
+        function updateMaintenanceMessage() {
+            const msg = document.getElementById('cfgMaintenanceMsg').value.trim();
+            db.ref('appConfig/maintenanceMessage').set(msg)
+                .then(() => {
+                    showToast("Maintenance notice message updated.");
+                })
+                .catch(err => {
+                    showToast("Update failed: " + err.message, true);
+                });
+        }
+
+        // Initialize GitHub config on startup
+        loadSavedGithubConfig();
     </script>
 </body>
 </html>
