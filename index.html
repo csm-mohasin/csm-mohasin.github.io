@@ -33,6 +33,7 @@
 <link rel="canonical" href="https://mohasin.bro.bd/"/>
 <link rel="icon" type="image/png" href="https://mohasin.bro.bd/3d/favicon.png"/>
 <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@400;500;600;700&family=Noto+Serif+Bengali:wght@400;500;600;700&display=swap" rel="stylesheet"/>
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet"/>
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js" defer></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js" defer></script>
@@ -1562,6 +1563,142 @@ footer{border-top:1px solid var(--border);padding:clamp(28px,4vw,44px) clamp(16p
   </div>
 </div>
 </div>
+<style>
+@font-face{
+  font-family:'Li Alinur Nobin';
+  src:url('https://csm-mohasin.github.io/LiAlinurNobinUnicode.woff') format('woff'),
+      url('https://raw.githubusercontent.com/csm-mohasin/csm-mohasin.github.io/main/LiAlinurNobinUnicode.woff') format('woff');
+  font-weight:400;font-style:normal;font-display:swap;
+}
+</style>
+<!-- ═══════════════════ MY STORY ═══════════════════ -->
+<div class="s-wrap" id="story">
+<div class="section" style="padding-bottom:clamp(24px,4vw,48px)">
+  <div class="s-tag rv">My Story</div>
+  <h2 class="s-title rv" style="margin-bottom:clamp(28px,4vw,48px)">জীবনের<br><strong>একটা গল্প</strong></h2>
+  
+  <style>
+    .story-card{
+      --story-h:480px;
+      position:relative;margin:0 auto;max-width:860px;padding:clamp(22px,3.4vw,38px) clamp(20px,3.4vw,40px);
+      border:1px solid var(--border);border-left:3px solid var(--accent);border-radius:6px;
+      background:var(--paper);box-shadow:var(--sh);
+    }
+    .story-label{
+      display:flex;align-items:center;gap:10px;margin-bottom:10px;
+      font-family:var(--fm);font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--accent);
+    }
+    .story-label::after{content:'';flex:1;height:1px;background:var(--border)}
+    .story-title{
+      font-family:'Li Alinur Nobin','Hind Siliguri',sans-serif;font-weight:400;font-synthesis:none;
+      font-size:clamp(24px,3.4vw,34px);line-height:1.5;color:var(--ink);margin-bottom:6px;
+    }
+    .story-sub{
+      font-family:'Li Alinur Nobin','Hind Siliguri',sans-serif;font-size:15px;color:var(--ink-muted);margin-bottom:22px;
+    }
+    .story-body{
+      position:relative;overflow:hidden;max-height:var(--story-h);
+      transition:max-height .9s cubic-bezier(.25,.1,.25,1);
+    }
+    .story-body::after{
+      content:'';position:absolute;left:0;right:0;bottom:0;height:130px;pointer-events:none;
+      background:linear-gradient(to bottom,transparent,var(--paper));
+      transition:opacity .4s;
+    }
+    .story-card.open .story-body::after{opacity:0}
+    .story-body p{
+      font-family:'Li Alinur Nobin','Noto Serif Bengali',serif;font-weight:400;font-synthesis:none;
+      font-size:clamp(17px,2vw,20px);line-height:2;color:var(--ink-soft);
+      margin-bottom:20px;text-align:justify;hyphens:auto;
+    }
+    .story-body p:first-of-type::first-letter{
+      float:left;font-size:3.4em;line-height:.9;padding:6px 12px 0 0;color:var(--accent);
+    }
+    .story-body p.story-quote{
+      padding:6px 0 6px 18px;border-left:2px solid var(--purple);
+      color:var(--ink);font-size:clamp(18px,2.1vw,22px);
+    }
+    .story-sep{
+      display:flex;align-items:center;gap:14px;margin:34px 0 22px;
+      font-family:var(--fm);font-size:11px;letter-spacing:.2em;color:var(--accent);
+    }
+    .story-sep::before,.story-sep::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,transparent,var(--border),transparent)}
+    .story-more{
+      margin-top:6px;display:inline-flex;align-items:center;gap:10px;cursor:pointer;
+      padding:11px 22px;border-radius:100px;border:1px solid var(--border-s);background:none;color:var(--ink);
+      font-family:'Li Alinur Nobin','Hind Siliguri',sans-serif;font-size:16px;font-weight:400;font-synthesis:none;transition:all .3s;
+    }
+    .story-more:hover{border-color:var(--accent);color:var(--accent);transform:translateY(-2px)}
+    .story-more i{transition:transform .4s}
+    .story-card.open .story-more i{transform:rotate(180deg)}
+    @media(max-width:600px){.story-body p{text-align:left}.story-card{--story-h:380px}}
+  </style>
+
+  <div class="story-card rv" id="story-card" style="transition-delay:.12s">
+    <div class="story-label"><i class="fas fa-feather-pointed"></i> My Story</div>
+    <h3 class="story-title">বাটন মোবাইল থেকে গুগল নলেজ প্যানেল</h3>
+    <div class="story-sub">একটা ১৪ বছরের বাচ্চার জেদের গল্প</div>
+
+    <div class="story-body" id="story-body">
+      <p>আজ যখন গুগলে নিজের নাম সার্চ করি, তখন নামের নিচে একটা সুন্দর ডট ডট দাগ (Knowledge Panel) ভেসে ওঠে। গুগল আমাকে একজন ‘উল্লেখযোগ্য ওয়েব ডেভেলপার’ হিসেবে স্বীকৃতি দেয়। দুনিয়া আজ আমার সফলতা দেখে হাততালি দেয়, আমার কাজ দেখে বাহবা দেয়। কিন্তু এই ঝলমলে পর্দার আড়ালে যে কতটা অবহেলা, কতটা তীব্র একাকীত্ব আর একটা ছোট বাচ্চার কতটা বুকভাঙা কান্না লুকিয়ে ছিল—তা আজ আপনাদের বলতে চাই।</p>
+
+      <p>গল্পটা ২০/২২ বছর বয়সী কোনো তরুণের নয়। গল্পটা ২০২২ সালের, যখন আমি ক্লাস সেভেনের মাত্র ১৪ বছরের একটা ছোট্ট বাচ্চা। গ্রামের এক কোণে বসে সেই বয়সে আমার মাথায় এক অদ্ভুত ভূত চাপলো—আমি ওয়েবসাইট বানানো শিখবো! কিন্তু আমার কাছে কোনো কম্পিউটার ছিল না, ছিল না কোনো দামি স্মার্টফোন। আমার একমাত্র সম্বল ছিল একটা ছোট্ট বাটন মোবাইল—Symphony D54+।</p>
+
+      <p>আপনারা কি জানেন, একটা ১৪ বছরের বাচ্চার জন্য বাটন মোবাইলের ছোট ছোট কিপ্যাড চেপে কোডিং শেখা কতটা যন্ত্রণার? একটা জাভা (.jar) ব্রাউজারে অপেরা মিনি দিয়ে যখন কোনো কোডিং সাইট লোড দিতাম, স্ক্রিনের দিকে তাকিয়ে নিষ্পাপ চোখে অপলক চেয়ে থাকতে হতো টানা দেড় থেকে দুই মিনিট! একটা পেজ লোড হতেই পুরো দুনিয়া থমকে যেত।</p>
+
+      <p>ফোনে কোড রান করার কোনো অ্যাপ বা সুযোগ ছিল না। তাই আমি কী করতাম জানেন? অবুঝের মতো ফোনের মেসেজ অপশনে গিয়ে একটা একটা করে অক্ষর টিপে কোড লিখতাম। তাতেও জায়গা না হলে, খাতা-কলম নিয়ে বসে যেতাম। ডায়েরির পাতায় পাতায় এইচটিএমএল আর সিএসএস-এর কোড লিখে রাখতাম, আর রাতে ঘুমানোর সময় ভাবতাম—ইশ! এই কোডটা যদি কোনোদিন একটা আসল কম্পিউটারে রান করে দেখতে পারতাম!</p>
+
+      <p>আমার জীবনের সবচেয়ে আবেগময় আর কষ্টের রাতটার কথা আজও চোখ বন্ধ করলে জ্বলজ্বল করে ওঠে। তখন প্রচণ্ড শীতের রাত। লেপের নিচে কাঁপতে কাঁপতে ছোট ছোট আঙুল দিয়ে মোবাইলের বাটন চেপে একটানা ৩ ঘণ্টা ধরে একটা প্রজেক্টের কোড লিখছিলাম। আঙুলগুলো শীতে পুরো অবশ হয়ে বরফ হয়ে আসছিল, তাও চোখে ছিল এক অদ্ভুত নেশা। ঠিক এমন সময় আম্মু এসে টের পেয়ে গেলেন। রাগ করে আমার হাত থেকে ফোনটা কেড়ে নিয়ে এক ঝটকায় সব কেটে দিলেন।</p>
+
+      <p class="story-quote">এক সেকেন্ডের মধ্যে একটা বাচ্চার ৩ ঘণ্টার হাড়ভাঙা খাটুনি, তার স্বপ্নের কোডগুলো বাতাসে মিলিয়ে গেল!</p>
+
+      <p>তখন গভীর রাতে লেপের নিচে মুখ লুকিয়ে আমি যেভাবে ফুঁপিয়ে ফুঁপিয়ে কেঁদেছিলাম, সেই নিঝুম রাতে একটা বাচ্চার চোখের জলের মূল্য আর কেউ না জানুক, আমার আল্লাহ জানতেন। বুকটা ভেঙে চুরমার হয়ে গিয়েছিল। কতবার যে মনে হয়েছে সব ছেড়ে দিই, আমার মতো মফস্বলের একটা বাচ্চার পক্ষে এ প্রযুক্তির বিশ্ব জয় করা অসম্ভব! মানুষ কত বড় বড় কম্পিউটার নিয়ে কোডিং করে, আর আমি একটা ভাঙা বাটন মোবাইল নিয়ে পড়ে আছি!</p>
+
+      <p>কিন্তু সেই বাচ্চার জেদটা যে পাথরের চেয়েও শক্ত ছিল। খালাতো ভাইয়ের ইন্টারমিডিয়েটের আইসিটি বইটা ধার করে এনে মাত্র ৩ দিনে পুরো এইচটিএমএল আর সিএসএস মুখস্থ করে ফেলেছিলাম। ফ্রি ডোমেইন আর হোস্টিংয়ের জন্য ইন্টারনেটের দ্বারে দ্বারে ভিক্ষুকের মতো ঘুরেছি। হাজার হাজার লাইনের কোড ভুল হয়েছে, ফোন হ্যাং করেছে, কিন্তু আমি চোখ মুছে আবার শুরু করেছি।</p>
+
+      <p>বাটন মোবাইলের সেই ছোট্ট ভাঙা কিপ্যাড চেপে শুরু করা সেই ১৪ বছরের বাচ্চাটা আজ ১৮ বছরে পদার্পণ করেছে।</p>
+
+      <div class="story-sep">✦ ৪ ফেব্রুয়ারি, ২০২৬ ✦</div>
+
+      <p>আজ ৪ ফেব্রুয়ারি, ২০২৬। ক্যালেন্ডারের পাতা উল্টে সময় অনেকদূর এগিয়ে গেছে। বাটন মোবাইলের কিপ্যাড চেপে কোডিং শেখা সেই ১৪ বছরের বাচ্চাটার বয়স আজ ১৮ বছর।</p>
+
+      <p>হ্যাঁ, আজ আমি ১৮ বছরের একজন তরুণ। যে গুগলকে একসময় রূপকথার মতো মনে হতো, সেই গুগল আজ আমাকে নিজস্ব একটি নলেজ প্যানেল (Knowledge Panel) দিয়ে স্বীকৃতি দিয়েছে। ইন্টারনেটের পাতায় আজ আমার নাম স্থায়ীভাবে খোদাই করা। কিন্তু আমি জানি, আমার পথচলা তো কেবল শুরু।</p>
+
+      <p>আজ এই পোর্টফোলিওতে আমার জীবনের এই ফেলে আসা দিনগুলোর গল্প লিখে রাখলাম একটি জীবন্ত স্মৃতি হিসেবে। এটি কেবল আমার অতীত নয়, এটি আমার আগামী দিনের অনুপ্রেরণা। ভবিষ্যতে নিজেকে আরও বড় উচ্চতায় নিয়ে যাওয়া, দেশের গণ্ডি পেরিয়ে ।</p>
+
+      <p>ভবিষ্যতে যখন আমি আরও বড় বড় লক্ষ্য অর্জন করবো, আরও বহুদূর এগিয়ে যাবো, তখনো আমার পোর্টফোলিওর এই পাতাটি আমাকে মনে করিয়ে দেবে— গ্রামের সেই ১৪ বছরের বাচ্চার চোখের জল আর জেদ কতটা শক্তিশালী ছিল।</p>
+
+      <p class="story-quote">আমি আজ যেখানেই থাকি না কেন, আমার হৃদয়ের এক কোণে সেই ভাঙা বাটন মোবাইল আর লেপের নিচের সেই অশ্রুভেজা শীতের রাতটা সবসময় অমর হয়ে থাকবে।</p>
+    </div>
+
+    <button class="story-more" id="story-more" type="button" aria-expanded="false" aria-controls="story-body">
+      <span id="story-more-txt">পুরো গল্পটা পড়ুন</span> <i class="fas fa-chevron-down"></i>
+    </button>
+  </div>
+  <script>
+  (function(){
+    var card=document.getElementById('story-card'),
+        body=document.getElementById('story-body'),
+        btn=document.getElementById('story-more'),
+        txt=document.getElementById('story-more-txt');
+    btn.addEventListener('click',function(){
+      var open=card.classList.toggle('open');
+      btn.setAttribute('aria-expanded',open);
+      txt.textContent=open?'গল্পটা ছোট করুন':'পুরো গল্পটা পড়ুন';
+      if(open){body.style.maxHeight=body.scrollHeight+'px';}
+      else{
+        body.style.maxHeight='';
+        card.scrollIntoView({behavior:'smooth',block:'start'});
+      }
+    });
+    window.addEventListener('resize',function(){
+      if(card.classList.contains('open'))body.style.maxHeight=body.scrollHeight+'px';
+    });
+  })();
+  </script>
+</div>
+</div>
+
 <!-- ═══════════════════ ABOUT ═══════════════════ -->
 <style>
 
@@ -1607,6 +1744,7 @@ footer{border-top:1px solid var(--border);padding:clamp(28px,4vw,44px) clamp(16p
       <p class="lead-txt rv">Self-driven Frontend Developer & Designer building things people love to use.</p>
       <p class="body-txt rv">I'm based in Bangladesh, passionate about crafting digital experiences that are both beautiful and functional. At 18, I've already shipped 20+ projects with 3+ years of hands-on experience.</p>
       <p class="body-txt rv" style="transition-delay:.1s">My journey began with curiosity — typing HTML for the first time and watching a browser bring something to life. Today I work with HTML, CSS, JavaScript, React, Python, and more.</p>
+
       <button class="cv-btn rv" id="cv-btn" style="transition-delay:.15s">
         <i class="fas fa-download cv-icon"></i>
         <div class="cv-spinner"></div>
