@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CSM MOHASIN MOD V1</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;600;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+<style>
+:root{
+  --c:#00ffcc;
+  --glass:rgba(255,255,255,.05);
+  --overlay:rgba(0,0,0,.95);
+}
+
+*{margin:0;padding:0;box-sizing:border-box}
+
+body{
+  min-height:100vh;
+  background:#020205;
+  font-family:'Plus Jakarta Sans',sans-serif;
+  color:#fff;
+  overflow-x:hidden;
+}
+
+*{
+  transition:
+    background .8s ease,
+    color .8s ease,
+    border-color .8s ease,
+    box-shadow .8s ease;
+}
+
+.bg-glow{
+  position:fixed;
+  inset:0;
+  filter:blur(140px);
+  opacity:.25;
+  z-index:0;
+}
+.bg-glow span{
+  position:absolute;
+  width:520px;height:520px;
+  background:var(--c);
+  border-radius:50%;
+}
+
+.main{
+  position:relative;
+  min-height:calc(100vh - 40px);
+  margin:20px;
+  padding:55px 25px 35px;
+  background:var(--glass);
+  backdrop-filter:blur(40px);
+  border:1.5px solid var(--c);
+  border-radius:32px;
+  box-shadow:0 30px 90px rgba(0,0,0,.8);
+  z-index:2;
+  display:flex;
+  flex-direction:column;
+}
+
+.share-btn{
+  position:absolute;
+  top:25px;right:25px;
+  width:42px;height:42px;
+  border-radius:12px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:rgba(255,255,255,.08);
+  border:1px solid rgba(255,255,255,.15);
+  cursor:pointer;
+}
+.share-btn:hover{background:var(--c);color:#000}
+
+.logo{
+  width:90px;height:90px;
+  margin:0 auto 25px;
+  border-radius:50%;
+  box-shadow:0 0 25px var(--c);
+}
+.logo img{
+  width:100%;height:100%;
+  border-radius:50%;
+  object-fit:cover;
+}
+
+h1{text-align:center;font-size:26px;font-weight:800}
+.dev{text-align:center;font-size:12px;color:var(--c);margin:6px 0 25px}
+
+.info{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:12px;
+  background:rgba(255,255,255,.04);
+  padding:15px;
+  border-radius:20px;
+  margin-bottom:25px;
+  text-align:center;
+}
+.info b{font-size:14px}
+.info span{font-size:10px;opacity:.6;display:block}
+
+.install{
+  position:sticky;
+  bottom:20px;
+  margin-top:auto;
+}
+.install button{
+  width:100%;
+  padding:16px;
+  border-radius:16px;
+  border:1px solid rgba(255,255,255,.15);
+  background:rgba(255,255,255,.06);
+  color:#fff;
+  font-weight:800;
+  cursor:pointer;
+  font-family:inherit;
+}
+.install button:hover{
+  background:var(--c);
+  color:#000;
+  box-shadow:0 0 22px var(--c);
+}
+.install button:active{transform:scale(.98)}
+
+/* password popup */
+.pw-modal{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.75);
+  backdrop-filter:blur(6px);
+  display:none;
+  align-items:center;
+  justify-content:center;
+  z-index:1001;
+  padding:20px;
+}
+.pw-modal.active{display:flex}
+.pw-box{
+  width:100%;
+  max-width:340px;
+  background:#0b0b0f;
+  border:1px solid var(--c);
+  border-radius:24px;
+  padding:25px;
+  text-align:center;
+}
+.pw-box h3{margin-bottom:6px}
+.pw-box p{font-size:12px;opacity:.6;margin-bottom:16px}
+.pw-box input{
+  width:100%;
+  padding:14px;
+  border-radius:12px;
+  border:1px solid rgba(255,255,255,.2);
+  background:rgba(255,255,255,.06);
+  color:#fff;
+  font-size:15px;
+  font-family:inherit;
+  outline:none;
+  text-align:center;
+}
+.pw-box input:focus{border-color:var(--c)}
+.pw-err{color:#ff4d6d;font-size:12px;height:16px;margin:8px 0}
+.pw-actions{display:flex;gap:10px}
+.pw-actions button{
+  flex:1;
+  padding:13px;
+  border-radius:12px;
+  border:1px solid rgba(255,255,255,.15);
+  background:rgba(255,255,255,.06);
+  color:#fff;
+  font-weight:700;
+  cursor:pointer;
+  font-family:inherit;
+}
+.pw-actions .ok{background:var(--c);color:#000;border-color:var(--c)}
+.shake{animation:shake .35s}
+@keyframes shake{
+  25%{transform:translateX(-8px)}
+  75%{transform:translateX(8px)}
+}
+
+/* share sheet */
+.share-sheet{
+  position:fixed;
+  inset:0;
+  background:rgba(0,0,0,.7);
+  display:none;
+  align-items:flex-end;
+  z-index:1000;
+}
+.share-sheet.active{display:flex}
+.share-box{
+  width:100%;
+  background:#0b0b0f;
+  border-radius:24px 24px 0 0;
+  padding:25px;
+}
+.share-box h3{text-align:center;margin-bottom:20px}
+.share-grid{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:15px;
+}
+.share-item{
+  background:rgba(255,255,255,.08);
+  border-radius:14px;
+  padding:15px 0;
+  text-align:center;
+  cursor:pointer;
+}
+.share-item i{font-size:22px;margin-bottom:6px}
+.share-item small{font-size:11px;opacity:.7;display:block}
+.share-item:hover{background:var(--c);color:#000}
+
+@media(max-width:600px){.main{margin:12px}}
+</style>
+</head>
+
+<body>
+
+<div class="bg-glow"><span></span></div>
+
+<div class="main">
+
+<div class="share-btn" onclick="openShare()">
+  <i class="fas fa-share-nodes"></i>
+</div>
+
+<div class="logo">
+<img src="https://mohasin-alam.github.io/Picsart_25-12-23_09-02-14-346.jpg" alt="logo">
+</div>
+
+<h1>CSM MOHASIN MOD V1</h1>
+<div class="dev">Developer: Csm Mohasin Alam</div>
+
+<div class="info">
+  <div><b>4.8 ★</b><span>Reviews</span></div>
+  <div><b>24 MB</b><span>Size</span></div>
+  <div><b>1M+</b><span>Downloads</span></div>
+</div>
+
+<div class="install">
+<button onclick="openPw()">
+<i class="fas fa-download"></i> DOWNLOAD APP
+</button>
+</div>
+
+</div>
+
+<!-- PASSWORD POPUP -->
+<div class="pw-modal" id="pwModal" onclick="closePw(event)">
+  <div class="pw-box" id="pwBox">
+    <h3><i class="fas fa-lock"></i> Password দিন</h3>
+    <p>ডাউনলোড করতে পাসওয়ার্ড প্রয়োজন</p>
+    <input type="password" id="pwInput" placeholder="Password" onkeydown="if(event.key==='Enter')checkPw()">
+    <div class="pw-err" id="pwErr"></div>
+    <div class="pw-actions">
+      <button onclick="hidePw()">Cancel</button>
+      <button class="ok" onclick="checkPw()">Download</button>
+    </div>
+  </div>
+</div>
+
+<!-- SHARE SHEET -->
+<div class="share-sheet" id="shareSheet" onclick="closeShare(event)">
+  <div class="share-box">
+    <h3>Share App</h3>
+    <div class="share-grid">
+      <div class="share-item" onclick="nativeShare()"><i class="fas fa-share"></i><small>System</small></div>
+      <div class="share-item" onclick="copyLink()"><i class="fas fa-link"></i><small>Copy</small></div>
+      <div class="share-item" onclick="shareFacebook()"><i class="fab fa-facebook-f"></i><small>Facebook</small></div>
+      <div class="share-item" onclick="shareMessenger()"><i class="fab fa-facebook-messenger"></i><small>Messenger</small></div>
+      <div class="share-item" onclick="shareWhatsApp()"><i class="fab fa-whatsapp"></i><small>WhatsApp</small></div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ===== কনফিগ ===== */
+const PASSWORD = 'csm-samiya.bd'; // এখানে নিজের পাসওয়ার্ড দিন
+const APK_URL = 'https://github.com/csm-mohasin/csm-mohasin.github.io/releases/download/v1.0/360.Photo.Sphere.Camera_1.1.1.apk';
+
+/* color fade */
+const colors=['#00ffcc','#0088ff','#6a00ff','#ff00cc','#ffb700'];
+let ci=0;
+setInterval(()=>{
+  document.documentElement.style.setProperty('--c',colors[ci]);
+  ci=(ci+1)%colors.length;
+},4200);
+
+/* password popup */
+const pwModal=document.getElementById('pwModal');
+const pwInput=document.getElementById('pwInput');
+const pwErr=document.getElementById('pwErr');
+function openPw(){pwModal.classList.add('active');pwInput.value='';pwErr.textContent='';setTimeout(()=>pwInput.focus(),50)}
+function hidePw(){pwModal.classList.remove('active')}
+function closePw(e){if(e.target.id==='pwModal')hidePw()}
+function checkPw(){
+  if(pwInput.value===PASSWORD){
+    hidePw();
+    location.href=APK_URL;
+  }else{
+    pwErr.textContent='ভুল পাসওয়ার্ড!';
+    const box=document.getElementById('pwBox');
+    box.classList.remove('shake');
+    void box.offsetWidth;
+    box.classList.add('shake');
+  }
+}
+
+/* share */
+const shareURL=encodeURIComponent(location.href);
+function openShare(){document.getElementById('shareSheet').classList.add('active')}
+function closeShare(e){if(e.target.id==='shareSheet')e.target.classList.remove('active')}
+function nativeShare(){
+  if(navigator.share){
+    navigator.share({title:'CSM MOHASIN MOD V1',url:location.href});
+  }
+}
+function copyLink(){navigator.clipboard.writeText(location.href);alert('Link copied')}
+function shareFacebook(){window.open(`https://www.facebook.com/sharer/sharer.php?u=${shareURL}`,'_blank')}
+function shareMessenger(){
+  window.open(`https://www.facebook.com/dialog/send?link=${shareURL}&app_id=5303202981&redirect_uri=${shareURL}`,'_blank')
+}
+function shareWhatsApp(){
+  window.open(`https://wa.me/?text=Check%20out%20this%20app%20${shareURL}`,'_blank')
+}
+</script>
+
+</body>
+</html>
