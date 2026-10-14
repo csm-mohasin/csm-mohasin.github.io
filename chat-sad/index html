@@ -75,11 +75,11 @@
             font-size: 15px;
             line-height: 1.6;
             background-color: var(--main-bg);
-            /* ফিক্সড ইনপুট বারের জন্য নিচে জায়গা তৈরি করা */
+           
             padding-bottom: 85px; 
         }
         
-        /* --- মেসেজ বাবল স্টাইল: ডানদিকে ইউজার, বামদিকে বট --- */
+     /* --- মেসেজ বাবল স্টাইল: ডানদিকে ইউজার, বামদিকে বট --- *  
         .chat-body > div {
             display: flex;
             margin-bottom: 15px;
@@ -104,7 +104,7 @@
 
         /* বট রিপ্লাই (বামদিকে) */
         .bot-reply { justify-content: flex-start; }
-        .bot-reply .message-bubble {
+        .bot-reply      .message-bubble {
             background-color: var(--ai-bg); 
             color: var(--text-color);
             border-bottom-left-radius: 4px;
@@ -182,7 +182,7 @@
   </div>
   
   <div class="chat-input">
-    <input type="text" id="userInput" placeholder="আপনার প্রশ্ন টাইপ করুন এবং এন্টার চাপুন..." onkeypress="if(event.key === 'Enter') sendMessage()" />
+    <input type="text" id="userInput" placeholder="আপনার প্রশ্ন ট..." onkeypress="if(event.key === 'Enter') sendMessage()" />
     <button onclick="sendMessage()" title="Send Message">
         <i class="fas fa-paper-plane"></i>
     </button>
@@ -210,9 +210,9 @@ const userInput = document.getElementById('userInput');
 let qaDictionary = {};
 let isQALoaded = false;
 
-// --- ১. মোবাইল কীবোর্ড সমস্যা সমাধানের ফিক্স ---
+
 function setAppHeight() {
-    // বর্তমান ভিউপোর্ট হাইট পরিমাপ করা (কীবোর্ড বন্ধ থাকা অবস্থায়)
+
     const vh = window.innerHeight * 0.01;
     // CSS ভ্যারিয়েবল `--app-height` সেট করা হলো
     document.documentElement.style.setProperty('--app-height', `${window.innerHeight}px`);
@@ -359,7 +359,7 @@ async function sendMessage() {
         
         typeReply(typingBubble, reply);
         
-    }, 300); 
+    }, 200); 
 }
 </script>
 
