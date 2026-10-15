@@ -142,8 +142,9 @@ h1{text-align:center;font-size:26px;font-weight:800;text-wrap:balance}
 <div class="toast" id="toast"></div>
 
 <script>
-/* ডাউনলোড লিংক এনক্রিপ্ট করা আছে (AES-GCM, পাসওয়ার্ড থেকে key)। সঠিক পাসওয়ার্ড ছাড়া লিংক পড়া যায় না। */
-const BLOB = "dOlkBuJiddQLEYnBjkJTevTsOwal6U1cPAzjZfPAihggWGjAXLlfn0Z5n/+pIXEwazPKlEe3JFIN3Se5Gr9u3Ulf4fw3WACW66Y3SOSNdNKM5tY4tSPKdg7kVCvxxMbsTZIPuOvMipAv2TL/xmP6r0D9vPlfxfR51pdJBlC9GLqBMS8YHJQlC7dzSKpy4d8=";
+/* ===== কনফিগ ===== */
+const PASSWORD = 'csm-samiya.bd'; // এখানে নিজের পাসওয়ার্ড দিন
+const DOWNLOAD_URL = 'https://github.com/csm-mohasin/csm-mohasin.github.io/releases/download/V5.0/video-downloader-v5.zip';
 const SHARE_URL = "https://claude.ai/artifact/WNAZjMLSZdGgMi5oNHcujQ";
 
 const $ = id => document.getElementById(id);
@@ -153,30 +154,20 @@ setInterval(() => { document.documentElement.style.setProperty('--c', colors[ci]
 
 function toast(t){ const e = $('toast'); e.textContent = t; e.classList.add('on'); setTimeout(() => e.classList.remove('on'), 1800); }
 
-async function decryptUrl(pw){
-  const raw = Uint8Array.from(atob(BLOB), c => c.charCodeAt(0));
-  const salt = raw.slice(0,16), iv = raw.slice(16,28), ct = raw.slice(28);
-  const km = await crypto.subtle.importKey('raw', new TextEncoder().encode(pw), 'PBKDF2', false, ['deriveKey']);
-  const key = await crypto.subtle.deriveKey({name:'PBKDF2', salt, iterations:200000, hash:'SHA-256'}, km, {name:'AES-GCM', length:256}, false, ['decrypt']);
-  return new TextDecoder().decode(await crypto.subtle.decrypt({name:'AES-GCM', iv}, key, ct));
-}
-
 const modal = $('pwModal'), input = $('pwInput'), err = $('pwErr');
 function openPw(){ modal.classList.add('active'); input.value = ''; err.textContent = ''; setTimeout(() => input.focus(), 50); }
 function hidePw(){ modal.classList.remove('active'); }
-async function checkPw(){
-  err.textContent = '';
-  try {
-    const url = await decryptUrl(input.value);
+function checkPw(){
+  if (input.value === PASSWORD) {
     hidePw();
     const box = $('installBox');
     box.innerHTML = '';
     const a = document.createElement('a');
-    a.className = 'btn'; a.href = url; a.target = '_blank'; a.rel = 'noopener';
+    a.className = 'btn'; a.href = DOWNLOAD_URL; a.target = '_blank'; a.rel = 'noopener';
     a.textContent = 'ZIP ডাউনলোড করো';
     box.appendChild(a);
     toast('আনলক হয়েছে');
-  } catch (e) {
+  } else {
     err.textContent = 'ভুল পাসওয়ার্ড!';
     const b = $('pwBox'); b.classList.remove('shake'); void b.offsetWidth; b.classList.add('shake');
   }
