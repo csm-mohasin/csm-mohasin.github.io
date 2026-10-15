@@ -1,0 +1,197 @@
+
+
+
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Video Downloader</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;600;800&family=Hind+Siliguri:wght@400;600&display=swap">
+<style>
+/* Layout: one glass card with logo, stats row and a sticky download button; password popup and share sheet on top */
+:root{
+  --c:#00ffcc; --bg:#020205; --glass:rgba(255,255,255,.05); --panel:#0b0b0f; --fg:#fff; --err:#ff4d6d;
+  --line:rgba(255,255,255,.15); --soft:rgba(255,255,255,.08);
+  color-scheme:dark;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{min-height:100%;background:var(--bg);color:var(--fg);font-family:'Plus Jakarta Sans','Hind Siliguri',sans-serif;overflow-x:hidden;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px}
+*{transition:background .8s ease,color .8s ease,border-color .8s ease,box-shadow .8s ease}
+.bg-glow{position:fixed;inset:0;filter:blur(140px);opacity:.25;z-index:0;pointer-events:none}
+.bg-glow span{position:absolute;width:520px;height:520px;background:var(--c);border-radius:50%;top:-120px;left:-120px}
+.main{position:relative;max-width:560px;margin:0 auto;padding:55px 24px 28px;background:var(--glass);backdrop-filter:blur(40px);
+  border:1.5px solid var(--c);border-radius:32px;box-shadow:0 30px 90px rgba(0,0,0,.8);z-index:2;display:flex;flex-direction:column}
+.share-btn{position:absolute;top:22px;right:22px;width:42px;height:42px;border-radius:12px;display:flex;align-items:center;justify-content:center;
+  background:var(--soft);border:1px solid var(--line);cursor:pointer;color:var(--fg)}
+.share-btn:hover,.share-btn:focus-visible{background:var(--c);color:#000;outline:none}
+svg{display:block}
+.logo{width:90px;height:90px;margin:0 auto 22px;border-radius:50%;box-shadow:0 0 25px var(--c);display:flex;align-items:center;justify-content:center;background:#05080a;color:var(--c)}
+h1{text-align:center;font-size:26px;font-weight:800;text-wrap:balance}
+.dev{text-align:center;font-size:12px;color:var(--c);margin:6px 0 22px}
+.about{font-size:14px;line-height:1.75;opacity:.85;margin-bottom:22px;text-align:center}
+.info{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;background:rgba(255,255,255,.04);padding:15px;border-radius:20px;margin-bottom:22px;text-align:center}
+.info b{font-size:14px}
+.info span{font-size:10px;opacity:.6;display:block}
+.feats{list-style:none;display:grid;gap:8px;margin-bottom:26px}
+.feats li{font-size:14px;padding:10px 14px;border-radius:14px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08)}
+.feats b{color:var(--c);font-weight:600}
+.steps{font-size:13px;opacity:.75;line-height:1.8;margin-bottom:26px;padding-left:18px}
+.steps code{color:var(--c);font-family:ui-monospace,Menlo,Consolas,monospace}
+.install{position:sticky;bottom:14px;margin-top:auto}
+.btn{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;padding:16px;border-radius:16px;border:1px solid var(--line);background:rgba(255,255,255,.06);
+  color:var(--fg);font-weight:800;cursor:pointer;font-family:inherit;font-size:15px;text-decoration:none;backdrop-filter:blur(10px)}
+.btn:hover,.btn:focus-visible{background:var(--c);color:#000;box-shadow:0 0 22px var(--c);outline:none}
+.btn:active{transform:scale(.98)}
+.pw-modal,.share-sheet{position:fixed;inset:0;display:none;z-index:1001}
+.pw-modal{background:rgba(0,0,0,.75);backdrop-filter:blur(6px);align-items:center;justify-content:center;padding:20px}
+.share-sheet{background:rgba(0,0,0,.7);align-items:flex-end;z-index:1000}
+.pw-modal.active,.share-sheet.active{display:flex}
+.pw-box{width:100%;max-width:340px;background:var(--panel);border:1px solid var(--c);border-radius:24px;padding:25px;text-align:center}
+.pw-box h3{margin-bottom:6px}
+.pw-box p{font-size:12px;opacity:.6;margin-bottom:16px}
+.pw-box input{width:100%;padding:14px;border-radius:12px;border:1px solid rgba(255,255,255,.2);background:rgba(255,255,255,.06);color:var(--fg);font-size:15px;font-family:inherit;outline:none;text-align:center}
+.pw-box input:focus{border-color:var(--c)}
+.pw-err{color:var(--err);font-size:12px;min-height:16px;margin:8px 0}
+.pw-actions{display:flex;gap:10px}
+.pw-actions .btn{padding:13px;font-size:14px;font-weight:700}
+.pw-actions .ok{background:var(--c);color:#000;border-color:var(--c)}
+.shake{animation:shake .35s}
+@keyframes shake{25%{transform:translateX(-8px)}75%{transform:translateX(8px)}}
+.share-box{width:100%;max-width:560px;margin:0 auto;background:var(--panel);border-radius:24px 24px 0 0;padding:25px 25px calc(25px + env(safe-area-inset-bottom,0px))}
+.share-box h3{text-align:center;margin-bottom:20px}
+.share-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.share-item{background:var(--soft);border-radius:14px;padding:15px 0;text-align:center;cursor:pointer;color:var(--fg);text-decoration:none;font-family:inherit;border:0}
+.share-item svg{margin:0 auto 6px}
+.share-item small{font-size:11px;opacity:.8;display:block}
+.share-item:hover,.share-item:focus-visible{background:var(--c);color:#000;outline:none}
+.toast{position:fixed;left:50%;bottom:30px;transform:translateX(-50%);background:var(--c);color:#000;padding:10px 18px;border-radius:12px;font-size:13px;font-weight:600;z-index:1100;opacity:0;pointer-events:none;transition:opacity .25s}
+.toast.on{opacity:1}
+@media(max-width:600px){.main{padding:55px 18px 24px}}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}.shake{animation:none}}
+</style>
+
+<div class="bg-glow"><span></span></div>
+
+<div class="main">
+  <button class="share-btn" id="shareOpen" type="button" aria-label="Share">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 10.5l6.8-4M8.6 13.5l6.8 4"/></svg>
+  </button>
+
+  <div class="logo">
+    <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg>
+  </div>
+
+  <h1>VIDEO DOWNLOADER</h1>
+  <div class="dev">Developer: Csm Mohasin Alam</div>
+
+  <p class="about">লিংক বসাও, কোয়ালিটি বেছে নাও, ভিডিও নামাও। তোমার নিজের পিসিতে চলে, কোনো অ্যাকাউন্ট লাগে না।</p>
+
+  <div class="info">
+    <div><b>Windows</b><span>Platform</span></div>
+    <div><b>~25 KB</b><span>Size</span></div>
+    <div><b>v5</b><span>Version</span></div>
+  </div>
+
+  <ul class="feats">
+    <li><b>Playlist</b> পুরো প্লেলিস্ট থেকে পছন্দেরগুলো টিক দিয়ে নামানো</li>
+    <li><b>Quality</b> Best থেকে যেকোনো রেজোলিউশন, অথবা MP3 / M4A</li>
+    <li><b>Subtitle</b> ইংরেজি ও বাংলা সাবটাইটেল ভিডিওর ভেতরে</li>
+    <li><b>Queue</b> একসাথে ৩টা ডাউনলোড, থামানো ও আবার চালানো</li>
+    <li><b>Auto setup</b> install.bat এ ক্লিক করলেই সব নিজে ইনস্টল</li>
+  </ul>
+
+  <ol class="steps">
+    <li>ZIP ডাউনলোড করে extract করো</li>
+    <li><code>install.bat</code> এ ডাবল-ক্লিক করো</li>
+    <li>ডেস্কটপের শর্টকাটে ক্লিক করো, অথবা CMD তে <code>yt</code> লেখো</li>
+  </ol>
+
+  <div class="install" id="installBox">
+    <button class="btn" id="openPw" type="button">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg>
+      DOWNLOAD
+    </button>
+  </div>
+</div>
+
+<div class="pw-modal" id="pwModal">
+  <div class="pw-box" id="pwBox">
+    <h3>Password দিন</h3>
+    <p>ডাউনলোড করতে পাসওয়ার্ড প্রয়োজন</p>
+    <input type="password" id="pwInput" placeholder="Password" autocomplete="off">
+    <div class="pw-err" id="pwErr" role="alert"></div>
+    <div class="pw-actions">
+      <button class="btn" id="pwCancel" type="button">Cancel</button>
+      <button class="btn ok" id="pwOk" type="button">Unlock</button>
+    </div>
+  </div>
+</div>
+
+<div class="share-sheet" id="shareSheet">
+  <div class="share-box">
+    <h3>Share</h3>
+    <div class="share-grid">
+      <button class="share-item" id="copyBtn" type="button">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 007 0l3-3a5 5 0 00-7-7l-1 1"/><path d="M14 11a5 5 0 00-7 0l-3 3a5 5 0 007 7l1-1"/></svg><small>Copy</small></button>
+      <a class="share-item" id="shFb" target="_blank" rel="noopener" href="#">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M14 8V6.5c0-.7.3-1 1-1h2V2h-3a4 4 0 00-4 4.2V8H7v3.5h3V22h4v-10.5h3L17.5 8z"/></svg><small>Facebook</small></a>
+      <a class="share-item" id="shMs" target="_blank" rel="noopener" href="#">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.5 2 2 6.2 2 11.5c0 2.9 1.3 5.4 3.4 7.1V22l3.1-1.7c1.1.3 2.2.5 3.5.5 5.5 0 10-4.2 10-9.5S17.5 2 12 2zm1 12.7l-2.5-2.7-4.9 2.7 5.4-5.7 2.6 2.7 4.8-2.7z"/></svg><small>Messenger</small></a>
+      <a class="share-item" id="shWa" target="_blank" rel="noopener" href="#">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21l1.6-4.8A8.5 8.5 0 1112 20.5a8.4 8.4 0 01-4-1z"/><path d="M9 9c0 3 3 6 6 6l1.2-1.4-2-1-.8.7c-1-.4-1.8-1.2-2.2-2.2l.7-.8-1-2z"/></svg><small>WhatsApp</small></a>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ===== কনফিগ ===== */
+const PASSWORD = 'csm-samiya.bd'; // এখানে নিজের পাসওয়ার্ড দিন
+const DOWNLOAD_URL = 'https://github.com/csm-mohasin/csm-mohasin.github.io/releases/download/V5.0/video-downloader-v5.zip';
+const SHARE_URL = "https://claude.ai/artifact/WNAZjMLSZdGgMi5oNHcujQ";
+
+const $ = id => document.getElementById(id);
+const colors = ['#00ffcc','#0088ff','#6a00ff','#ff00cc','#ffb700'];
+let ci = 0;
+setInterval(() => { document.documentElement.style.setProperty('--c', colors[ci]); ci = (ci + 1) % colors.length; }, 4200);
+
+function toast(t){ const e = $('toast'); e.textContent = t; e.classList.add('on'); setTimeout(() => e.classList.remove('on'), 1800); }
+
+const modal = $('pwModal'), input = $('pwInput'), err = $('pwErr');
+function openPw(){ modal.classList.add('active'); input.value = ''; err.textContent = ''; setTimeout(() => input.focus(), 50); }
+function hidePw(){ modal.classList.remove('active'); }
+function checkPw(){
+  if (input.value === PASSWORD) {
+    hidePw();
+    const box = $('installBox');
+    box.innerHTML = '';
+    const a = document.createElement('a');
+    a.className = 'btn'; a.href = DOWNLOAD_URL; a.target = '_blank'; a.rel = 'noopener';
+    a.textContent = 'ZIP ডাউনলোড করো';
+    box.appendChild(a);
+    toast('আনলক হয়েছে');
+  } else {
+    err.textContent = 'ভুল পাসওয়ার্ড!';
+    const b = $('pwBox'); b.classList.remove('shake'); void b.offsetWidth; b.classList.add('shake');
+  }
+}
+$('openPw').onclick = openPw;
+$('pwCancel').onclick = hidePw;
+$('pwOk').onclick = checkPw;
+input.addEventListener('keydown', e => { if (e.key === 'Enter') checkPw(); });
+modal.addEventListener('click', e => { if (e.target === modal) hidePw(); });
+
+const sheet = $('shareSheet'), enc = encodeURIComponent(SHARE_URL);
+$('shareOpen').onclick = () => sheet.classList.add('active');
+sheet.addEventListener('click', e => { if (e.target === sheet) sheet.classList.remove('active'); });
+$('shFb').href = 'https://www.facebook.com/sharer/sharer.php?u=' + enc;
+$('shMs').href = 'https://www.facebook.com/dialog/send?link=' + enc + '&app_id=5303202981&redirect_uri=' + enc;
+$('shWa').href = 'https://wa.me/?text=' + encodeURIComponent('Video Downloader ' + SHARE_URL);
+$('copyBtn').onclick = async () => {
+  try { await navigator.clipboard.writeText(SHARE_URL); toast('Link copied'); }
+  catch { toast(SHARE_URL); }
+};
+document.addEventListener('keydown', e => { if (e.key === 'Escape') { hidePw(); sheet.classList.remove('active'); } });
+</script>
+
+</body></html>
