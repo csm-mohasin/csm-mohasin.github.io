@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Login</title>
+<title>CSM Login</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body {
@@ -13,6 +13,20 @@
     justify-content: center;
     background: #0f0f0f;
     font-family: 'Segoe UI', sans-serif;
+    flex-direction: column;
+    gap: 16px;
+    padding: 20px;
+  }
+  .notice-bar {
+    background: #1c3a5e;
+    border: 1px solid #2563eb;
+    border-radius: 10px;
+    padding: 12px 16px;
+    width: 90%;
+    max-width: 380px;
+    color: #93c5fd;
+    font-size: 13px;
+    display: none;
   }
   .card {
     background: #1a1a1a;
@@ -25,63 +39,138 @@
   }
   h2 { color: #fff; margin-bottom: 8px; font-size: 22px; }
   p { color: #888; font-size: 13px; margin-bottom: 28px; }
-  input {
-    width: 100%;
-    padding: 14px 16px;
-    border-radius: 10px;
-    border: 1px solid #333;
-    background: #111;
-    color: #fff;
-    font-size: 15px;
-    margin-bottom: 16px;
-    outline: none;
-  }
-  input:focus { border-color: #555; }
-  button {
+  .google-btn {
     width: 100%;
     padding: 14px;
     border-radius: 10px;
-    border: none;
-    background: #2563eb;
-    color: #fff;
-    font-size: 16px;
+    border: 1px solid #444;
+    background: #fff;
+    color: #333;
+    font-size: 15px;
     font-weight: 600;
     cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
   }
-  button:active { background: #1d4ed8; }
-  .error {
-    color: #f87171;
-    font-size: 13px;
-    margin-top: 12px;
-    display: none;
-  }
+  .google-btn img { width: 20px; }
+  .status { margin-top: 16px; font-size: 13px; color: #888; min-height: 20px; }
+  .error { color: #f87171; }
+  .success { color: #4ade80; }
 </style>
 </head>
 <body>
+
+<div class="notice-bar" id="notice-bar">📢 <span id="notice-text"></span></div>
+
 <div class="card">
   <h2>🔐 CSM Access</h2>
-  <p>Enter your password to continue</p>
-  <input type="password" id="pass" placeholder="Password" />
-  <button onclick="checkPass()">Login</button>
-  <div class="error" id="err">❌ Wrong password. Try again.</div>
+  <p>Sign in with your Google account</p>
+  <button class="google-btn" onclick="signIn()">
+    <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg">
+    Sign in with Google
+  </button>
+  <div class="status" id="status"></div>
 </div>
 
-<script>
-  const passwords = ["samiya.bd"];
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
+  import { getAuth, GoogleAuthProvider, signInWithRedirect, getRedirectResult } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
+  import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
 
-  function checkPass() {
-    const val = document.getElementById('pass').value.trim();
-    if (passwords.includes(val)) {
-      window.location.href = "https://mohasin.bro.bd/apk/login?success=true&time=30000";
-    } else {
-      document.getElementById('err').style.display = 'block';
-      document.getElementById('pass').value = '';
+  // তোমার Firebase config এখানে
+  const firebaseConfig = {
+    apiKey: "YOUR_API_KEY",
+    authDomain: "YOUR_AUTH_DOMAIN",
+    projectId: "YOUR_PROJECT_ID",
+    storageBucket: "YOUR_STORAGE_BUCKET",
+    messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+    appId: "YOUR_APP_ID"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
+  const provider = new GoogleAuthProvider();
+  const status = document.getElementById('status');
+
+  // Notice load
+  getDoc(doc(db, "config", "notice")).then((d) => {
+    if (d.exists() && d.data().text) {
+      document.getElementById('notice-text').textContent = d.data().text;
+      document.getElementById('notice-bar').style.display = 'block';
     }
-  }
-
-  document.getElementById('pass').addEventListener('keydown', function(e) {
-    if (e.key === 'Enter') checkPass();
   });
+
+  // Redirect result
+  getRedirectResult(auth).then(async (result) => {
+    if (!result) return;
+
+    status.textContent = "Checking access...";
+    const user = result.user;
+
+    const userRef = doc(db, "users", user.uid);
+    const userDoc = await getDoc(userRef);
+
+    if (!userDoc.exists()) {
+      // নতুন user — save করো pending state এ
+      await setDoc(userRef, {
+        name: user.displayName,
+        email: user.email,
+        photo: user.photoURL,
+        disabled: true,
+        createdAt: Date.now()
+      });
+      status.className = 'status error';
+      status.textContent = "❌ Access not granted. Contact admin.";
+      setTimeout(() => {
+        window.location.href = "?success=false";
+      }, 2000);
+      return;
+    }
+
+    const data = userDoc.data();
+
+    if (data.disabled) {
+      status.className = 'status error';
+      status.textContent = "❌ Your access is disabled.";
+      setTimeout(() => {
+        window.location.href = "?success=false";
+      }, 1500);
+      return;
+    }
+
+    const now = Date.now();
+    if (data.expireAt && data.expireAt < now) {
+      status.className = 'status error';
+      status.textContent = "⏰ Your time has expired.";
+      setTimeout(() => {
+        window.location.href = "?success=false";
+      }, 1500);
+      return;
+    }
+
+    status.className = 'status success';
+    status.textContent = "✅ Access granted!";
+    const timeLeft = data.expireAt ? data.expireAt - now : 0;
+    setTimeout(() => {
+      if (timeLeft > 0) {
+        window.location.href = `https://mohasin.bro.bd/apk/login?success=true&time=${timeLeft}`;
+      } else {
+        window.location.href = "https://mohasin.bro.bd/apk/login?success=true";
+      }
+    }, 1000);
+
+  }).catch((err) => {
+    status.className = 'status error';
+    status.textContent = "Error: " + err.message;
+  });
+
+  window.signIn = () => {
+    status.textContent = "Redirecting to Google...";
+    signInWithRedirect(auth, provider);
+  };
 </script>
 </body>
 </html>

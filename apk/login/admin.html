@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CSM Admin</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #0f0f0f; color: #fff; font-family: 'Segoe UI', sans-serif; }
+  header {
+    background: #1a1a1a;
+    border-bottom: 1px solid #333;
+    padding: 16px 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  header h1 { font-size: 18px; }
+  header button {
+    background: #333;
+    color: #fff;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 13px;
+  }
+  .container { padding: 24px; max-width: 900px; margin: 0 auto; }
+  .notice-box {
+    background: #1a1a1a;
+    border: 1px solid #333;
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 24px;
+  }
+  .notice-box h3 { margin-bottom: 12px; color: #aaa; font-size: 14px; }
+  .notice-box textarea {
+    width: 100%;
+    background: #111;
+    border: 1px solid #333;
+    border-radius: 8px;
+    color: #fff;
+    padding: 12px;
+    font-size: 14px;
+    resize: vertical;
+    min-height: 80px;
+  }
+  .notice-box button {
+    margin-top: 10px;
+    background: #2563eb;
+    color: #fff;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 14px;
+  }
+  table { width: 100%; border-collapse: collapse; }
+  th, td { padding: 12px 16px; text-align: left; border-bottom: 1px solid #222; font-size: 14px; }
+  th { color: #888; font-weight: 500; }
+  td { color: #fff; }
+  .badge {
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+  }
+  .badge.active { background: #14532d; color: #4ade80; }
+  .badge.disabled { background: #450a0a; color: #f87171; }
+  .badge.pending { background: #333; color: #aaa; }
+  .actions { display: flex; gap: 8px; flex-wrap: wrap; }
+  .btn {
+    padding: 6px 12px;
+    border-radius: 6px;
+    border: none;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 600;
+  }
+  .btn-enable { background: #14532d; color: #4ade80; }
+  .btn-disable { background: #450a0a; color: #f87171; }
+  .btn-time { background: #1e3a5f; color: #60a5fa; }
+  .modal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.8);
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+  }
+  .modal.show { display: flex; }
+  .modal-box {
+    background: #1a1a1a;
+    border: 1px solid #333;
+    border-radius: 12px;
+    padding: 24px;
+    width: 90%;
+    max-width: 340px;
+  }
+  .modal-box h3 { margin-bottom: 16px; }
+  .modal-box input {
+    width: 100%;
+    background: #111;
+    border: 1px solid #333;
+    border-radius: 8px;
+    color: #fff;
+    padding: 12px;
+    font-size: 14px;
+    margin-bottom: 12px;
+  }
+  .modal-box .row { display: flex; gap: 10px; }
+  .modal-box .row button {
+    flex: 1;
+    padding: 10px;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    font-size: 14px;
+  }
+  .btn-cancel { background: #333; color: #fff; }
+  .btn-save { background: #2563eb; color: #fff; }
+  #login-screen {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .login-card {
+    background: #1a1a1a;
+    border: 1px solid #333;
+    border-radius: 16px;
+    padding: 40px 32px;
+    width: 90%;
+    max-width: 340px;
+    text-align: center;
+  }
+  .login-card h2 { margin-bottom: 8px; }
+  .login-card p { color: #888; font-size: 13px; margin-bottom: 24px; }
+  .login-card button {
+    width: 100%;
+    padding: 14px;
+    border-radius: 10px;
+    border: 1px solid #444;
+    background: #fff;
+    color: #333;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+  }
+  .login-card button img { width: 20px; }
+  #main-screen { display: none; }
+  .save-notice { color: #4ade80; font-size: 13px; margin-top: 8px; display: none; }
+</style>
+</head>
+<body>
+
+<div id="login-screen">
+  <div class="login-card">
+    <h2>🛡️ Admin Panel</h2>
+    <p>Sign in with admin Google account</p>
+    <button onclick="adminSignIn()">
+      <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg">
+      Sign in with Google
+    </button>
+    <div class="status" id="login-status" style="margin-top:12px;font-size:13px;color:#888;"></div>
+  </div>
+</div>
+
+<div id="main-screen">
+  <header>
+    <h1>🛡️ CSM Admin Dashboard</h1>
+    <button onclick="signOut()">Sign Out</button>
+  </header>
+  <div class="container">
+
+    <!-- Notice -->
+    <div class="notice-box">
+      <h3>📢 NOTICE (shows in app)</h3>
+      <textarea id="notice-text" placeholder="Write notice here..."></textarea>
+      <button onclick="saveNotice()">Save Notice</button>
+      <div class="save-notice" id="notice-saved">✅ Saved!</div>
+    </div>
+
+    <!-- User List -->
+    <div class="notice-box">
+      <h3>👥 USER LIST</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>Name</th>
+            <th>Email</th>
+            <th>Status</th>
+            <th>Expires</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="user-table">
+          <tr><td colspan="5" style="color:#555;text-align:center;">Loading...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- Time Modal -->
+<div class="modal" id="time-modal">
+  <div class="modal-box">
+    <h3>⏱️ Set Access Time</h3>
+    <input type="number" id="time-minutes" placeholder="Minutes (e.g. 20)" min="1"/>
+    <div class="row">
+      <button class="btn-cancel" onclick="closeModal()">Cancel</button>
+      <button class="btn-save" onclick="saveTime()">Set Time</button>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
+  import { getAuth, GoogleAuthProvider, signInWithRedirect, getRedirectResult, signOut as fbSignOut } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
+  import { getFirestore, doc, getDoc, setDoc, updateDoc, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
+
+  // তোমার Firebase config এখানে
+  const firebaseConfig = {
+    apiKey: "YOUR_API_KEY",
+    authDomain: "YOUR_AUTH_DOMAIN",
+    projectId: "YOUR_PROJECT_ID",
+    storageBucket: "YOUR_STORAGE_BUCKET",
+    messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+    appId: "YOUR_APP_ID"
+  };
+
+  // তোমার admin UID এখানে দাও
+  const ADMIN_UID = "YOUR_ADMIN_UID";
+
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
+  const provider = new GoogleAuthProvider();
+
+  let selectedUid = null;
+
+  // Redirect result
+  getRedirectResult(auth).then(async (result) => {
+    if (result) {
+      const user = result.user;
+      if (user.uid !== ADMIN_UID) {
+        document.getElementById('login-status').textContent = "❌ Not admin account.";
+        await fbSignOut(auth);
+        return;
+      }
+      showDashboard(user);
+    } else {
+      const user = auth.currentUser;
+      if (user && user.uid === ADMIN_UID) {
+        showDashboard(user);
+      }
+    }
+  });
+
+  auth.onAuthStateChanged((user) => {
+    if (user && user.uid === ADMIN_UID) {
+      showDashboard(user);
+    }
+  });
+
+  async function showDashboard(user) {
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('main-screen').style.display = 'block';
+    loadUsers();
+    loadNotice();
+  }
+
+  async function loadUsers() {
+    const tbody = document.getElementById('user-table');
+    const snap = await getDocs(collection(db, "users"));
+    if (snap.empty) {
+      tbody.innerHTML = '<tr><td colspan="5" style="color:#555;text-align:center;">No users yet</td></tr>';
+      return;
+    }
+    tbody.innerHTML = '';
+    snap.forEach((d) => {
+      const u = d.data();
+      const uid = d.id;
+      const expireDate = u.expireAt ? new Date(u.expireAt).toLocaleString() : 'Unlimited';
+      const status = u.disabled ? 'disabled' : (u.expireAt && u.expireAt < Date.now() ? 'pending' : 'active');
+      const badge = `<span class="badge ${status}">${status}</span>`;
+      tbody.innerHTML += `
+        <tr>
+          <td>${u.name || '-'}</td>
+          <td>${u.email || '-'}</td>
+          <td>${badge}</td>
+          <td>${expireDate}</td>
+          <td>
+            <div class="actions">
+              <button class="btn btn-enable" onclick="enableUser('${uid}')">Enable</button>
+              <button class="btn btn-disable" onclick="disableUser('${uid}')">Disable</button>
+              <button class="btn btn-time" onclick="openTimeModal('${uid}')">Set Time</button>
+            </div>
+          </td>
+        </tr>`;
+    });
+  }
+
+  async function loadNotice() {
+    const d = await getDoc(doc(db, "config", "notice"));
+    if (d.exists()) {
+      document.getElementById('notice-text').value = d.data().text || '';
+    }
+  }
+
+  window.adminSignIn = () => signInWithRedirect(auth, provider);
+
+  window.signOut = async () => {
+    await fbSignOut(auth);
+    location.reload();
+  };
+
+  window.enableUser = async (uid) => {
+    await updateDoc(doc(db, "users", uid), { disabled: false });
+    loadUsers();
+  };
+
+  window.disableUser = async (uid) => {
+    await updateDoc(doc(db, "users", uid), { disabled: true });
+    loadUsers();
+  };
+
+  window.openTimeModal = (uid) => {
+    selectedUid = uid;
+    document.getElementById('time-modal').classList.add('show');
+  };
+
+  window.closeModal = () => {
+    document.getElementById('time-modal').classList.remove('show');
+    selectedUid = null;
+  };
+
+  window.saveTime = async () => {
+    const minutes = parseInt(document.getElementById('time-minutes').value);
+    if (!minutes || minutes < 1) return;
+    const expireAt = Date.now() + (minutes * 60 * 1000);
+    await updateDoc(doc(db, "users", selectedUid), { expireAt, disabled: false });
+    closeModal();
+    loadUsers();
+  };
+
+  window.saveNotice = async () => {
+    const text = document.getElementById('notice-text').value;
+    await setDoc(doc(db, "config", "notice"), { text });
+    const el = document.getElementById('notice-saved');
+    el.style.display = 'block';
+    setTimeout(() => el.style.display = 'none', 2000);
+  };
+</script>
+</body>
+</html>
