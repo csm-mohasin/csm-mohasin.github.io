@@ -239,16 +239,16 @@
   // তোমার Firebase config এখানে
   const firebaseConfig = {
     apiKey: "AIzaSyDYQEmr9dM32hiXHTfYswH6xyeusD67urg",
-  authDomain: "csmkohinapk.firebaseapp.com",
-  projectId: "csmkohinapk",
-  storageBucket: "csmkohinapk.firebasestorage.app",
-  messagingSenderId: "242746054882",
-  appId: "1:242746054882:web:342c52a8d5e6ee733ba6bb"
+    authDomain: "csmkohinapk.firebaseapp.com",
+    projectId: "csmkohinapk",
+    storageBucket: "csmkohinapk.firebasestorage.app",
+    messagingSenderId: "242746054882",
+    appId: "1:242746054882:web:342c52a8d5e6ee733ba6bb"
   };
 
   const ADMIN_EMAIL = "admin@mohasin.bro.bd";
 
-  const app = initializeApp(firebaseConfig);
+  const app = initializeApp(firebaseConfig, "admin"); // alada session, user login ke affect korbe na
   const auth = getAuth(app);
   const db = getFirestore(app);
 

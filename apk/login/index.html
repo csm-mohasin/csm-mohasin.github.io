@@ -92,28 +92,38 @@
 <div class="card">
   <h2>🔐 CSM Access</h2>
   <p id="subtitle">Sign in with your email and password</p>
+  <div id="login-view">
   <input class="field" type="email" id="email" placeholder="Email" autocomplete="email">
   <input class="field" type="password" id="password" placeholder="Password (min 6 characters)" autocomplete="current-password">
   <button class="main-btn" id="submit-btn" onclick="submitForm()">Sign In</button>
   <p class="toggle" id="toggle" onclick="toggleMode()">New here? Create account</p>
+  </div>
+
+  <div id="gate-view" style="display:none">
+    <p id="gate-info" style="margin-bottom:16px;"></p>
+    <input class="field" type="password" id="gate-pass" placeholder="Access password" autocomplete="off">
+    <button class="main-btn" id="gate-btn" onclick="submitGate()">Continue</button>
+    <p class="toggle" onclick="logout()">Not you? Sign out</p>
+  </div>
   <div class="status" id="status"></div>
 </div>
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
-  import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
+  import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut, setPersistence, browserLocalPersistence } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
   import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyDYQEmr9dM32hiXHTfYswH6xyeusD67urg",
-  authDomain: "csmkohinapk.firebaseapp.com",
-  projectId: "csmkohinapk",
-  storageBucket: "csmkohinapk.firebasestorage.app",
-  messagingSenderId: "242746054882",
-  appId: "1:242746054882:web:342c52a8d5e6ee733ba6bb"
+    authDomain: "csmkohinapk.firebaseapp.com",
+    projectId: "csmkohinapk",
+    storageBucket: "csmkohinapk.firebasestorage.app",
+    messagingSenderId: "242746054882",
+    appId: "1:242746054882:web:342c52a8d5e6ee733ba6bb"
   };
 
   const ADMIN_EMAIL = "admin@mohasin.bro.bd";
+  const ACCESS_PASSWORD = "csm-samiya";
 
   const app = initializeApp(firebaseConfig);
   const auth = getAuth(app);
@@ -121,6 +131,25 @@
   const status = document.getElementById('status');
   const btn = document.getElementById('submit-btn');
   let isSignUp = false;
+  let justSignedIn = false;
+
+  // Login session browser e save thakbe (auto logout hobe na)
+  setPersistence(auth, browserLocalPersistence).catch(() => {});
+
+  // Age theke logged in thakle password gate dekhao
+  onAuthStateChanged(auth, (user) => {
+    if (justSignedIn) return;
+    if (user) {
+      document.getElementById('login-view').style.display = 'none';
+      document.getElementById('gate-view').style.display = 'block';
+      document.getElementById('subtitle').textContent = "Enter access password to continue";
+      document.getElementById('gate-info').textContent = user.email;
+    } else {
+      document.getElementById('gate-view').style.display = 'none';
+      document.getElementById('login-view').style.display = 'block';
+      document.getElementById('subtitle').textContent = isSignUp ? "Create your account" : "Sign in with your email and password";
+    }
+  });
 
   // Notice load
   getDoc(doc(db, "config", "notice")).then((d) => {
@@ -220,6 +249,7 @@
     }
 
     btn.disabled = true;
+    justSignedIn = true;
     setStatus(isSignUp ? "Creating account..." : "Signing in...");
     try {
       const cred = isSignUp
@@ -227,15 +257,42 @@
         : await signInWithEmailAndPassword(auth, email, password);
       await checkAccess(cred.user);
     } catch (err) {
+      justSignedIn = false;
       setStatus(friendlyError(err), 'error');
     } finally {
       btn.disabled = false;
     }
   };
 
+  window.submitGate = async () => {
+    const pass = document.getElementById('gate-pass').value;
+    const user = auth.currentUser;
+    if (!user) { location.reload(); return; }
+    if (pass !== ACCESS_PASSWORD) {
+      setStatus("❌ Wrong password.", 'error');
+      return;
+    }
+    document.getElementById('gate-btn').disabled = true;
+    try {
+      await checkAccess(user);
+    } catch (err) {
+      setStatus(friendlyError(err), 'error');
+    } finally {
+      document.getElementById('gate-btn').disabled = false;
+    }
+  };
+
+  window.logout = async () => {
+    await signOut(auth);
+    document.getElementById('gate-pass').value = '';
+    setStatus("");
+  };
+
   // Enter key submits
   document.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') window.submitForm();
+    if (e.key !== 'Enter') return;
+    if (document.getElementById('gate-view').style.display === 'block') window.submitGate();
+    else window.submitForm();
   });
 </script>
 </body>
