@@ -75,13 +75,12 @@
 </div>
 
 <script>
-  // Password list - add more as needed
   const passwords = ["samiya.bd"];
 
   function checkPass() {
     const val = document.getElementById('pass').value.trim();
     if (passwords.includes(val)) {
-      window.location.href = "?login=success=true";
+      window.location.href = "https://mohasin.bro.bd/apk/login?success=true";
     } else {
       document.getElementById('err').style.display = 'block';
       document.getElementById('pass').value = '';
