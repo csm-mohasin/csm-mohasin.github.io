@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Login</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #0f0f0f;
+    font-family: 'Segoe UI', sans-serif;
+  }
+  .card {
+    background: #1a1a1a;
+    border: 1px solid #333;
+    border-radius: 16px;
+    padding: 40px 32px;
+    width: 90%;
+    max-width: 380px;
+    text-align: center;
+  }
+  h2 {
+    color: #fff;
+    margin-bottom: 8px;
+    font-size: 22px;
+  }
+  p {
+    color: #888;
+    font-size: 13px;
+    margin-bottom: 28px;
+  }
+  input {
+    width: 100%;
+    padding: 14px 16px;
+    border-radius: 10px;
+    border: 1px solid #333;
+    background: #111;
+    color: #fff;
+    font-size: 15px;
+    margin-bottom: 16px;
+    outline: none;
+  }
+  input:focus { border-color: #555; }
+  button {
+    width: 100%;
+    padding: 14px;
+    border-radius: 10px;
+    border: none;
+    background: #2563eb;
+    color: #fff;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  button:active { background: #1d4ed8; }
+  .error {
+    color: #f87171;
+    font-size: 13px;
+    margin-top: 12px;
+    display: none;
+  }
+</style>
+</head>
+<body>
+<div class="card">
+  <h2>🔐 CSM Access</h2>
+  <p>Enter your password to continue</p>
+  <input type="password" id="pass" placeholder="Password" />
+  <button onclick="checkPass()">Login</button>
+  <div class="error" id="err">❌ Wrong password. Try again.</div>
+</div>
+
+<script>
+  // Password list - add more as needed
+  const passwords = ["samiya.bd"];
+
+  function checkPass() {
+    const val = document.getElementById('pass').value.trim();
+    if (passwords.includes(val)) {
+      window.location.href = "?login=success=true";
+    } else {
+      document.getElementById('err').style.display = 'block';
+      document.getElementById('pass').value = '';
+    }
+  }
+
+  document.getElementById('pass').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') checkPass();
+  });
+</script>
+</body>
+</html>
