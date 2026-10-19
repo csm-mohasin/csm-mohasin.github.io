@@ -55,6 +55,31 @@
     gap: 10px;
   }
   .google-btn img { width: 20px; }
+  .field {
+    width: 100%;
+    padding: 13px 14px;
+    margin-bottom: 12px;
+    border-radius: 10px;
+    border: 1px solid #444;
+    background: #0f0f0f;
+    color: #fff;
+    font-size: 15px;
+    outline: none;
+  }
+  .field:focus { border-color: #2563eb; }
+  .main-btn {
+    width: 100%;
+    padding: 14px;
+    border-radius: 10px;
+    border: none;
+    background: #2563eb;
+    color: #fff;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .main-btn:disabled { opacity: .6; cursor: default; }
+  .toggle { margin-top: 16px; font-size: 13px; color: #93c5fd; cursor: pointer; margin-bottom: 0; }
   .status { margin-top: 16px; font-size: 13px; color: #888; min-height: 20px; }
   .error { color: #f87171; }
   .success { color: #4ade80; }
@@ -66,33 +91,36 @@
 
 <div class="card">
   <h2>🔐 CSM Access</h2>
-  <p>Sign in with your Google account</p>
-  <button class="google-btn" onclick="signIn()">
-    <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg">
-    Sign in with Google
-  </button>
+  <p id="subtitle">Sign in with your email and password</p>
+  <input class="field" type="email" id="email" placeholder="Email" autocomplete="email">
+  <input class="field" type="password" id="password" placeholder="Password (min 6 characters)" autocomplete="current-password">
+  <button class="main-btn" id="submit-btn" onclick="submitForm()">Sign In</button>
+  <p class="toggle" id="toggle" onclick="toggleMode()">New here? Create account</p>
   <div class="status" id="status"></div>
 </div>
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
-  import { getAuth, GoogleAuthProvider, signInWithRedirect, getRedirectResult } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
+  import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
   import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
 
   const firebaseConfig = {
-    apiKey: "AIzaSyDYQEmr9dM32hiXHTfYswH6xyeusD67urg",
-  authDomain: "csmkohinapk.firebaseapp.com",
-  projectId: "csmkohinapk",
-  storageBucket: "csmkohinapk.firebasestorage.app",
-  messagingSenderId: "242746054882",
-  appId: "1:242746054882:web:342c52a8d5e6ee733ba6bb"
+    apiKey: "YOUR_API_KEY",
+    authDomain: "YOUR_AUTH_DOMAIN",
+    projectId: "YOUR_PROJECT_ID",
+    storageBucket: "YOUR_STORAGE_BUCKET",
+    messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+    appId: "YOUR_APP_ID"
   };
+
+  const ADMIN_EMAIL = "admin@mohasin.bro.bd";
 
   const app = initializeApp(firebaseConfig);
   const auth = getAuth(app);
   const db = getFirestore(app);
-  const provider = new GoogleAuthProvider();
   const status = document.getElementById('status');
+  const btn = document.getElementById('submit-btn');
+  let isSignUp = false;
 
   // Notice load
   getDoc(doc(db, "config", "notice")).then((d) => {
@@ -102,78 +130,113 @@
     }
   });
 
-  // Redirect result
-  getRedirectResult(auth).then(async (result) => {
-    if (!result) return;
+  function setStatus(msg, cls = '') {
+    status.className = 'status ' + cls;
+    status.textContent = msg;
+  }
 
-    status.textContent = "Checking access...";
-    const user = result.user;
+  function friendlyError(err) {
+    switch (err.code) {
+      case 'auth/invalid-email': return 'Invalid email address.';
+      case 'auth/missing-password': return 'Please enter your password.';
+      case 'auth/weak-password': return 'Password must be at least 6 characters.';
+      case 'auth/email-already-in-use': return 'This email is already registered. Please sign in.';
+      case 'auth/user-not-found':
+      case 'auth/wrong-password':
+      case 'auth/invalid-credential': return 'Wrong email or password.';
+      case 'auth/too-many-requests': return 'Too many attempts. Try again later.';
+      case 'auth/operation-not-allowed': return 'Email/Password login is not enabled in Firebase.';
+      default: return err.message;
+    }
+  }
+
+  function redirect(success, timeLeft = 0) {
+    const base = "https://mohasin.bro.bd/apk/login?success=" + success;
+    window.location.href = (success && timeLeft > 0) ? base + "&time=" + timeLeft : base;
+  }
+
+  async function checkAccess(user) {
+    setStatus("Checking access...");
     const userRef = doc(db, "users", user.uid);
     const userDoc = await getDoc(userRef);
 
     if (!userDoc.exists()) {
       // নতুন user — save করো, সরাসরি access দাও
       await setDoc(userRef, {
-        name: user.displayName,
+        name: user.displayName || user.email.split('@')[0],
         email: user.email,
-        photo: user.photoURL,
+        photo: user.photoURL || "",
         disabled: false,
         createdAt: Date.now()
       });
-    } else {
-      const data = userDoc.data();
-
-      // Disabled check
-      if (data.disabled) {
-        status.className = 'status error';
-        status.textContent = "❌ Your access is disabled.";
-        setTimeout(() => {
-          window.location.href = "https://mohasin.bro.bd/apk/login?success=false";
-        }, 1500);
-        return;
-      }
-
-      // Time expire check
-      const now = Date.now();
-      if (data.expireAt && data.expireAt < now) {
-        status.className = 'status error';
-        status.textContent = "⏰ Your time has expired.";
-        setTimeout(() => {
-          window.location.href = "https://mohasin.bro.bd/apk/login?success=false";
-        }, 1500);
-        return;
-      }
-
-      // Time বাকি থাকলে pass করো
-      const timeLeft = data.expireAt ? data.expireAt - now : 0;
-      status.className = 'status success';
-      status.textContent = "✅ Access granted!";
-      setTimeout(() => {
-        if (timeLeft > 0) {
-          window.location.href = `https://mohasin.bro.bd/apk/login?success=true&time=${timeLeft}`;
-        } else {
-          window.location.href = "https://mohasin.bro.bd/apk/login?success=true";
-        }
-      }, 1000);
+      setStatus("✅ Access granted!", 'success');
+      setTimeout(() => redirect(true), 1000);
       return;
     }
 
-    // নতুন user direct access
-    status.className = 'status success';
-    status.textContent = "✅ Access granted!";
-    setTimeout(() => {
-      window.location.href = "https://mohasin.bro.bd/apk/login?success=true";
-    }, 1000);
+    const data = userDoc.data();
 
-  }).catch((err) => {
-    status.className = 'status error';
-    status.textContent = "Error: " + err.message;
-  });
+    // Disabled check
+    if (data.disabled) {
+      setStatus("❌ Your access is disabled.", 'error');
+      setTimeout(() => redirect(false), 1500);
+      return;
+    }
 
-  window.signIn = () => {
-    status.textContent = "Redirecting to Google...";
-    signInWithRedirect(auth, provider);
+    // Time expire check
+    const now = Date.now();
+    if (data.expireAt && data.expireAt < now) {
+      setStatus("⏰ Your time has expired.", 'error');
+      setTimeout(() => redirect(false), 1500);
+      return;
+    }
+
+    // Time বাকি থাকলে pass করো
+    const timeLeft = data.expireAt ? data.expireAt - now : 0;
+    setStatus("✅ Access granted!", 'success');
+    setTimeout(() => redirect(true, timeLeft), 1000);
+  }
+
+  window.toggleMode = () => {
+    isSignUp = !isSignUp;
+    document.getElementById('subtitle').textContent = isSignUp ? "Create your account" : "Sign in with your email and password";
+    btn.textContent = isSignUp ? "Create Account" : "Sign In";
+    document.getElementById('toggle').textContent = isSignUp ? "Already have an account? Sign in" : "New here? Create account";
+    document.getElementById('password').autocomplete = isSignUp ? "new-password" : "current-password";
+    setStatus("");
   };
+
+  window.submitForm = async () => {
+    const email = document.getElementById('email').value.trim();
+    const password = document.getElementById('password').value;
+
+    if (!email || !password) {
+      setStatus("Enter email and password.", 'error');
+      return;
+    }
+    if (isSignUp && email.toLowerCase() === ADMIN_EMAIL) {
+      setStatus("This email can't be registered here.", 'error');
+      return;
+    }
+
+    btn.disabled = true;
+    setStatus(isSignUp ? "Creating account..." : "Signing in...");
+    try {
+      const cred = isSignUp
+        ? await createUserWithEmailAndPassword(auth, email, password)
+        : await signInWithEmailAndPassword(auth, email, password);
+      await checkAccess(cred.user);
+    } catch (err) {
+      setStatus(friendlyError(err), 'error');
+    } finally {
+      btn.disabled = false;
+    }
+  };
+
+  // Enter key submits
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') window.submitForm();
+  });
 </script>
 </body>
 </html>

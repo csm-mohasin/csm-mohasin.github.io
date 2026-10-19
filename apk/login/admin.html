@@ -153,6 +153,19 @@
     gap: 10px;
   }
   .login-card button img { width: 20px; }
+  .login-card input {
+    width: 100%;
+    padding: 13px 14px;
+    margin-bottom: 12px;
+    border-radius: 10px;
+    border: 1px solid #444;
+    background: #0f0f0f;
+    color: #fff;
+    font-size: 15px;
+    outline: none;
+  }
+  .login-card input:focus { border-color: #2563eb; }
+  .login-card button.primary { background: #2563eb; color: #fff; border: none; }
   #main-screen { display: none; }
   .save-notice { color: #4ade80; font-size: 13px; margin-top: 8px; display: none; }
 </style>
@@ -162,11 +175,10 @@
 <div id="login-screen">
   <div class="login-card">
     <h2>🛡️ Admin Panel</h2>
-    <p>Sign in with admin Google account</p>
-    <button onclick="adminSignIn()">
-      <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg">
-      Sign in with Google
-    </button>
+    <p>Sign in with admin email and password</p>
+    <input type="email" id="admin-email" placeholder="Admin email" autocomplete="email">
+    <input type="password" id="admin-password" placeholder="Password" autocomplete="current-password">
+    <button class="primary" onclick="adminSignIn()">Sign In</button>
     <div class="status" id="login-status" style="margin-top:12px;font-size:13px;color:#888;"></div>
   </div>
 </div>
@@ -221,54 +233,42 @@
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
-  import { getAuth, GoogleAuthProvider, signInWithRedirect, getRedirectResult, signOut as fbSignOut } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
+  import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut as fbSignOut } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
   import { getFirestore, doc, getDoc, setDoc, updateDoc, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
 
   // তোমার Firebase config এখানে
   const firebaseConfig = {
-    apiKey: "AIzaSyDYQEmr9dM32hiXHTfYswH6xyeusD67urg",
-  authDomain: "csmkohinapk.firebaseapp.com",
-  projectId: "csmkohinapk",
-  storageBucket: "csmkohinapk.firebasestorage.app",
-  messagingSenderId: "242746054882",
-  appId: "1:242746054882:web:342c52a8d5e6ee733ba6bb"
+    apiKey: "YOUR_API_KEY",
+    authDomain: "YOUR_AUTH_DOMAIN",
+    projectId: "YOUR_PROJECT_ID",
+    storageBucket: "YOUR_STORAGE_BUCKET",
+    messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+    appId: "YOUR_APP_ID"
   };
 
-  // তোমার admin UID এখানে দাও
-  const ADMIN_UID = "YOUR_ADMIN_UID";
+  const ADMIN_EMAIL = "admin@mohasin.bro.bd";
 
   const app = initializeApp(firebaseConfig);
   const auth = getAuth(app);
   const db = getFirestore(app);
-  const provider = new GoogleAuthProvider();
 
   let selectedUid = null;
 
-  // Redirect result
-  getRedirectResult(auth).then(async (result) => {
-    if (result) {
-      const user = result.user;
-      if (user.uid !== ADMIN_UID) {
-        document.getElementById('login-status').textContent = "❌ Not admin account.";
-        await fbSignOut(auth);
-        return;
-      }
-      showDashboard(user);
-    } else {
-      const user = auth.currentUser;
-      if (user && user.uid === ADMIN_UID) {
-        showDashboard(user);
-      }
-    }
-  });
+  const isAdmin = (user) => user && user.email && user.email.toLowerCase() === ADMIN_EMAIL;
+  let dashboardShown = false;
 
-  auth.onAuthStateChanged((user) => {
-    if (user && user.uid === ADMIN_UID) {
-      showDashboard(user);
+  onAuthStateChanged(auth, async (user) => {
+    if (!user) return;
+    if (isAdmin(user)) {
+      if (!dashboardShown) showDashboard(user);
+    } else {
+      document.getElementById('login-status').textContent = "❌ Not admin account.";
+      await fbSignOut(auth);
     }
   });
 
   async function showDashboard(user) {
+    dashboardShown = true;
     document.getElementById('login-screen').style.display = 'none';
     document.getElementById('main-screen').style.display = 'block';
     loadUsers();
@@ -313,7 +313,23 @@
     }
   }
 
-  window.adminSignIn = () => signInWithRedirect(auth, provider);
+  window.adminSignIn = async () => {
+    const email = document.getElementById('admin-email').value.trim();
+    const password = document.getElementById('admin-password').value;
+    const statusEl = document.getElementById('login-status');
+    if (!email || !password) { statusEl.textContent = "Enter email and password."; return; }
+    if (email.toLowerCase() !== ADMIN_EMAIL) { statusEl.textContent = "❌ Not admin account."; return; }
+    statusEl.textContent = "Signing in...";
+    try {
+      await signInWithEmailAndPassword(auth, email, password);
+    } catch (err) {
+      statusEl.textContent = "❌ Wrong email or password.";
+    }
+  };
+
+  document.getElementById('admin-password').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') window.adminSignIn();
+  });
 
   window.signOut = async () => {
     await fbSignOut(auth);
