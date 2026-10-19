@@ -95,13 +95,14 @@
   <div id="login-view">
   <input class="field" type="email" id="email" placeholder="Email" autocomplete="email">
   <input class="field" type="password" id="password" placeholder="Password (min 6 characters)" autocomplete="current-password">
+  <input class="field" type="text" id="key" placeholder="Access key (required for new account)" autocomplete="off" autocapitalize="characters" style="display:none">
   <button class="main-btn" id="submit-btn" onclick="submitForm()">Sign In</button>
   <p class="toggle" id="toggle" onclick="toggleMode()">New here? Create account</p>
   </div>
 
   <div id="gate-view" style="display:none">
     <p id="gate-info" style="margin-bottom:16px;"></p>
-    <input class="field" type="password" id="gate-pass" placeholder="Access password" autocomplete="off">
+    <input class="field" type="password" id="gate-pass" placeholder="Your password" autocomplete="current-password">
     <button class="main-btn" id="gate-btn" onclick="submitGate()">Continue</button>
     <p class="toggle" onclick="logout()">Not you? Sign out</p>
   </div>
@@ -110,8 +111,8 @@
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
-  import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut, setPersistence, browserLocalPersistence } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
-  import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
+  import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut, setPersistence, browserLocalPersistence, EmailAuthProvider, reauthenticateWithCredential, deleteUser } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
+  import { getFirestore, doc, getDoc, runTransaction } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyDYQEmr9dM32hiXHTfYswH6xyeusD67urg",
@@ -123,7 +124,6 @@
   };
 
   const ADMIN_EMAIL = "admin@mohasin.bro.bd";
-  const ACCESS_PASSWORD = "csm-samiya";
 
   const app = initializeApp(firebaseConfig);
   const auth = getAuth(app);
@@ -142,7 +142,7 @@
     if (user) {
       document.getElementById('login-view').style.display = 'none';
       document.getElementById('gate-view').style.display = 'block';
-      document.getElementById('subtitle').textContent = "Enter access password to continue";
+      document.getElementById('subtitle').textContent = "Enter your password to continue";
       document.getElementById('gate-info').textContent = user.email;
     } else {
       document.getElementById('gate-view').style.display = 'none';
@@ -165,6 +165,7 @@
   }
 
   function friendlyError(err) {
+    if (err.message === 'INVALID_KEY') return 'Invalid or already used key.';
     switch (err.code) {
       case 'auth/invalid-email': return 'Invalid email address.';
       case 'auth/missing-password': return 'Please enter your password.';
@@ -174,6 +175,8 @@
       case 'auth/wrong-password':
       case 'auth/invalid-credential': return 'Wrong email or password.';
       case 'auth/too-many-requests': return 'Too many attempts. Try again later.';
+      case 'auth/requires-recent-login': return 'Please sign in again.';
+      case 'permission-denied': return 'Invalid or already used key.';
       case 'auth/operation-not-allowed': return 'Email/Password login is not enabled in Firebase.';
       default: return err.message;
     }
@@ -184,22 +187,34 @@
     window.location.href = (success && timeLeft > 0) ? base + "&time=" + timeLeft : base;
   }
 
+  // Key ek bar-i use kora jay (transaction + Firestore rules dui jaygay check)
+  async function registerWithKey(user, key) {
+    const keyRef = doc(db, "keys", key);
+    const userRef = doc(db, "users", user.uid);
+    await runTransaction(db, async (tx) => {
+      const k = await tx.get(keyRef);
+      if (!k.exists() || k.data().used) throw new Error('INVALID_KEY');
+      tx.update(keyRef, { used: true, usedBy: user.uid, usedEmail: user.email, usedAt: Date.now() });
+      tx.set(userRef, {
+        name: user.displayName || user.email.split('@')[0],
+        email: user.email,
+        photo: user.photoURL || "",
+        key: key,
+        disabled: false,
+        createdAt: Date.now()
+      });
+    });
+  }
+
   async function checkAccess(user) {
     setStatus("Checking access...");
     const userRef = doc(db, "users", user.uid);
     const userDoc = await getDoc(userRef);
 
     if (!userDoc.exists()) {
-      // নতুন user — save করো, সরাসরি access দাও
-      await setDoc(userRef, {
-        name: user.displayName || user.email.split('@')[0],
-        email: user.email,
-        photo: user.photoURL || "",
-        disabled: false,
-        createdAt: Date.now()
-      });
-      setStatus("✅ Access granted!", 'success');
-      setTimeout(() => redirect(true), 1000);
+      // Key chhara toiri hoya account — access nai
+      setStatus("❌ Account not activated. A valid key is required.", 'error');
+      await signOut(auth);
       return;
     }
 
@@ -232,6 +247,7 @@
     btn.textContent = isSignUp ? "Create Account" : "Sign In";
     document.getElementById('toggle').textContent = isSignUp ? "Already have an account? Sign in" : "New here? Create account";
     document.getElementById('password').autocomplete = isSignUp ? "new-password" : "current-password";
+    document.getElementById('key').style.display = isSignUp ? 'block' : 'none';
     setStatus("");
   };
 
@@ -243,6 +259,11 @@
       setStatus("Enter email and password.", 'error');
       return;
     }
+    const key = document.getElementById('key').value.trim().toUpperCase();
+    if (isSignUp && !key) {
+      setStatus("Enter your access key.", 'error');
+      return;
+    }
     if (isSignUp && email.toLowerCase() === ADMIN_EMAIL) {
       setStatus("This email can't be registered here.", 'error');
       return;
@@ -252,9 +273,18 @@
     justSignedIn = true;
     setStatus(isSignUp ? "Creating account..." : "Signing in...");
     try {
-      const cred = isSignUp
-        ? await createUserWithEmailAndPassword(auth, email, password)
-        : await signInWithEmailAndPassword(auth, email, password);
+      let cred;
+      if (isSignUp) {
+        cred = await createUserWithEmailAndPassword(auth, email, password);
+        try {
+          await registerWithKey(cred.user, key);
+        } catch (e) {
+          await deleteUser(cred.user).catch(() => {}); // key vul hole account rakha hobe na
+          throw e;
+        }
+      } else {
+        cred = await signInWithEmailAndPassword(auth, email, password);
+      }
       await checkAccess(cred.user);
     } catch (err) {
       justSignedIn = false;
@@ -268,17 +298,24 @@
     const pass = document.getElementById('gate-pass').value;
     const user = auth.currentUser;
     if (!user) { location.reload(); return; }
-    if (pass !== ACCESS_PASSWORD) {
-      setStatus("❌ Wrong password.", 'error');
+    if (!pass) { setStatus("Enter your password.", 'error'); return; }
+    const gbtn = document.getElementById('gate-btn');
+    gbtn.disabled = true;
+    setStatus("Checking...");
+    try {
+      await reauthenticateWithCredential(user, EmailAuthProvider.credential(user.email, pass));
+    } catch (err) {
+      const wrong = ['auth/invalid-credential', 'auth/wrong-password'].includes(err.code);
+      setStatus(wrong ? "❌ Wrong password." : friendlyError(err), 'error');
+      gbtn.disabled = false;
       return;
     }
-    document.getElementById('gate-btn').disabled = true;
     try {
       await checkAccess(user);
     } catch (err) {
       setStatus(friendlyError(err), 'error');
     } finally {
-      document.getElementById('gate-btn').disabled = false;
+      gbtn.disabled = false;
     }
   };
 

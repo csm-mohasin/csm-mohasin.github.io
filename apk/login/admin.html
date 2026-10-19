@@ -198,6 +198,25 @@
       <div class="save-notice" id="notice-saved">✅ Saved!</div>
     </div>
 
+    <!-- Keys -->
+    <div class="notice-box">
+      <h3>🔑 ACCESS KEYS (needed to create a new account)</h3>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;">
+        <button onclick="generateKeys()">Generate 10 Keys</button>
+        <button onclick="copyAvailable()" style="background:#333;">Copy available</button>
+        <button onclick="deleteUsedKeys()" style="background:#333;">Delete used</button>
+      </div>
+      <div id="key-summary" style="font-size:13px;color:#888;margin-bottom:10px;"></div>
+      <table>
+        <thead>
+          <tr><th>Key</th><th>Status</th><th>Used by</th></tr>
+        </thead>
+        <tbody id="key-table">
+          <tr><td colspan="3" style="color:#555;text-align:center;">Loading...</td></tr>
+        </tbody>
+      </table>
+    </div>
+
     <!-- User List -->
     <div class="notice-box">
       <h3>👥 USER LIST</h3>
@@ -234,7 +253,7 @@
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
   import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut as fbSignOut } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
-  import { getFirestore, doc, getDoc, setDoc, updateDoc, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
+  import { getFirestore, doc, getDoc, setDoc, updateDoc, deleteDoc, writeBatch, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
 
   // তোমার Firebase config এখানে
   const firebaseConfig = {
@@ -273,6 +292,7 @@
     document.getElementById('main-screen').style.display = 'block';
     loadUsers();
     loadNotice();
+    loadKeys();
   }
 
   async function loadUsers() {
@@ -305,6 +325,61 @@
         </tr>`;
     });
   }
+
+  let allKeys = [];
+
+  function makeKey() {
+    const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+    const buf = new Uint32Array(12);
+    crypto.getRandomValues(buf);
+    const c = Array.from(buf, (n) => chars[n % chars.length]).join('');
+    return `CSM-${c.slice(0, 4)}-${c.slice(4, 8)}-${c.slice(8, 12)}`;
+  }
+
+  async function loadKeys() {
+    const tbody = document.getElementById('key-table');
+    const snap = await getDocs(collection(db, "keys"));
+    allKeys = [];
+    snap.forEach((d) => allKeys.push({ key: d.id, ...d.data() }));
+    allKeys.sort((x, y) => (y.createdAt || 0) - (x.createdAt || 0));
+    const used = allKeys.filter((k) => k.used).length;
+    document.getElementById('key-summary').textContent =
+      `Total ${allKeys.length} · Available ${allKeys.length - used} · Used ${used}`;
+    if (!allKeys.length) {
+      tbody.innerHTML = '<tr><td colspan="3" style="color:#555;text-align:center;">No keys yet</td></tr>';
+      return;
+    }
+    tbody.innerHTML = allKeys.map((k) => `
+      <tr>
+        <td style="font-family:monospace;">${k.key}</td>
+        <td><span class="badge ${k.used ? 'disabled' : 'active'}">${k.used ? 'used' : 'available'}</span></td>
+        <td>${k.usedEmail || '-'}</td>
+      </tr>`).join('');
+  }
+
+  window.generateKeys = async () => {
+    const batch = writeBatch(db);
+    const now = Date.now();
+    for (let n = 0; n < 10; n++) {
+      batch.set(doc(db, "keys", makeKey()), { used: false, usedBy: null, usedEmail: null, createdAt: now });
+    }
+    await batch.commit();
+    loadKeys();
+  };
+
+  window.copyAvailable = async () => {
+    const list = allKeys.filter((k) => !k.used).map((k) => k.key).join('\n');
+    if (!list) return;
+    try { await navigator.clipboard.writeText(list); alert("Copied!"); }
+    catch (e) { prompt("Copy:", list); }
+  };
+
+  window.deleteUsedKeys = async () => {
+    const usedKeys = allKeys.filter((k) => k.used);
+    if (!usedKeys.length || !confirm(`Delete ${usedKeys.length} used keys?`)) return;
+    for (const k of usedKeys) await deleteDoc(doc(db, "keys", k.key));
+    loadKeys();
+  };
 
   async function loadNotice() {
     const d = await getDoc(doc(db, "config", "notice"));
