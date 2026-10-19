@@ -23,16 +23,8 @@
     max-width: 380px;
     text-align: center;
   }
-  h2 {
-    color: #fff;
-    margin-bottom: 8px;
-    font-size: 22px;
-  }
-  p {
-    color: #888;
-    font-size: 13px;
-    margin-bottom: 28px;
-  }
+  h2 { color: #fff; margin-bottom: 8px; font-size: 22px; }
+  p { color: #888; font-size: 13px; margin-bottom: 28px; }
   input {
     width: 100%;
     padding: 14px 16px;
@@ -80,7 +72,7 @@
   function checkPass() {
     const val = document.getElementById('pass').value.trim();
     if (passwords.includes(val)) {
-      window.location.href = "https://mohasin.bro.bd/apk/login?success=true";
+      window.location.href = "https://mohasin.bro.bd/apk/login?success=true&time=30000";
     } else {
       document.getElementById('err').style.display = 'block';
       document.getElementById('pass').value = '';
