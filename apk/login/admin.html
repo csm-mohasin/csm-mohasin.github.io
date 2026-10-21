@@ -14,6 +14,8 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
   }
   header h1 { font-size: 18px; }
   header button {
@@ -25,7 +27,7 @@
     cursor: pointer;
     font-size: 13px;
   }
-  .container { padding: 24px; max-width: 900px; margin: 0 auto; }
+  .container { padding: 24px; max-width: 960px; margin: 0 auto; }
   .notice-box {
     background: #1a1a1a;
     border: 1px solid #333;
@@ -55,8 +57,51 @@
     cursor: pointer;
     font-size: 14px;
   }
+  .search-bar {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 14px;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+  .search-bar input {
+    flex: 1;
+    min-width: 160px;
+    background: #111;
+    border: 1px solid #333;
+    border-radius: 8px;
+    color: #fff;
+    padding: 8px 12px;
+    font-size: 13px;
+    outline: none;
+  }
+  .search-bar input:focus { border-color: #2563eb; }
+  .search-bar select {
+    background: #111;
+    border: 1px solid #333;
+    border-radius: 8px;
+    color: #fff;
+    padding: 8px 12px;
+    font-size: 13px;
+    cursor: pointer;
+  }
+  .stat-row {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 16px;
+  }
+  .stat-chip {
+    background: #111;
+    border: 1px solid #333;
+    border-radius: 8px;
+    padding: 8px 14px;
+    font-size: 13px;
+    color: #aaa;
+  }
+  .stat-chip span { color: #fff; font-weight: 600; }
   table { width: 100%; border-collapse: collapse; }
-  th, td { padding: 12px 16px; text-align: left; border-bottom: 1px solid #222; font-size: 14px; }
+  th, td { padding: 12px 16px; text-align: left; border-bottom: 1px solid #222; font-size: 13px; }
   th { color: #888; font-weight: 500; }
   td { color: #fff; }
   .badge {
@@ -68,23 +113,25 @@
   .badge.active { background: #14532d; color: #4ade80; }
   .badge.disabled { background: #450a0a; color: #f87171; }
   .badge.pending { background: #333; color: #aaa; }
-  .actions { display: flex; gap: 8px; flex-wrap: wrap; }
+  .actions { display: flex; gap: 6px; flex-wrap: wrap; }
   .btn {
-    padding: 6px 12px;
+    padding: 5px 10px;
     border-radius: 6px;
     border: none;
     cursor: pointer;
-    font-size: 12px;
+    font-size: 11px;
     font-weight: 600;
   }
   .btn-enable { background: #14532d; color: #4ade80; }
   .btn-disable { background: #450a0a; color: #f87171; }
   .btn-time { background: #1e3a5f; color: #60a5fa; }
+  .btn-notice { background: #3b2f6e; color: #a78bfa; }
+  .btn-delete { background: #7f1d1d; color: #fca5a5; }
   .modal {
     display: none;
     position: fixed;
     inset: 0;
-    background: rgba(0,0,0,0.8);
+    background: rgba(0,0,0,0.85);
     align-items: center;
     justify-content: center;
     z-index: 100;
@@ -96,10 +143,10 @@
     border-radius: 12px;
     padding: 24px;
     width: 90%;
-    max-width: 340px;
+    max-width: 360px;
   }
   .modal-box h3 { margin-bottom: 16px; }
-  .modal-box input {
+  .modal-box input, .modal-box textarea {
     width: 100%;
     background: #111;
     border: 1px solid #333;
@@ -108,7 +155,9 @@
     padding: 12px;
     font-size: 14px;
     margin-bottom: 12px;
+    outline: none;
   }
+  .modal-box textarea { min-height: 90px; resize: vertical; }
   .modal-box .row { display: flex; gap: 10px; }
   .modal-box .row button {
     flex: 1;
@@ -120,6 +169,8 @@
   }
   .btn-cancel { background: #333; color: #fff; }
   .btn-save { background: #2563eb; color: #fff; }
+  .btn-send { background: #6d28d9; color: #fff; }
+  .btn-delete-confirm { background: #dc2626; color: #fff; }
   #login-screen {
     min-height: 100vh;
     display: flex;
@@ -137,22 +188,6 @@
   }
   .login-card h2 { margin-bottom: 8px; }
   .login-card p { color: #888; font-size: 13px; margin-bottom: 24px; }
-  .login-card button {
-    width: 100%;
-    padding: 14px;
-    border-radius: 10px;
-    border: 1px solid #444;
-    background: #fff;
-    color: #333;
-    font-size: 15px;
-    font-weight: 600;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 10px;
-  }
-  .login-card button img { width: 20px; }
   .login-card input {
     width: 100%;
     padding: 13px 14px;
@@ -165,9 +200,43 @@
     outline: none;
   }
   .login-card input:focus { border-color: #2563eb; }
-  .login-card button.primary { background: #2563eb; color: #fff; border: none; }
+  .login-card button.primary {
+    width: 100%;
+    padding: 14px;
+    border-radius: 10px;
+    border: none;
+    background: #2563eb;
+    color: #fff;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+  }
   #main-screen { display: none; }
   .save-notice { color: #4ade80; font-size: 13px; margin-top: 8px; display: none; }
+  .label-small { font-size: 12px; color: #888; margin-bottom: 4px; }
+  .user-notice-badge {
+    display: inline-block;
+    background: #3b2f6e;
+    color: #c4b5fd;
+    font-size: 11px;
+    padding: 2px 8px;
+    border-radius: 12px;
+    margin-left: 6px;
+  }
+
+  .toggle { cursor:pointer; display:flex; justify-content:space-between; align-items:center; user-select:none; }
+  .toggle::after { content:'▾'; color:#888; }
+  .toggle.collapsed::after { content:'▸'; }
+  .toggle.collapsed + .box-body { display:none; }
+  .box-body { margin-top:12px; }
+  .toolbar { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:12px; align-items:center; }
+  .toolbar select, .toolbar input[type=text] { background:#111; border:1px solid #333; border-radius:8px; color:#fff; padding:8px 12px; font-size:13px; outline:none; }
+  .toolbar input[type=text] { flex:1; min-width:140px; }
+  .toolbar button { margin-top:0 !important; padding:8px 14px !important; font-size:13px !important; }
+  .btn-gray { background:#333 !important; }
+  .btn-red { background:#450a0a !important; color:#f87171 !important; }
+  input[type=checkbox] { width:16px; height:16px; cursor:pointer; }
+  .count-pill { background:#333; color:#fff; font-size:11px; padding:2px 8px; border-radius:12px; margin-left:8px; }
 </style>
 </head>
 <body>
@@ -179,61 +248,90 @@
     <input type="email" id="admin-email" placeholder="Admin email" autocomplete="email">
     <input type="password" id="admin-password" placeholder="Password" autocomplete="current-password">
     <button class="primary" onclick="adminSignIn()">Sign In</button>
-    <div class="status" id="login-status" style="margin-top:12px;font-size:13px;color:#888;"></div>
+    <div id="login-status" style="margin-top:12px;font-size:13px;color:#888;"></div>
   </div>
 </div>
 
 <div id="main-screen">
   <header>
     <h1>🛡️ CSM Admin Dashboard</h1>
-    <button onclick="signOut()">Sign Out</button>
+    <div style="display:flex;gap:8px;">
+      <button onclick="toggleAllBoxes(false)">⬇ Expand all</button>
+      <button onclick="toggleAllBoxes(true)">⬆ Collapse all</button>
+      <button onclick="refreshAll()">🔄 Refresh</button>
+      <button onclick="signOut()">Sign Out</button>
+    </div>
   </header>
   <div class="container">
 
-    <!-- Notice -->
+    <!-- Global Notice -->
     <div class="notice-box">
-      <h3>📢 NOTICE (shows in app)</h3>
+      <h3>📢 GLOBAL NOTICE (shows in app for everyone)</h3>
       <textarea id="notice-text" placeholder="Write notice here..."></textarea>
       <button onclick="saveNotice()">Save Notice</button>
       <div class="save-notice" id="notice-saved">✅ Saved!</div>
     </div>
 
-    <!-- Keys -->
+    <!-- Available Keys -->
     <div class="notice-box">
-      <h3>🔑 ACCESS KEYS (needed to create a new account)</h3>
-      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;">
-        <button onclick="generateKeys()">Generate 10 Keys</button>
-        <button onclick="copyAvailable()" style="background:#333;">Copy available</button>
-        <button onclick="deleteUsedKeys()" style="background:#333;">Delete used</button>
+      <h3 class="toggle" onclick="toggleBox(this)"><span>🔑 AVAILABLE KEYS <span class="count-pill" id="avail-count">0</span></span></h3>
+      <div class="box-body">
+        <div class="toolbar">
+          <select id="gen-count">
+            <option value="5">5 keys</option>
+            <option value="10" selected>10 keys</option>
+            <option value="20">20 keys</option>
+            <option value="50">50 keys</option>
+          </select>
+          <button onclick="generateKeys()">➕ Generate</button>
+          <button class="btn-gray" onclick="copyAvailable()">📋 Copy all</button>
+          <button class="btn-gray" onclick="copySelected()">📋 Copy selected</button>
+          <button class="btn-red" onclick="deleteSelected('avail')">🗑 Delete selected</button>
+        </div>
+        <div class="toolbar">
+          <input type="text" id="key-search" placeholder="🔍 Search key / email..." oninput="renderKeys()">
+        </div>
+        <table>
+          <thead><tr><th><input type="checkbox" onchange="toggleChecks('avail',this.checked)"></th><th>Key</th><th>Created</th><th>Actions</th></tr></thead>
+          <tbody id="avail-table"><tr><td colspan="4" style="color:#555;text-align:center;">Loading...</td></tr></tbody>
+        </table>
       </div>
-      <div id="key-summary" style="font-size:13px;color:#888;margin-bottom:10px;"></div>
-      <table>
-        <thead>
-          <tr><th>Key</th><th>Status</th><th>Used by</th></tr>
-        </thead>
-        <tbody id="key-table">
-          <tr><td colspan="3" style="color:#555;text-align:center;">Loading...</td></tr>
-        </tbody>
-      </table>
+    </div>
+
+    <!-- Used Keys -->
+    <div class="notice-box">
+      <h3 class="toggle collapsed" onclick="toggleBox(this)"><span>✅ USED KEYS <span class="count-pill" id="used-count">0</span></span></h3>
+      <div class="box-body">
+        <div class="toolbar">
+          <button class="btn-red" onclick="deleteSelected('used')">🗑 Delete selected</button>
+          <button class="btn-red" onclick="deleteUsedKeys()">🗑 Delete all used</button>
+        </div>
+        <table>
+          <thead><tr><th><input type="checkbox" onchange="toggleChecks('used',this.checked)"></th><th>Key</th><th>Used by</th><th>Actions</th></tr></thead>
+          <tbody id="used-table"><tr><td colspan="4" style="color:#555;text-align:center;">Loading...</td></tr></tbody>
+        </table>
+      </div>
     </div>
 
     <!-- User List -->
     <div class="notice-box">
-      <h3>👥 USER LIST</h3>
-      <table>
-        <thead>
-          <tr>
-            <th>Name</th>
-            <th>Email</th>
-            <th>Status</th>
-            <th>Expires</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody id="user-table">
-          <tr><td colspan="5" style="color:#555;text-align:center;">Loading...</td></tr>
-        </tbody>
-      </table>
+      <h3 class="toggle" onclick="toggleBox(this)"><span>👥 USER LIST</span></h3>
+      <div class="box-body">
+        <div class="stat-row" id="user-stats"></div>
+        <div class="search-bar">
+          <input type="text" id="user-search" placeholder="🔍 Search by name or email..." oninput="filterUsers()">
+          <select id="status-filter" onchange="filterUsers()">
+            <option value="all">All Status</option>
+            <option value="active">Active</option>
+            <option value="disabled">Disabled</option>
+            <option value="pending">Expired</option>
+          </select>
+        </div>
+        <table>
+          <thead><tr><th>Name</th><th>Email</th><th>Status</th><th>Expires</th><th>Actions</th></tr></thead>
+          <tbody id="user-table"><tr><td colspan="5" style="color:#555;text-align:center;">Loading...</td></tr></tbody>
+        </table>
+      </div>
     </div>
   </div>
 </div>
@@ -242,20 +340,51 @@
 <div class="modal" id="time-modal">
   <div class="modal-box">
     <h3>⏱️ Set Access Time</h3>
-    <input type="number" id="time-minutes" placeholder="Minutes (e.g. 20)" min="1"/>
+    <p class="label-small" id="time-modal-label">User:</p>
+    <input type="number" id="time-minutes" placeholder="Minutes (e.g. 60)" min="1"/>
     <div class="row">
-      <button class="btn-cancel" onclick="closeModal()">Cancel</button>
+      <button class="btn-cancel" onclick="closeModal('time-modal')">Cancel</button>
       <button class="btn-save" onclick="saveTime()">Set Time</button>
+    </div>
+  </div>
+</div>
+
+<!-- Per-user Notice Modal -->
+<div class="modal" id="notice-modal">
+  <div class="modal-box">
+    <h3>💬 Send Notice to User</h3>
+    <p class="label-small" id="notice-modal-label">User:</p>
+    <textarea id="user-notice-text" placeholder="Write personal notice for this user..."></textarea>
+    <div class="row">
+      <button class="btn-cancel" onclick="closeModal('notice-modal')">Cancel</button>
+      <button class="btn-send" onclick="sendUserNotice()">Send</button>
+    </div>
+  </div>
+</div>
+
+<!-- Delete Confirm Modal -->
+<div class="modal" id="delete-modal">
+  <div class="modal-box">
+    <h3>🗑️ Delete User</h3>
+    <p style="color:#f87171;font-size:13px;margin-bottom:16px;" id="delete-modal-label">This will permanently delete the user's data from Firestore. Cannot be undone.</p>
+    <div class="row">
+      <button class="btn-cancel" onclick="closeModal('delete-modal')">Cancel</button>
+      <button class="btn-delete-confirm" onclick="confirmDeleteUser()">Delete</button>
     </div>
   </div>
 </div>
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
-  import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut as fbSignOut } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
-  import { getFirestore, doc, getDoc, setDoc, updateDoc, deleteDoc, writeBatch, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
+  import {
+    getAuth, signInWithEmailAndPassword,
+    onAuthStateChanged, signOut as fbSignOut
+  } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-auth.js";
+  import {
+    getFirestore, doc, getDoc, setDoc, updateDoc,
+    deleteDoc, writeBatch, collection, getDocs
+  } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
 
-  // তোমার Firebase config এখানে
   const firebaseConfig = {
     apiKey: "AIzaSyDYQEmr9dM32hiXHTfYswH6xyeusD67urg",
     authDomain: "csmkohinapk.firebaseapp.com",
@@ -266,126 +395,32 @@
   };
 
   const ADMIN_EMAIL = "admin@mohasin.bro.bd";
-
-  const app = initializeApp(firebaseConfig, "admin"); // alada session, user login ke affect korbe na
+  const app = initializeApp(firebaseConfig, "admin");
   const auth = getAuth(app);
   const db = getFirestore(app);
 
   let selectedUid = null;
-
-  const isAdmin = (user) => user && user.email && user.email.toLowerCase() === ADMIN_EMAIL;
+  let selectedUserLabel = '';
+  let allUsers = [];
+  let allKeys = [];
   let dashboardShown = false;
 
+  // ── Auth ────────────────────────────────────────────────
   onAuthStateChanged(auth, async (user) => {
     if (!user) return;
-    if (isAdmin(user)) {
-      if (!dashboardShown) showDashboard(user);
+    if (user.email?.toLowerCase() === ADMIN_EMAIL) {
+      if (!dashboardShown) showDashboard();
     } else {
       document.getElementById('login-status').textContent = "❌ Not admin account.";
       await fbSignOut(auth);
     }
   });
 
-  async function showDashboard(user) {
+  function showDashboard() {
     dashboardShown = true;
     document.getElementById('login-screen').style.display = 'none';
     document.getElementById('main-screen').style.display = 'block';
-    loadUsers();
-    loadNotice();
-    loadKeys();
-  }
-
-  async function loadUsers() {
-    const tbody = document.getElementById('user-table');
-    const snap = await getDocs(collection(db, "users"));
-    if (snap.empty) {
-      tbody.innerHTML = '<tr><td colspan="5" style="color:#555;text-align:center;">No users yet</td></tr>';
-      return;
-    }
-    tbody.innerHTML = '';
-    snap.forEach((d) => {
-      const u = d.data();
-      const uid = d.id;
-      const expireDate = u.expireAt ? new Date(u.expireAt).toLocaleString() : 'Unlimited';
-      const status = u.disabled ? 'disabled' : (u.expireAt && u.expireAt < Date.now() ? 'pending' : 'active');
-      const badge = `<span class="badge ${status}">${status}</span>`;
-      tbody.innerHTML += `
-        <tr>
-          <td>${u.name || '-'}</td>
-          <td>${u.email || '-'}</td>
-          <td>${badge}</td>
-          <td>${expireDate}</td>
-          <td>
-            <div class="actions">
-              <button class="btn btn-enable" onclick="enableUser('${uid}')">Enable</button>
-              <button class="btn btn-disable" onclick="disableUser('${uid}')">Disable</button>
-              <button class="btn btn-time" onclick="openTimeModal('${uid}')">Set Time</button>
-            </div>
-          </td>
-        </tr>`;
-    });
-  }
-
-  let allKeys = [];
-
-  function makeKey() {
-    const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-    const buf = new Uint32Array(12);
-    crypto.getRandomValues(buf);
-    const c = Array.from(buf, (n) => chars[n % chars.length]).join('');
-    return `CSM-${c.slice(0, 4)}-${c.slice(4, 8)}-${c.slice(8, 12)}`;
-  }
-
-  async function loadKeys() {
-    const tbody = document.getElementById('key-table');
-    const snap = await getDocs(collection(db, "keys"));
-    allKeys = [];
-    snap.forEach((d) => allKeys.push({ key: d.id, ...d.data() }));
-    allKeys.sort((x, y) => (y.createdAt || 0) - (x.createdAt || 0));
-    const used = allKeys.filter((k) => k.used).length;
-    document.getElementById('key-summary').textContent =
-      `Total ${allKeys.length} · Available ${allKeys.length - used} · Used ${used}`;
-    if (!allKeys.length) {
-      tbody.innerHTML = '<tr><td colspan="3" style="color:#555;text-align:center;">No keys yet</td></tr>';
-      return;
-    }
-    tbody.innerHTML = allKeys.map((k) => `
-      <tr>
-        <td style="font-family:monospace;">${k.key}</td>
-        <td><span class="badge ${k.used ? 'disabled' : 'active'}">${k.used ? 'used' : 'available'}</span></td>
-        <td>${k.usedEmail || '-'}</td>
-      </tr>`).join('');
-  }
-
-  window.generateKeys = async () => {
-    const batch = writeBatch(db);
-    const now = Date.now();
-    for (let n = 0; n < 10; n++) {
-      batch.set(doc(db, "keys", makeKey()), { used: false, usedBy: null, usedEmail: null, createdAt: now });
-    }
-    await batch.commit();
-    loadKeys();
-  };
-
-  window.copyAvailable = async () => {
-    const list = allKeys.filter((k) => !k.used).map((k) => k.key).join('\n');
-    if (!list) return;
-    try { await navigator.clipboard.writeText(list); alert("Copied!"); }
-    catch (e) { prompt("Copy:", list); }
-  };
-
-  window.deleteUsedKeys = async () => {
-    const usedKeys = allKeys.filter((k) => k.used);
-    if (!usedKeys.length || !confirm(`Delete ${usedKeys.length} used keys?`)) return;
-    for (const k of usedKeys) await deleteDoc(doc(db, "keys", k.key));
-    loadKeys();
-  };
-
-  async function loadNotice() {
-    const d = await getDoc(doc(db, "config", "notice"));
-    if (d.exists()) {
-      document.getElementById('notice-text').value = d.data().text || '';
-    }
+    loadUsers(); loadNotice(); loadKeys();
   }
 
   window.adminSignIn = async () => {
@@ -395,20 +430,84 @@
     if (!email || !password) { statusEl.textContent = "Enter email and password."; return; }
     if (email.toLowerCase() !== ADMIN_EMAIL) { statusEl.textContent = "❌ Not admin account."; return; }
     statusEl.textContent = "Signing in...";
-    try {
-      await signInWithEmailAndPassword(auth, email, password);
-    } catch (err) {
-      statusEl.textContent = "❌ Wrong email or password.";
-    }
+    try { await signInWithEmailAndPassword(auth, email, password); }
+    catch { statusEl.textContent = "❌ Wrong email or password."; }
   };
 
   document.getElementById('admin-password').addEventListener('keydown', (e) => {
     if (e.key === 'Enter') window.adminSignIn();
   });
 
-  window.signOut = async () => {
-    await fbSignOut(auth);
-    location.reload();
+  window.signOut = async () => { await fbSignOut(auth); location.reload(); };
+
+  window.refreshAll = () => { loadUsers(); loadKeys(); loadNotice(); };
+
+  // ── Users ────────────────────────────────────────────────
+  async function loadUsers() {
+    const tbody = document.getElementById('user-table');
+    const snap = await getDocs(collection(db, "users"));
+    allUsers = [];
+    snap.forEach((d) => allUsers.push({ uid: d.id, ...d.data() }));
+    updateUserStats();
+    renderUsers(allUsers);
+  }
+
+  function getStatus(u) {
+    if (u.disabled) return 'disabled';
+    if (u.expireAt && u.expireAt < Date.now()) return 'pending';
+    return 'active';
+  }
+
+  function updateUserStats() {
+    const total = allUsers.length;
+    const active = allUsers.filter(u => getStatus(u) === 'active').length;
+    const disabled = allUsers.filter(u => getStatus(u) === 'disabled').length;
+    const expired = allUsers.filter(u => getStatus(u) === 'pending').length;
+    document.getElementById('user-stats').innerHTML = `
+      <div class="stat-chip">Total <span>${total}</span></div>
+      <div class="stat-chip">Active <span style="color:#4ade80">${active}</span></div>
+      <div class="stat-chip">Disabled <span style="color:#f87171">${disabled}</span></div>
+      <div class="stat-chip">Expired <span style="color:#aaa">${expired}</span></div>
+    `;
+  }
+
+  function renderUsers(users) {
+    const tbody = document.getElementById('user-table');
+    if (!users.length) {
+      tbody.innerHTML = '<tr><td colspan="5" style="color:#555;text-align:center;">No users found</td></tr>';
+      return;
+    }
+    tbody.innerHTML = users.map(u => {
+      const status = getStatus(u);
+      const expireDate = u.expireAt ? new Date(u.expireAt).toLocaleString() : 'Unlimited';
+      const noticeBadge = u.notice ? `<span class="user-notice-badge">📨 notice</span>` : '';
+      return `<tr>
+        <td>${u.name || '-'}${noticeBadge}</td>
+        <td style="font-size:12px;color:#aaa;">${u.email || '-'}</td>
+        <td><span class="badge ${status}">${status}</span></td>
+        <td style="font-size:12px;color:#aaa;">${expireDate}</td>
+        <td>
+          <div class="actions">
+            <button class="btn btn-enable" onclick="enableUser('${u.uid}')">Enable</button>
+            <button class="btn btn-disable" onclick="disableUser('${u.uid}')">Disable</button>
+            <button class="btn btn-time" onclick="openTimeModal('${u.uid}','${(u.name||u.email||u.uid).replace(/'/g,"\\'")}')">⏱ Time</button>
+            <button class="btn btn-notice" onclick="openNoticeModal('${u.uid}','${(u.name||u.email||u.uid).replace(/'/g,"\\'")}','${(u.notice||'').replace(/'/g,"\\'").replace(/\n/g,' ')}')">💬 Notice</button>
+            <button class="btn btn-delete" onclick="openDeleteModal('${u.uid}','${(u.name||u.email||u.uid).replace(/'/g,"\\'")}')">🗑 Delete</button>
+          </div>
+        </td>
+      </tr>`;
+    }).join('');
+  }
+
+  window.filterUsers = () => {
+    const q = document.getElementById('user-search').value.toLowerCase();
+    const sf = document.getElementById('status-filter').value;
+    const filtered = allUsers.filter(u => {
+      const matchQ = !q || (u.name||'').toLowerCase().includes(q) || (u.email||'').toLowerCase().includes(q);
+      const matchS = sf === 'all' || getStatus(u) === sf;
+      return matchQ && matchS;
+    });
+    renderUsers(filtered);
   };
 
   window.enableUser = async (uid) => {
@@ -421,14 +520,12 @@
     loadUsers();
   };
 
-  window.openTimeModal = (uid) => {
+  // ── Time Modal ────────────────────────────────────────────
+  window.openTimeModal = (uid, label) => {
     selectedUid = uid;
+    document.getElementById('time-modal-label').textContent = 'User: ' + label;
+    document.getElementById('time-minutes').value = '';
     document.getElementById('time-modal').classList.add('show');
-  };
-
-  window.closeModal = () => {
-    document.getElementById('time-modal').classList.remove('show');
-    selectedUid = null;
   };
 
   window.saveTime = async () => {
@@ -436,9 +533,162 @@
     if (!minutes || minutes < 1) return;
     const expireAt = Date.now() + (minutes * 60 * 1000);
     await updateDoc(doc(db, "users", selectedUid), { expireAt, disabled: false });
-    closeModal();
+    closeModal('time-modal');
     loadUsers();
   };
+
+  // ── Per-user Notice Modal ─────────────────────────────────
+  window.openNoticeModal = (uid, label, existingNotice) => {
+    selectedUid = uid;
+    document.getElementById('notice-modal-label').textContent = 'To: ' + label;
+    document.getElementById('user-notice-text').value = decodeURIComponent(existingNotice || '');
+    document.getElementById('notice-modal').classList.add('show');
+  };
+
+  window.sendUserNotice = async () => {
+    const text = document.getElementById('user-notice-text').value.trim();
+    await updateDoc(doc(db, "users", selectedUid), { notice: text || null });
+    closeModal('notice-modal');
+    loadUsers();
+  };
+
+  // ── Delete Modal ──────────────────────────────────────────
+  window.openDeleteModal = (uid, label) => {
+    selectedUid = uid;
+    selectedUserLabel = label;
+    document.getElementById('delete-modal-label').textContent =
+      `"${label}" কে permanently delete করা হবে। এটা undo করা যাবে না।`;
+    document.getElementById('delete-modal').classList.add('show');
+  };
+
+  window.confirmDeleteUser = async () => {
+    await deleteDoc(doc(db, "users", selectedUid));
+    closeModal('delete-modal');
+    loadUsers();
+  };
+
+  // ── Shared Modal Close ────────────────────────────────────
+  window.closeModal = (id) => {
+    document.getElementById(id).classList.remove('show');
+    selectedUid = null;
+  };
+
+  // ── Keys ─────────────────────────────────────────────────
+  function makeKey() {
+    const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+    const buf = new Uint32Array(12);
+    crypto.getRandomValues(buf);
+    const c = Array.from(buf, (n) => chars[n % chars.length]).join('');
+    return `CSM-${c.slice(0,4)}-${c.slice(4,8)}-${c.slice(8,12)}`;
+  }
+
+  async function loadKeys() {
+    const snap = await getDocs(collection(db, "keys"));
+    allKeys = [];
+    snap.forEach((d) => allKeys.push({ key: d.id, ...d.data() }));
+    allKeys.sort((x, y) => (y.createdAt || 0) - (x.createdAt || 0));
+    renderKeys();
+  }
+
+  window.renderKeys = () => {
+    const q = (document.getElementById('key-search')?.value || '').toLowerCase();
+    const match = (k) => !q || k.key.toLowerCase().includes(q) || (k.usedEmail || '').toLowerCase().includes(q);
+    const avail = allKeys.filter(k => !k.used && match(k));
+    const used = allKeys.filter(k => k.used && match(k));
+    document.getElementById('avail-count').textContent = allKeys.filter(k => !k.used).length;
+    document.getElementById('used-count').textContent = allKeys.filter(k => k.used).length;
+    const actions = (k) => `<div class="actions">
+      <button class="btn btn-time" onclick="copyKey('${k.key}')">📋 Copy</button>
+      <button class="btn btn-delete" onclick="deleteKey('${k.key}')">🗑 Delete</button></div>`;
+    document.getElementById('avail-table').innerHTML = avail.length ? avail.map(k => `
+      <tr>
+        <td><input type="checkbox" class="avail-chk" value="${k.key}"></td>
+        <td style="font-family:monospace;">${k.key}</td>
+        <td style="font-size:12px;color:#aaa;">${k.createdAt ? new Date(k.createdAt).toLocaleString() : '-'}</td>
+        <td>${actions(k)}</td>
+      </tr>`).join('') : '<tr><td colspan="4" style="color:#555;text-align:center;">No available keys</td></tr>';
+    document.getElementById('used-table').innerHTML = used.length ? used.map(k => `
+      <tr>
+        <td><input type="checkbox" class="used-chk" value="${k.key}"></td>
+        <td style="font-family:monospace;">${k.key}</td>
+        <td style="font-size:12px;color:#aaa;">${k.usedEmail || '-'}</td>
+        <td><div class="actions"><button class="btn btn-delete" onclick="deleteKey('${k.key}')">🗑 Delete</button></div></td>
+      </tr>`).join('') : '<tr><td colspan="4" style="color:#555;text-align:center;">No used keys</td></tr>';
+  };
+
+  window.generateKeys = async () => {
+    const n = parseInt(document.getElementById('gen-count').value) || 10;
+    const batch = writeBatch(db);
+    const now = Date.now();
+    for (let i = 0; i < n; i++) {
+      batch.set(doc(db, "keys", makeKey()), { used: false, usedBy: null, usedEmail: null, createdAt: now });
+    }
+    await batch.commit();
+    loadKeys();
+  };
+
+  const copyText = async (text) => {
+    try { await navigator.clipboard.writeText(text); alert("Copied!"); }
+    catch { prompt("Copy:", text); }
+  };
+
+  window.copyKey = (k) => copyText(k);
+
+  window.copyAvailable = () => {
+    const list = allKeys.filter(k => !k.used).map(k => k.key).join('\n');
+    if (!list) { alert('No available keys!'); return; }
+    copyText(list);
+  };
+
+  window.copySelected = () => {
+    const list = [...document.querySelectorAll('.avail-chk:checked')].map(c => c.value).join('\n');
+    if (!list) { alert('Select keys first.'); return; }
+    copyText(list);
+  };
+
+  window.toggleChecks = (type, on) => {
+    document.querySelectorAll('.' + type + '-chk').forEach(c => c.checked = on);
+  };
+
+  async function deleteKeysBatch(keys) {
+    for (let i = 0; i < keys.length; i += 400) {
+      const batch = writeBatch(db);
+      keys.slice(i, i + 400).forEach(k => batch.delete(doc(db, "keys", k)));
+      await batch.commit();
+    }
+    loadKeys();
+  }
+
+  window.deleteKey = async (k) => {
+    if (!confirm(`Delete key ${k}?`)) return;
+    await deleteDoc(doc(db, "keys", k));
+    loadKeys();
+  };
+
+  window.deleteSelected = async (type) => {
+    const keys = [...document.querySelectorAll('.' + type + '-chk:checked')].map(c => c.value);
+    if (!keys.length) { alert('Select keys first.'); return; }
+    if (!confirm(`Delete ${keys.length} selected keys?`)) return;
+    await deleteKeysBatch(keys);
+  };
+
+  window.deleteUsedKeys = async () => {
+    const keys = allKeys.filter(k => k.used).map(k => k.key);
+    if (!keys.length || !confirm(`Delete all ${keys.length} used keys?`)) return;
+    await deleteKeysBatch(keys);
+  };
+
+  // ── Expand / Collapse ─────────────────────────────────────
+  window.toggleBox = (h) => h.classList.toggle('collapsed');
+  window.toggleAllBoxes = (collapse) => {
+    document.querySelectorAll('.toggle').forEach(h => h.classList.toggle('collapsed', collapse));
+  };
+
+  // ── Notice ────────────────────────────────────────────────
+  async function loadNotice() {
+    const d = await getDoc(doc(db, "config", "notice"));
+    if (d.exists()) document.getElementById('notice-text').value = d.data().text || '';
+  }
 
   window.saveNotice = async () => {
     const text = document.getElementById('notice-text').value;
