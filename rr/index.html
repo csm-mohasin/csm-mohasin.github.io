@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="bn">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>SkyTrack – Live Flight Tracker</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<style>
+*{box-sizing:border-box;margin:0}
+body{font-family:system-ui,sans-serif;background:#0b1220;color:#e6edf7;overflow:hidden}
+#map{position:fixed;inset:0}
+.bar{position:fixed;top:12px;left:12px;right:12px;z-index:1000;display:flex;gap:8px;align-items:center;max-width:560px}
+.bar input{flex:1;padding:12px 14px;border-radius:12px;border:1px solid #2a3a5a;background:#101a2ecc;backdrop-filter:blur(10px);color:#fff;font-size:15px;outline:none}
+.pill{padding:10px 12px;border-radius:12px;background:#101a2ecc;backdrop-filter:blur(10px);border:1px solid #2a3a5a;font-size:13px;white-space:nowrap}
+.dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:#22c55e;margin-right:6px}
+.dot.err{background:#ef4444}
+#panel{position:fixed;z-index:1000;background:#101a2ef2;backdrop-filter:blur(12px);border:1px solid #2a3a5a;border-radius:16px;padding:16px;
+ bottom:12px;left:12px;right:12px;max-width:380px;display:none}
+#panel h2{font-size:22px;margin-bottom:2px}
+#panel .sub{color:#8ea3c7;font-size:13px;margin-bottom:12px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.grid div{background:#0b1220;border-radius:10px;padding:8px 10px}
+.grid small{display:block;color:#8ea3c7;font-size:11px}
+.grid b{font-size:15px}
+#close{position:absolute;top:10px;right:14px;cursor:pointer;font-size:20px;color:#8ea3c7}
+.plane{transition:transform .3s}
+.plane svg{filter:drop-shadow(0 0 3px #000)}
+.leaflet-container{background:#0b1220}
+.dark-tiles{filter:invert(1) hue-rotate(180deg) brightness(.85) contrast(.9) saturate(.6)}
+</style>
+</head>
+<body>
+<div id="map"></div>
+<div class="bar">
+  <input id="q" placeholder="Callsign / Country search (e.g. BBC, UAE)…">
+  <div class="pill"><span class="dot" id="dot"></span><span id="cnt">0</span> ✈</div>
+</div>
+<div id="panel">
+  <span id="close">×</span>
+  <h2 id="pc">—</h2><div class="sub" id="pcountry"></div>
+  <div class="grid">
+    <div><small>Altitude</small><b id="palt">-</b></div>
+    <div><small>Speed</small><b id="pspd">-</b></div>
+    <div><small>Heading</small><b id="phdg">-</b></div>
+    <div><small>Vertical rate</small><b id="pvr">-</b></div>
+    <div><small>ICAO24</small><b id="pid">-</b></div>
+    <div><small>Status</small><b id="pgr">-</b></div>
+  </div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+const map=L.map('map',{zoomControl:false,worldCopyJump:true}).setView([23.8,90.4],6);
+L.control.zoom({position:'bottomright'}).addTo(map);
+L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}',{attribution:'Tiles © Esri | Data: airplanes.live / adsb.fi',maxZoom:16}).addTo(map);
+
+const markers=new Map(); let flights={}, selected=null, filter='';
+const planeSVG=(c)=>`<svg width="26" height="26" viewBox="0 0 24 24" fill="${c}"><path d="M21 16v-2l-8-5V3.5a1.5 1.5 0 0 0-3 0V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5z"/></svg>`;
+const color=a=>a==null?'#94a3b8':a<1000?'#22c55e':a<5000?'#eab308':a<9000?'#f97316':'#38bdf8';
+
+function icon(f){
+  return L.divIcon({className:'',iconSize:[26,26],iconAnchor:[13,13],
+    html:`<div class="plane" style="transform:rotate(${f.hdg||0}deg)">${planeSVG(f.id===selected?'#ef4444':color(f.alt))}</div>`});
+}
+function match(f){
+  if(!filter)return true;
+  return (f.call||'').toLowerCase().includes(filter)||(f.country||'').toLowerCase().includes(filter);
+}
+function render(){
+  let n=0;
+  for(const [id,m] of markers) if(!flights[id]||!match(flights[id])){map.removeLayer(m);markers.delete(id);}
+  for(const id in flights){
+    const f=flights[id]; if(!match(f))continue; n++;
+    let m=markers.get(id);
+    if(m){m.setLatLng([f.lat,f.lon]);m.setIcon(icon(f));}
+    else{m=L.marker([f.lat,f.lon],{icon:icon(f)}).addTo(map).on('click',()=>select(id));markers.set(id,m);}
+  }
+  document.getElementById('cnt').textContent=n;
+  if(selected&&flights[selected])fillPanel(flights[selected]);
+}
+function select(id){selected=id;document.getElementById('panel').style.display='block';render();}
+function fillPanel(f){
+  const $=i=>document.getElementById(i);
+  $('pc').textContent=f.call||'N/A'; $('pcountry').textContent=f.country;
+  $('palt').textContent=f.alt!=null?Math.round(f.alt*3.281).toLocaleString()+' ft':'-';
+  $('pspd').textContent=f.spd!=null?Math.round(f.spd*1.944)+' kt':'-';
+  $('phdg').textContent=f.hdg!=null?Math.round(f.hdg)+'°':'-';
+  $('pvr').textContent=f.vr!=null?Math.round(f.vr*196.85)+' ft/min':'-';
+  $('pid').textContent=f.id; $('pgr').textContent=f.ground?'On ground':'Airborne';
+}
+document.getElementById('close').onclick=()=>{selected=null;document.getElementById('panel').style.display='none';render();};
+document.getElementById('q').oninput=e=>{filter=e.target.value.trim().toLowerCase();render();};
+
+let busy=false;
+async function load(){
+  if(busy)return; busy=true;
+  const c=map.getCenter(), b=map.getBounds();
+  const nm=Math.min(250,Math.max(20,Math.round(c.distanceTo(b.getNorthEast())/1852)));
+  const la=c.lat.toFixed(3), lo=c.lng.toFixed(3);
+  const urls=[`https://api.airplanes.live/v2/point/${la}/${lo}/${nm}`,
+              `https://opendata.adsb.fi/api/v2/lat/${la}/lon/${lo}/dist/${nm}`,
+              `https://api.adsb.lol/v2/point/${la}/${lo}/${nm}`];
+  const dot=document.getElementById('dot');
+  try{
+    let d=null;
+    for(const u of urls){
+      try{const r=await fetch(u); if(!r.ok)continue; const j=await r.json(); if(j&&(j.ac||j.aircraft)){d=j;break;}}catch(e){}
+    }
+    if(!d)throw new Error('all providers failed');
+    d.ac=d.ac||d.aircraft; const next={};
+    (d.ac||[]).forEach(a=>{
+      if(a.lat==null||a.lon==null)return;
+      const g=a.alt_baro==='ground';
+      next[a.hex]={id:a.hex,call:(a.flight||a.r||'').trim(),country:[a.t,a.r].filter(Boolean).join(' · '),lon:a.lon,lat:a.lat,
+        alt:g?0:(typeof a.alt_baro==='number'?a.alt_baro/3.281:null),ground:g,
+        spd:a.gs!=null?a.gs/1.944:null,hdg:a.track,vr:a.baro_rate!=null?a.baro_rate/196.85:null};
+    });
+    flights=next; dot.className='dot'; render();
+  }catch(e){dot.className='dot err';}
+  busy=false;
+}
+map.on('moveend',load);
+load(); setInterval(load,15000);
+</script>
+</body>
+</html>
