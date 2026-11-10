@@ -1,178 +1,85 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#080d18">
 <title>CSM Smart Home Control</title>
-
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600&display=swap">
 <style>
-:root{
-  --bg:#080d18;
-  --panel:#111b2c;
-  --panel2:#17243a;
-  --text:#eef4ff;
-  --muted:#8fa2bd;
-  --blue:#38bdf8;
-  --green:#22c55e;
-  --red:#ef4444;
-  --border:#263650;
-}
+:root{--bg:#080d18;--panel:#111b2c;--panel2:#17243a;--text:#eef4ff;--muted:#8fa2bd;--blue:#38bdf8;--green:#22c55e;--red:#ef4444;--border:#263650}
 *{box-sizing:border-box}
-body{
-  margin:0;
-  background:var(--bg);
-  color:var(--text);
-  font-family:Arial,sans-serif;
-}
-header,main{
-  max-width:900px;
-  margin:auto;
-}
+body{margin:0;background:var(--bg);color:var(--text);font-family:Arial,sans-serif}
+header,main{max-width:900px;margin:auto}
 header{padding:25px 18px 15px}
-.brand{
-  color:var(--blue);
-  font-size:12px;
-  font-weight:bold;
-  letter-spacing:3px;
-}
+.brand{color:var(--blue);font-size:12px;font-weight:bold;letter-spacing:3px}
 h1{font-size:27px;margin:10px 0}
 .muted{color:var(--muted);font-size:13px}
 main{padding:12px 16px 30px}
-.panel{
-  background:var(--panel);
-  border:1px solid var(--border);
-  border-radius:17px;
-  padding:18px;
-  margin-bottom:16px;
-}
-.row{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap:12px;
-}
-.status{
-  display:flex;
-  align-items:center;
-  gap:8px;
-  font-size:12px;
-  color:var(--muted);
-}
-.dot{
-  width:9px;height:9px;
-  border-radius:50%;
-  background:#64748b;
-}
-.dot.online{
-  background:var(--green);
-  box-shadow:0 0 10px var(--green);
-}
-input,select{
-  width:100%;
-  padding:13px;
-  margin:7px 0 12px;
-  border-radius:10px;
-  border:1px solid var(--border);
-  background:#0b1423;
-  color:var(--text);
-  font-size:14px;
-}
-button{
-  border:0;
-  border-radius:10px;
-  padding:12px 15px;
-  color:white;
-  font-weight:bold;
-  font-size:13px;
-  cursor:pointer;
-}
+.panel{background:var(--panel);border:1px solid var(--border);border-radius:17px;padding:18px;margin-bottom:16px}
+.row{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.status{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--muted)}
+.dot{width:9px;height:9px;border-radius:50%;background:#64748b}
+.dot.online{background:var(--green);box-shadow:0 0 10px var(--green)}
+input,select{width:100%;padding:13px;margin:7px 0 12px;border-radius:10px;border:1px solid var(--border);background:#0b1423;color:var(--text);font-size:14px}
+button{border:0;border-radius:10px;padding:12px 15px;color:white;font-weight:bold;font-size:13px;cursor:pointer}
 button:disabled{opacity:.45;cursor:not-allowed}
-.primary{background:#0284c7}
-.secondary{background:#263750}
-.danger{background:#b91c1c}
-.success{background:#15803d}
-.cards{
-  display:grid;
-  grid-template-columns:repeat(2,minmax(0,1fr));
-  gap:12px;
-}
-.relay{
-  background:var(--panel2);
-  border:1px solid var(--border);
-  border-radius:15px;
-  padding:17px;
-}
+.primary{background:#0284c7}.secondary{background:#263750}.danger{background:#b91c1c}.success{background:#15803d}
+.cards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.relay{background:var(--panel2);border:1px solid var(--border);border-radius:15px;padding:17px}
 .relay h3{margin:0 0 8px;font-size:16px}
-.state{
-  font-size:12px;
-  color:var(--muted);
-  margin:13px 0;
-}
-.state.active{color:var(--green)}
-.toggle{width:100%;background:#334155}
-.toggle.active{background:#15803d}
-.actions{display:flex;gap:9px;flex-wrap:wrap}
-.actions button{flex:1;min-width:100px}
+.state{font-size:12px;color:var(--muted);margin:13px 0}.state.active{color:var(--green)}
+.toggle{width:100%;background:#334155}.toggle.active{background:#15803d}
+.actions{display:flex;gap:9px;flex-wrap:wrap}.actions button{flex:1;min-width:100px}
 .section-title{font-size:17px;margin:0 0 15px}
-#dashboard{display:none}
-#login{max-width:430px;margin:20px auto}
+#dashboard{display:none}#login{max-width:430px;margin:20px auto}
 #message{font-size:13px;color:#fca5a5;margin-top:10px}
-.schedule-item{
-  padding:13px;
-  background:#0c1728;
-  border:1px solid var(--border);
-  border-radius:10px;
-  margin-top:10px;
-}
+.schedule-item{padding:13px;background:#0c1728;border:1px solid var(--border);border-radius:10px;margin-top:10px}
 .schedule-item button{margin-top:9px}
-.developer-footer{
-  text-align:center;
-  padding:35px 15px;
-  margin-top:25px;
+.developer-footer{text-align:center;padding:35px 15px;margin-top:25px}
+.credit-line{width:65px;height:3px;background:linear-gradient(90deg,#38bdf8,#818cf8);border-radius:5px;margin:0 auto 22px}
+.credit-label{font-size:10px;letter-spacing:3px;color:#64748b}
+.developer-name{font-size:21px;font-weight:800;letter-spacing:1px;margin:12px 0;background:linear-gradient(90deg,#38bdf8,#a78bfa);-webkit-background-clip:text;background-clip:text;color:transparent}
+.developer-role{font-size:10px;letter-spacing:2px;color:#94a3b8}.copyright{font-size:10px;margin-top:18px;color:#64748b}
+
+/* Date/time popup */
+.picker-modal{display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.84);backdrop-filter:blur(8px);align-items:center;justify-content:center;padding:12px}
+.picker-modal.show{display:flex}
+.picker-dialog{width:min(100%,520px);max-height:95vh;overflow-y:auto;background:#111b2c;border:1px solid #263650;border-radius:18px;padding:16px;box-shadow:0 20px 70px #0009}
+.picker-dialog .row strong{font-size:16px}
+#picker{width:min(100%,430px);min-width:250px;margin:14px auto}
+.picker-error{min-height:18px;color:#fca5a5;margin:4px 0 10px}
+
+.rdp{
+  --rdp-font:'Outfit','Avenir Next','Segoe UI',system-ui,sans-serif;
+  --rdp-cyan:#86e6ff; --rdp-amber:#ffcf85;
+  position:relative; width:100%; aspect-ratio:1/1; container-type:inline-size;
+  font-family:var(--rdp-font); border-radius:50%; outline:none;
+  -webkit-user-select:none; user-select:none; -webkit-tap-highlight-color:transparent;
 }
-.credit-line{
-  width:65px;height:3px;
-  background:linear-gradient(90deg,#38bdf8,#818cf8);
-  border-radius:5px;
-  margin:0 auto 22px;
-}
-.credit-label{
-  font-size:10px;
-  letter-spacing:3px;
-  color:#64748b;
-}
-.developer-name{
-  font-size:21px;
-  font-weight:800;
-  letter-spacing:1px;
-  margin:12px 0;
-  background:linear-gradient(90deg,#38bdf8,#a78bfa);
-  -webkit-background-clip:text;
-  background-clip:text;
-  color:transparent;
-}
-.developer-role{
-  font-size:10px;
-  letter-spacing:2px;
-  color:#94a3b8;
-}
-.copyright{
-  font-size:10px;
-  margin-top:18px;
-  color:#64748b;
-}
-@media(max-width:420px){
-  .cards{gap:9px}
-  .relay{padding:13px}
-  h1{font-size:23px}
-}
+.rdp:focus-visible{outline:2px solid rgba(111,220,255,.6);outline-offset:6px}
+.rdp-shadow{position:absolute;inset:3.1%;border-radius:50%;pointer-events:none;box-shadow:0 2.2cqw 5cqw rgba(0,0,0,.45),0 0 3.4cqw rgba(90,170,255,.16)}
+.rdp-c{position:absolute;inset:0;width:100%;height:100%;display:block}
+.rdp-fg{touch-action:none}
+.rdp-time{position:absolute;left:50%;top:calc(50% - .6cqw);transform:translate(-50%,-50%);display:flex;align-items:center;white-space:nowrap;pointer-events:none;font-size:11.25cqw;font-weight:600;line-height:1;color:var(--rdp-cyan);text-shadow:0 0 .08em rgba(100,215,255,.7),0 0 .38em rgba(50,160,255,.42)}
+.rdp-h,.rdp-m{display:inline-block;width:1.22em}
+.rdp-h{text-align:right}.rdp-m{text-align:left}
+.rdp-colon{display:inline-flex;flex-direction:column;gap:.2em;margin:0 .2em;animation:rdp-blink 2s ease-in-out infinite}
+.rdp-colon i{width:.13em;height:.13em;border-radius:50%;background:currentColor}
+@keyframes rdp-blink{0%,100%{opacity:1}50%{opacity:.3}}
+.rdp-invalid .rdp-time{color:var(--rdp-amber);text-shadow:0 0 .08em rgba(255,200,120,.6),0 0 .38em rgba(255,160,60,.35)}
+.rdp-ampm{position:absolute;left:50%;top:calc(50% + 9.4cqw);transform:translate(-50%,-50%);font:400 4.4cqw/1 var(--rdp-font);letter-spacing:.08em;color:#cfe6f5;padding:.45em 1.1em;border:1px solid transparent;border-radius:999px;background:transparent;cursor:pointer;transition:background .2s,border-color .2s}
+.rdp-ampm:hover{background:rgba(111,220,255,.09);border-color:rgba(111,220,255,.35)}
+.rdp-ampm:focus-visible{outline:2px solid var(--rdp-cyan);outline-offset:2px}
+.rdp-pill{position:absolute;left:50%;top:16.72%;transform:translate(-50%,-50%);display:flex;align-items:baseline;gap:.5cqw;padding:.8cqw 2.2cqw;border-radius:999px;background:rgba(22,27,32,.88);border:1.5px solid #5fd6ff;box-shadow:0 0 2.4cqw rgba(95,214,255,.45),inset 0 0 1.6cqw rgba(95,214,255,.12);font-size:3.5cqw;font-weight:400;line-height:1.15;color:#eaf9ff;pointer-events:none;white-space:nowrap}
+.rdp-pill small{font-size:.42em;letter-spacing:.08em;color:#7fcbe8;font-weight:500}
+.rdp-sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+@media(prefers-reduced-motion:reduce){.rdp-colon{animation:none}.rdp-ampm{transition:none}}
+@media(max-width:420px){.cards{gap:9px}.relay{padding:13px}h1{font-size:23px}.picker-dialog{padding:12px}}
 </style>
 </head>
 
 <body>
-
 <header>
   <div class="brand">CSM / HOME AUTOMATION</div>
   <h1>Smart Home Control</h1>
@@ -180,25 +87,16 @@ button:disabled{opacity:.45;cursor:not-allowed}
 </header>
 
 <main>
-
-<!-- LOGIN -->
 <section class="panel" id="login">
   <h2 class="section-title">Sign In</h2>
   <p class="muted">Login with your Firebase account.</p>
-
-  <input id="email" type="email" placeholder="Email address">
-  <input id="password" type="password" placeholder="Password">
-
-  <button class="primary" id="loginBtn" style="width:100%">
-    LOGIN
-  </button>
+  <input id="email" type="email" placeholder="Email address" autocomplete="username">
+  <input id="password" type="password" placeholder="Password" autocomplete="current-password">
+  <button class="primary" id="loginBtn" style="width:100%">LOGIN</button>
   <div id="message"></div>
 </section>
 
-<!-- DASHBOARD -->
 <section id="dashboard">
-
-  <!-- CONNECTION -->
   <div class="panel">
     <div class="row">
       <div>
@@ -210,14 +108,12 @@ button:disabled{opacity:.45;cursor:not-allowed}
         <span id="connectionLabel">OFFLINE</span>
       </div>
     </div>
-
     <div class="row" style="margin-top:15px">
       <span class="muted" id="userLabel">Signed in</span>
       <button class="secondary" id="logoutBtn">LOGOUT</button>
     </div>
   </div>
 
-  <!-- MASTER CONTROL -->
   <div class="panel">
     <h2 class="section-title">Master Control</h2>
     <div class="actions">
@@ -227,7 +123,6 @@ button:disabled{opacity:.45;cursor:not-allowed}
     <p class="muted" id="lastUpdate">Waiting for Firebase...</p>
   </div>
 
-  <!-- RELAYS -->
   <div class="panel">
     <div class="row">
       <h2 class="section-title">Relay Control</h2>
@@ -236,191 +131,695 @@ button:disabled{opacity:.45;cursor:not-allowed}
     <div class="cards" id="relayCards"></div>
   </div>
 
-  <!-- SCHEDULE -->
   <div class="panel">
     <h2 class="section-title">⏰ Schedule Automation</h2>
     <p class="muted">
-      Schedule relay ON/OFF at a selected time.
-      Keep this webpage open for scheduled actions.
+      Schedules are saved in Firebase and copied to the ESP8266's LittleFS memory.
+      After syncing, the ESP8266 can run them even when this website is closed.
     </p>
 
-    <label class="muted">Select Relay</label>
-    <select id="scheduleRelay">
-      <option value="all">All Relays</option>
-      <option value="0">Relay 1</option>
-      <option value="1">Relay 2</option>
-      <option value="2">Relay 3</option>
-      <option value="3">Relay 4</option>
+    <label class="muted" for="scheduleMode">Schedule Type</label>
+    <select id="scheduleMode">
+      <option value="once">One-time</option>
+      <option value="daily">Daily (every day)</option>
     </select>
 
-    <label class="muted">Action</label>
+    <label class="muted" for="scheduleRelay">Select Relay</label>
+    <select id="scheduleRelay">
+      <option value="all">All Relays</option>
+      <option value="1">Relay 1</option>
+      <option value="2">Relay 2</option>
+      <option value="3">Relay 3</option>
+      <option value="4">Relay 4</option>
+    </select>
+
+    <label class="muted" for="scheduleAction">Action</label>
     <select id="scheduleAction">
       <option value="true">Turn ON</option>
       <option value="false">Turn OFF</option>
     </select>
 
-    <label class="muted">Date and Time</label>
-    <input id="scheduleTime" type="datetime-local">
+    <label class="muted" id="scheduleDateLabel">Date and Time</label>
+    <button type="button" class="secondary" id="openDatePicker" style="width:100%;text-align:left">
+      📅 <span id="selectedDateTime">Select date &amp; time</span>
+    </button>
+    <input id="scheduleTime" type="hidden">
 
-    <button class="primary" id="addSchedule" style="width:100%">
+    <button class="primary" id="addSchedule" style="width:100%;margin-top:10px">
       + ADD SCHEDULE
     </button>
-
     <div id="scheduleList"></div>
   </div>
 
-  <!-- INFORMATION -->
   <div class="panel">
     <h2 class="section-title">System Information</h2>
-    <div class="row">
-      <span class="muted">Database</span>
-      <strong>Realtime Database</strong>
-    </div>
-    <div class="row" style="margin-top:13px">
-      <span class="muted">Controller</span>
-      <strong>NodeMCU ESP8266</strong>
-    </div>
-    <div class="row" style="margin-top:13px">
-      <span class="muted">Communication</span>
-      <strong>Firebase Stream</strong>
-    </div>
+    <div class="row"><span class="muted">Database</span><strong>Realtime Database</strong></div>
+    <div class="row" style="margin-top:13px"><span class="muted">Controller</span><strong>NodeMCU ESP8266</strong></div>
+    <div class="row" style="margin-top:13px"><span class="muted">Communication</span><strong>Firebase Stream</strong></div>
   </div>
-
 </section>
 
-<!-- DEVELOPER CREDIT -->
 <footer class="developer-footer">
   <div class="credit-line"></div>
-  <div class="credit-label">DESIGNED & DEVELOPED BY</div>
+  <div class="credit-label">DESIGNED &amp; DEVELOPED BY</div>
   <div class="developer-name">CSM Mohasin Alam</div>
-  <div class="developer-role">
-    SMART HOME AUTOMATION DEVELOPER
-  </div>
-  <div class="copyright">
-    © 2026 CSM Mohasin Alam. All Rights Reserved.
-  </div>
+  <div class="developer-role">SMART HOME AUTOMATION DEVELOPER</div>
+  <div class="copyright">© 2026 CSM Mohasin Alam. All Rights Reserved.</div>
 </footer>
-
 </main>
 
+<!-- Radial Disc Date-Time Picker Popup -->
+<div id="datePickerModal" class="picker-modal" role="dialog" aria-modal="true" aria-label="Select date and time">
+  <div class="picker-dialog">
+    <div class="row">
+      <strong>Select Date &amp; Time</strong>
+      <button type="button" class="secondary" id="closeDatePicker" aria-label="Close">✕</button>
+    </div>
+    <div id="picker"></div>
+    <p id="pickerError" class="picker-error muted"></p>
+    <div class="actions">
+      <button type="button" class="secondary" id="cancelDatePicker">CANCEL</button>
+      <button type="button" class="primary" id="confirmDatePicker">CONFIRM</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+'use strict';
+
+var VB=640,C=320,R_OUT=300,R_BAND=213,R_IN=138,R_RING=128,R_MIN=176,R_LBL=257;
+var TAU=Math.PI*2,PAST=7;
+var FONT="'Outfit','Avenir Next','Segoe UI',system-ui,sans-serif";
+var F={
+  hour:'300 38px '+FONT,hourSel:'400 38px '+FONT,
+  wd:'500 14.5px '+FONT,dn:'400 31px '+FONT,mo:'600 10.5px '+FONT,
+  min:'300 23px '+FONT,knob:'500 23px '+FONT,ghost:'400 20px '+FONT
+};
+var reduce=!!(window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+
+function rad(a){return a*Math.PI/180;}
+function pt(r,a){return [C+r*Math.sin(rad(a)),C-r*Math.cos(rad(a))];}
+function mod(a,n){return ((a%n)+n)%n;}
+function clamp(v,a,b){return Math.min(b,Math.max(a,v));}
+function normDelta(a){return mod(a+180,360)-180;}
+function pad(n){return (n<10?'0':'')+n;}
+function hexRgb(c){return [1,3,5].map(function(i){return parseInt(c.slice(i,i+2),16);});}
+function palette(c1,c2,n){
+  var a=hexRgb(c1),b=hexRgb(c2),out=[];
+  for(var k=0;k<=n;k++){
+    var t=k/n;
+    out.push('rgb('+a.map(function(v,i){return Math.round(v+(b[i]-v)*t);}).join(',')+')');
+  }
+  return out;
+}
+var PAL_H=palette('#a9b5c1','#f2fcff',10);
+var PAL_D=palette('#9eabb8','#ffffff',10);
+
+function sectorPath(c,r1,r2,a1,a2){
+  c.beginPath();
+  c.arc(C,C,r2,rad(a1-90),rad(a2-90),false);
+  c.arc(C,C,r1,rad(a2-90),rad(a1-90),true);
+  c.closePath();
+}
+
+function create(target,opts){
+  opts=opts||{};
+  var root=typeof target==='string'?document.querySelector(target):target;
+  if(!root)throw new Error('RadialDateTimePicker: target not found');
+  var N=opts.days||60,STEP=opts.minuteStep||5;
+  var start=opts.startDate?new Date(opts.startDate):new Date();
+  start.setHours(0,0,0,0);
+  var minDate=opts.minDate!==undefined?new Date(opts.minDate):new Date();
+
+  root.classList.add('rdp');
+  root.setAttribute('tabindex','0');
+  root.setAttribute('role','group');
+  root.setAttribute('aria-label','Date and time dial. Left and right arrows change the day, up and down change the hour, shift with up or down changes the minutes, A and P set AM or PM.');
+  root.innerHTML=
+    '<div class="rdp-shadow"></div>'+
+    '<canvas class="rdp-c rdp-bg"></canvas>'+
+    '<canvas class="rdp-c rdp-fg"></canvas>'+
+    '<div class="rdp-pill"><span class="rdp-pill-t">09:30</span><small>24H</small></div>'+
+    '<div class="rdp-time" aria-hidden="true"><span class="rdp-h">09</span><span class="rdp-colon"><i></i><i></i></span><span class="rdp-m">30</span></div>'+
+    '<button type="button" class="rdp-ampm" aria-label="Toggle AM or PM">AM</button>'+
+    '<span class="rdp-sr" aria-live="polite"></span>';
+
+  var bg=root.querySelector('.rdp-bg'),fg=root.querySelector('.rdp-fg');
+  var bx=bg.getContext('2d'),fx=fg.getContext('2d');
+  var hEl=root.querySelector('.rdp-h'),mEl=root.querySelector('.rdp-m');
+  var apEl=root.querySelector('.rdp-ampm'),pillT=root.querySelector('.rdp-pill-t');
+  var srEl=root.querySelector('.rdp-sr');
+  var input=null;
+  if(opts.name){input=document.createElement('input');input.type='hidden';input.name=opts.name;root.appendChild(input);}
+
+  var days=[];
+  for(var i=-PAST;i<N;i++){
+    var dt=new Date(start.getFullYear(),start.getMonth(),start.getDate()+i);
+    days.push({
+      i:i,date:dt,
+      wd:dt.toLocaleDateString('en-US',{weekday:'short'}).toUpperCase(),
+      dn:String(dt.getDate()),
+      mo:dt.getDate()===1?dt.toLocaleDateString('en-US',{month:'short'}).toUpperCase():''
+    });
+  }
+
+  var S={dateIdx:2,hour:9,minute:30,pm:false};
+  var hs=9,hsT=9,ds=2,dsT=2,ma=180,maT=180;
+  var drag=null,hoverMin=null,wheelAcc=0,box=null;
+  var W=0,SC=1;
+
+  function snapStr(){return S.dateIdx+'|'+S.hour+'|'+S.minute+'|'+S.pm;}
+  function selectedDate(){
+    var d=days[S.dateIdx+PAST].date,h24=(S.hour%12)+(S.pm?12:0);
+    return new Date(d.getFullYear(),d.getMonth(),d.getDate(),h24,S.minute);
+  }
+  function detail(){
+    var date=selectedDate(),h24=(S.hour%12)+(S.pm?12:0);
+    return {
+      date:date,
+      iso:date.getFullYear()+'-'+pad(date.getMonth()+1)+'-'+pad(date.getDate())+'T'+pad(h24)+':'+pad(S.minute),
+      valid:date.getTime()>=minDate.getTime(),
+      hour24:h24,minute:S.minute
+    };
+  }
+  function emit(type){
+    var d=detail();
+    root.dispatchEvent(new CustomEvent('rdp:'+type,{detail:d,bubbles:true}));
+    var cb=type==='change'?opts.onChange:opts.onInput;
+    if(typeof cb==='function')cb(d);
+  }
+  var lastLive=null,lastCommit=null,lastBuzz=0;
+  function buzz(){
+    var n=Date.now();
+    if(n-lastBuzz<28)return;
+    lastBuzz=n;
+    try{if(navigator.vibrate)navigator.vibrate(6);}catch(e){}
+  }
+  function commit(){
+    var s=snapStr();
+    if(s!==lastCommit){lastCommit=s;emit('change');}
+  }
+  function derive(){
+    S.hour=mod(Math.round(hsT)-1,12)+1;
+    S.dateIdx=clamp(Math.round(dsT),0,N-1);
+  }
+  function setMinute(m){
+    if(m===S.minute)return;
+    S.minute=m;
+    maT+=normDelta(m*6-mod(maT,360));
+  }
+  function applyState(idx,hour,minute,pm){
+    S.dateIdx=idx;S.hour=hour;S.pm=pm;dsT=idx;
+    var base=Math.round(hsT);
+    hsT=base+(mod(hour-base+6,12)-6);
+    S.minute=minute;
+    maT+=normDelta(minute*6-mod(maT,360));
+    updateUI();kick();
+  }
+  function stepHour(n){hsT=Math.round(hsT)+n;derive();updateUI();commit();kick();}
+  function stepDate(n){
+    var t=clamp(Math.round(dsT)+n,0,N-1);
+    if(t===Math.round(dsT))return;
+    dsT=t;derive();updateUI();commit();kick();
+  }
+  function stepMinute(n){setMinute(mod(S.minute+n,60));updateUI();commit();kick();}
+  function setPm(v){if(S.pm===v)return;S.pm=v;updateUI();commit();}
+
+  var cache={h:'',m:'',ap:'',pill:'',inv:null,iso:''},srTimer=0;
+  function updateUI(){
+    var hT=pad(S.hour),mT=pad(S.minute),ap=S.pm?'PM':'AM';
+    if(cache.h!==hT){hEl.textContent=hT;cache.h=hT;}
+    if(cache.m!==mT){mEl.textContent=mT;cache.m=mT;}
+    if(cache.ap!==ap){apEl.textContent=ap;cache.ap=ap;}
+    var h24=(S.hour%12)+(S.pm?12:0);
+    var pill=pad(h24)+':'+pad(hoverMin!==null?hoverMin:S.minute);
+    if(cache.pill!==pill){pillT.textContent=pill;cache.pill=pill;}
+    var d=detail();
+    if(cache.inv!==!d.valid){
+      cache.inv=!d.valid;
+      root.classList.toggle('rdp-invalid',!d.valid);
+      root.setAttribute('aria-invalid',String(!d.valid));
+    }
+    if(input&&cache.iso!==d.iso){input.value=d.iso;cache.iso=d.iso;}
+    var sn=snapStr();
+    if(lastLive!==null&&sn!==lastLive){buzz();emit('input');}
+    lastLive=sn;
+    clearTimeout(srTimer);
+    srTimer=setTimeout(function(){
+      srEl.textContent=d.date.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric',year:'numeric'})+', '+S.hour+':'+mT+' '+ap+(d.valid?'':'. This time has already passed.');
+    },500);
+  }
+
+  function drawStatic(){
+    var c=bx,g;
+    c.setTransform(1,0,0,1,0,0);c.clearRect(0,0,bg.width,bg.height);
+    c.setTransform(SC,0,0,SC,0,0);
+    g=c.createLinearGradient(0,C-R_OUT,0,C+R_OUT);
+    g.addColorStop(0,'#343b43');g.addColorStop(1,'#21262c');
+    c.fillStyle=g;c.beginPath();c.arc(C,C,R_OUT,0,TAU);c.fill();
+    g=c.createLinearGradient(C-R_OUT,C-R_OUT,C+R_OUT,C+R_OUT);
+    g.addColorStop(0,'rgba(157,180,202,.65)');g.addColorStop(.5,'rgba(92,111,130,.3)');g.addColorStop(1,'rgba(157,180,202,.4)');
+    c.strokeStyle=g;c.lineWidth=1.8;c.beginPath();c.arc(C,C,R_OUT-.9,0,TAU);c.stroke();
+
+    c.save();
+    c.shadowColor='rgba(95,208,255,.55)';c.shadowBlur=10*SC;
+    sectorPath(c,R_BAND+18,R_OUT-6,-14,14);
+    c.fillStyle='rgba(95,205,255,.10)';c.fill();
+    c.lineWidth=1.3;c.strokeStyle='rgba(95,208,255,.8)';c.stroke();
+    c.restore();
+
+    c.strokeStyle='rgba(190,210,230,.24)';c.lineWidth=1.4;c.beginPath();
+    [75,285].forEach(function(a){
+      var p1=pt(R_BAND,a),p2=pt(R_OUT,a);
+      c.moveTo(p1[0],p1[1]);c.lineTo(p2[0],p2[1]);
+    });
+    c.stroke();
+
+    g=c.createLinearGradient(0,C+R_BAND,0,C+R_OUT);
+    g.addColorStop(0,'#0a7dff');g.addColorStop(1,'#37b6ff');
+    c.save();c.shadowColor='rgba(30,150,255,.85)';c.shadowBlur=24*SC;
+    c.fillStyle=g;
+    sectorPath(c,R_BAND+2,R_OUT-2,166,194);c.fill();
+    sectorPath(c,R_BAND+2,R_OUT-2,166,194);c.fill();
+    c.restore();
+    c.strokeStyle='rgba(143,214,255,.65)';c.lineWidth=1.2;
+    sectorPath(c,R_BAND+2,R_OUT-2,166,194);c.stroke();
+
+    g=c.createLinearGradient(C-R_BAND,C-R_BAND,C+R_BAND,C+R_BAND);
+    g.addColorStop(0,'#5a626b');g.addColorStop(1,'#383e46');
+    c.fillStyle=g;c.beginPath();c.arc(C,C,R_BAND,0,TAU);c.fill();
+    c.strokeStyle='rgba(255,255,255,.16)';c.lineWidth=1.2;c.beginPath();c.arc(C,C,R_BAND,0,TAU);c.stroke();
+    c.strokeStyle='rgba(255,255,255,.14)';c.lineWidth=2;c.lineCap='round';
+    c.beginPath();c.arc(C,C,R_BAND-6,rad(-240),rad(-130));c.stroke();
+
+    c.fillStyle='#1f2429';c.beginPath();c.arc(C,C,R_IN,0,TAU);c.fill();
+    c.strokeStyle='rgba(255,255,255,.08)';c.lineWidth=1;c.beginPath();c.arc(C,C,R_IN,0,TAU);c.stroke();
+    var m,a,p1,p2;
+    c.lineCap='round';c.strokeStyle='rgba(255,255,255,.16)';c.lineWidth=1;c.beginPath();
+    for(m=0;m<60;m++){
+      if(m%5===0)continue;
+      a=m*6;p1=pt(R_IN+3,a);p2=pt(R_IN+7,a);
+      c.moveTo(p1[0],p1[1]);c.lineTo(p2[0],p2[1]);
+    }
+    c.stroke();
+    c.strokeStyle='rgba(255,255,255,.38)';c.lineWidth=1.6;c.beginPath();
+    for(m=0;m<60;m+=5){
+      a=m*6;p1=pt(R_IN+3,a);p2=pt(R_IN+12,a);
+      c.moveTo(p1[0],p1[1]);c.lineTo(p2[0],p2[1]);
+    }
+    c.stroke();
+
+    g=c.createRadialGradient(C-20,C-30,10,C,C,R_RING);
+    g.addColorStop(0,'#30363d');g.addColorStop(1,'#171b1f');
+    c.fillStyle=g;c.beginPath();c.arc(C,C,R_RING-3,0,TAU);c.fill();
+    g=c.createLinearGradient(C-R_RING,C-R_RING,C+R_RING,C+R_RING);
+    g.addColorStop(0,'#55c2ff');g.addColorStop(1,'#1b6bff');
+    c.save();c.shadowColor='rgba(40,140,255,.9)';c.shadowBlur=16*SC;
+    c.strokeStyle=g;c.lineWidth=3.4;
+    c.beginPath();c.arc(C,C,R_RING,0,TAU);c.stroke();
+    c.beginPath();c.arc(C,C,R_RING,0,TAU);c.stroke();
+    c.restore();
+  }
+
+  function drawHours(c){
+    c.save();sectorPath(c,R_BAND-4,R_OUT+6,-75,75);c.clip();
+    for(var hh=1;hh<=12;hh++){
+      var d=mod(hh-hs+6,12)-6,ad=Math.abs(d);
+      if(ad>3)continue;
+      var a=d*30,p=pt(R_LBL,a),near=Math.max(0,1-ad);
+      c.globalAlpha=clamp((3-ad)/.8,0,1);
+      c.font=near>.5?F.hourSel:F.hour;
+      c.fillStyle=PAL_H[Math.round(near*10)];
+      c.save();c.translate(p[0],p[1]);c.rotate(rad(a*.85));c.scale(1+.3*near,1+.3*near);
+      c.fillText(String(hh),0,0);c.restore();
+    }
+    c.restore();
+  }
+
+  function drawDates(c){
+    c.save();sectorPath(c,R_BAND-4,R_OUT+6,75,285);c.clip();
+    var lo=Math.max(-PAST,Math.floor(ds-4)),hi=Math.min(N-1,Math.ceil(ds+4)),k,it,d,ad,a;
+    c.strokeStyle='rgba(190,210,230,.17)';c.lineWidth=1.2;c.beginPath();
+    for(k=lo;k<=hi;k++){
+      a=180-(k-ds)*30-15;
+      var l1=pt(R_BAND,a),l2=pt(R_OUT,a);
+      c.moveTo(l1[0],l1[1]);c.lineTo(l2[0],l2[1]);
+    }
+    c.stroke();
+    var hasSpacing=('letterSpacing' in c);
+    for(k=lo;k<=hi;k++){
+      it=days[k+PAST];d=k-ds;ad=Math.abs(d);
+      if(ad>4)continue;
+      a=180-d*30;
+      var p=pt(R_LBL,a),near=Math.max(0,1-ad),past=k<0;
+      var fade=clamp((3.7-ad)/.8,0,1)*(past?.45:1);
+      if(fade<=0)continue;
+      c.globalAlpha=fade;
+      var col=past?'#6c7783':PAL_D[Math.round(near*10)];
+      c.save();c.translate(p[0],p[1]);c.rotate(rad((a-180)*.5));c.scale(1+.1*near,1+.1*near);
+      c.fillStyle=col;c.font=F.wd;if(hasSpacing)c.letterSpacing='1.2px';
+      c.fillText(it.wd,0,-16);
+      if(hasSpacing)c.letterSpacing='0px';
+      c.font=F.dn;c.fillText(it.dn,0,11);
+      if(it.mo){c.font=F.mo;c.fillStyle='#6fdcff';c.fillText(it.mo,0,-33);}
+      if(k===0){c.fillStyle='#6fdcff';c.beginPath();c.arc(0,35,2.6,0,TAU);c.fill();}
+      c.restore();
+    }
+    c.restore();
+  }
+
+  function drawMinutes(c){
+    var a=mod(ma,360),m,la,p,rot;
+    if(a>=1){
+      c.lineCap='round';c.strokeStyle='rgba(127,227,255,.2)';c.lineWidth=7;
+      c.beginPath();c.arc(C,C,R_BAND-1.5,rad(-90),rad(a-90));c.stroke();
+      c.strokeStyle='rgba(127,227,255,.85)';c.lineWidth=2.4;
+      c.beginPath();c.arc(C,C,R_BAND-1.5,rad(-90),rad(a-90));c.stroke();
+    }
+    c.font=F.min;c.fillStyle='#a9b5c1';
+    for(m=0;m<60;m+=5){
+      la=m*6;if(Math.abs(normDelta(la-a))<7)continue;
+      p=pt(R_MIN,la);rot=(la>90&&la<270)?la-180:la;
+      c.save();c.translate(p[0],p[1]);c.rotate(rad(rot));c.fillText(pad(m),0,0);c.restore();
+    }
+    if(hoverMin!==null&&hoverMin!==S.minute){
+      p=pt(R_MIN,hoverMin*6);
+      c.save();c.setLineDash([3,3]);c.lineWidth=1.3;c.strokeStyle='rgba(180,220,255,.6)';c.fillStyle='rgba(255,255,255,.05)';
+      c.beginPath();c.arc(p[0],p[1],23,0,TAU);c.fill();c.stroke();c.setLineDash([]);
+      c.font=F.ghost;c.fillStyle='#d9ecf9';c.fillText(pad(hoverMin),p[0],p[1]);c.restore();
+    }
+    p=pt(R_MIN,a);
+    var kr=(drag&&drag.mode==='minute')?28:25;
+    var halo=c.createRadialGradient(p[0],p[1],kr*.6,p[0],p[1],kr+14);
+    halo.addColorStop(0,'rgba(120,200,255,.30)');halo.addColorStop(1,'rgba(120,200,255,0)');
+    c.fillStyle=halo;c.beginPath();c.arc(p[0],p[1],kr+14,0,TAU);c.fill();
+    var kg=c.createRadialGradient(p[0]-kr*.25,p[1]-kr*.35,2,p[0],p[1],kr);
+    kg.addColorStop(0,'rgba(207,233,255,.55)');kg.addColorStop(1,'rgba(111,156,196,.22)');
+    c.fillStyle=kg;c.beginPath();c.arc(p[0],p[1],kr,0,TAU);c.fill();
+    c.strokeStyle='rgba(205,232,255,.85)';c.lineWidth=1.6;c.stroke();
+    c.font=F.knob;c.fillStyle='#ffffff';c.fillText(pad(S.minute),p[0],p[1]);
+  }
+
+  function render(){
+    if(!W)return;
+    var c=fx;c.setTransform(1,0,0,1,0,0);c.clearRect(0,0,fg.width,fg.height);
+    c.setTransform(SC,0,0,SC,0,0);
+    c.textAlign='center';c.textBaseline='middle';c.globalAlpha=1;
+    drawHours(c);drawDates(c);c.globalAlpha=1;drawMinutes(c);
+  }
+
+  var raf=0,lastTs=0;
+  function kick(){if(!raf)raf=requestAnimationFrame(tick);}
+  function tick(ts){
+    raf=0;
+    var dtm=Math.min(50,lastTs?ts-lastTs:16.7),k=reduce?1:1-Math.pow(.8,dtm/16.7),moving=false;
+    lastTs=ts;
+    if(!(drag&&drag.mode==='hour')){hs+=(hsT-hs)*k;if(Math.abs(hsT-hs)<.002)hs=hsT;else moving=true;}
+    if(!(drag&&drag.mode==='date')){ds+=(dsT-ds)*k;if(Math.abs(dsT-ds)<.002)ds=dsT;else moving=true;}
+    ma+=(maT-ma)*k;if(Math.abs(maT-ma)<.05)ma=maT;else moving=true;
+    render();if(moving)kick();else lastTs=0;
+  }
+
+  function resize(){
+    var r=root.getBoundingClientRect();if(!r.width)return;
+    var dpr=Math.min(window.devicePixelRatio||1,2),px=Math.round(r.width*dpr);
+    if(bg.width!==px||W!==px){bg.width=bg.height=fg.width=fg.height=px;W=px;}
+    SC=px/VB;box=r;drawStatic();render();
+  }
+  if(window.ResizeObserver)new ResizeObserver(resize).observe(root);
+  else window.addEventListener('resize',resize);
+
+  function polar(e,fresh){
+    if(fresh||!box)box=fg.getBoundingClientRect();
+    var s=VB/box.width,x=(e.clientX-box.left)*s-C,y=(e.clientY-box.top)*s-C;
+    var a=Math.atan2(x,-y)*180/Math.PI;if(a<0)a+=360;
+    return {r:Math.hypot(x,y),a:a};
+  }
+  function isTop(a){return a<=75||a>=285;}
+  function minuteFromAngle(a){return mod(Math.round(a/(6*STEP))*STEP,60);}
+  function setHover(v){if(v!==hoverMin){hoverMin=v;updateUI();kick();}}
+
+  fg.addEventListener('contextmenu',function(e){e.preventDefault();});
+  fg.addEventListener('pointerdown',function(e){
+    if(e.button!==undefined&&e.button!==0)return;
+    var p=polar(e,true);if(p.r>R_OUT+10||p.r<R_IN)return;
+    var mode=p.r>=R_BAND?(isTop(p.a)?'hour':'date'):'minute';
+    drag={mode:mode,lastA:p.a,moved:0,id:e.pointerId,v:0,t:performance.now()};
+    try{fg.setPointerCapture(e.pointerId);}catch(err){}
+    if(mode==='minute'){hoverMin=null;setMinute(minuteFromAngle(p.a));updateUI();}
+    e.preventDefault();root.focus({preventScroll:true});
+    fg.style.cursor=mode==='minute'?'pointer':'grabbing';kick();
+  });
+  fg.addEventListener('pointermove',function(e){
+    var p;
+    if(!drag){
+      p=polar(e,true);
+      if(p.r>=R_IN&&p.r<R_BAND){setHover(minuteFromAngle(p.a));fg.style.cursor='pointer';}
+      else{setHover(null);fg.style.cursor=(p.r>=R_BAND&&p.r<=R_OUT)?'grab':'';}
+      return;
+    }
+    if(e.pointerId!==drag.id)return;
+    p=polar(e,false);
+    var dA=normDelta(p.a-drag.lastA);
+    drag.lastA=p.a;drag.moved+=Math.abs(dA);
+    var now=performance.now(),dtm=Math.max(1,now-drag.t),dU;
+    if(drag.mode==='hour'){
+      dU=-dA/30;hs+=dU;hsT=hs;derive();drag.v=drag.v*.7+(dU/dtm)*.3;
+    }else if(drag.mode==='date'){
+      dU=dA/30;ds=clamp(ds+dU,-.3,N-1+.3);dsT=ds;derive();drag.v=drag.v*.7+(dU/dtm)*.3;
+    }else setMinute(minuteFromAngle(p.a));
+    drag.t=now;updateUI();kick();
+  });
+  function endDrag(e){
+    if(!drag||e.pointerId!==drag.id)return;
+    var d=drag;drag=null;
+    try{fg.releasePointerCapture(e.pointerId);}catch(err){}
+    var p=polar(e,true),idle=performance.now()-d.t,v=idle>90?0:d.v,push=clamp(v*170,-5,5);
+    if(d.mode==='hour'){
+      if(d.moved<4){
+        var ts=p.a>180?p.a-360:p.a;
+        hsT=Math.round(hs)+clamp(Math.round(ts/30),-2,2);
+      }else hsT=Math.round(hs+push);
+    }else if(d.mode==='date'){
+      var t=clamp(Math.round(ds+(d.moved<4?0:push)),0,N-1);
+      if(d.moved<4){
+        var c2=Math.round(ds)+clamp(Math.round((180-p.a)/30),-3,3);
+        if(c2>=0&&c2<=N-1)t=c2;
+      }
+      dsT=t;
+    }
+    fg.style.cursor='';derive();updateUI();commit();kick();
+  }
+  fg.addEventListener('pointerup',endDrag);
+  fg.addEventListener('pointercancel',endDrag);
+  fg.addEventListener('pointerleave',function(){if(!drag)setHover(null);});
+  fg.addEventListener('wheel',function(e){
+    var p=polar(e,true);if(p.r>R_OUT+10||p.r<R_IN)return;
+    e.preventDefault();wheelAcc+=e.deltaY;
+    if(Math.abs(wheelAcc)<50)return;
+    var dir=wheelAcc>0?1:-1;wheelAcc=0;
+    if(p.r>=R_BAND){if(isTop(p.a))stepHour(dir);else stepDate(dir);}
+    else stepMinute(dir*STEP);
+  },{passive:false});
+
+  root.addEventListener('keydown',function(e){
+    var used=true;
+    switch(e.key){
+      case 'ArrowLeft':stepDate(-1);break;
+      case 'ArrowRight':stepDate(1);break;
+      case 'PageUp':stepDate(-7);break;
+      case 'PageDown':stepDate(7);break;
+      case 'ArrowUp':if(e.shiftKey)stepMinute(STEP);else stepHour(1);break;
+      case 'ArrowDown':if(e.shiftKey)stepMinute(-STEP);else stepHour(-1);break;
+      case 'a':case 'A':setPm(false);break;
+      case 'p':case 'P':setPm(true);break;
+      default:used=false;
+    }
+    if(used)e.preventDefault();
+  });
+  apEl.addEventListener('click',function(){setPm(!S.pm);});
+
+  function setValue(date){
+    var d=new Date(date);
+    var idx=Math.round((new Date(d.getFullYear(),d.getMonth(),d.getDate())-start)/864e5);
+    if(isNaN(idx)||idx<0||idx>=N)return false;
+    var h24=d.getHours();
+    applyState(idx,h24%12||12,(Math.round(d.getMinutes()/STEP)*STEP)%60,h24>=12);
+    commit();return true;
+  }
+
+  if(opts.value){
+    var v=new Date(opts.value),vi=Math.round((new Date(v.getFullYear(),v.getMonth(),v.getDate())-start)/864e5);
+    if(vi>=0&&vi<N){
+      var vh=v.getHours();
+      S.dateIdx=vi;S.hour=vh%12||12;S.pm=vh>=12;S.minute=(Math.round(v.getMinutes()/STEP)*STEP)%60;
+    }
+  }
+  hs=hsT=S.hour;ds=dsT=S.dateIdx;ma=maT=S.minute*6;
+  derive();updateUI();lastCommit=snapStr();resize();
+
+  if(document.fonts&&document.fonts.load){
+    Promise.all(['300 38px Outfit','400 38px Outfit','500 20px Outfit','600 20px Outfit'].map(function(f){return document.fonts.load(f);}))
+      .then(function(){render();}).catch(function(){});
+  }
+
+  return {
+    root:root,
+    getValue:function(){return selectedDate();},
+    setValue:setValue,
+    isValid:function(){return detail().valid;}
+  };
+}
+window.RadialDateTimePicker=create;
+})();
+</script>
+
+<script>
+// Radial disc popup controls
+let dateTimePicker=null;
+const pickerModal=document.getElementById('datePickerModal');
+const scheduleTimeInput=document.getElementById('scheduleTime');
+const selectedDateTimeLabel=document.getElementById('selectedDateTime');
+
+function openDateTimePicker(){
+  pickerModal.classList.add('show');
+  const initial=scheduleTimeInput.value
+    ?new Date(scheduleTimeInput.value)
+    :new Date(Date.now()+5*60000);
+
+  if(!dateTimePicker){
+    dateTimePicker=RadialDateTimePicker('#picker',{
+      days:60,
+      minuteStep:5,
+      minDate:new Date(),
+      value:initial
+    });
+  }else{
+    if(!dateTimePicker.setValue(initial)){
+      dateTimePicker.setValue(new Date(Date.now()+5*60000));
+    }
+    requestAnimationFrame(()=>window.dispatchEvent(new Event('resize')));
+  }
+}
+function closeDateTimePicker(){pickerModal.classList.remove('show');}
+
+document.getElementById('openDatePicker').addEventListener('click',openDateTimePicker);
+document.getElementById('closeDatePicker').addEventListener('click',closeDateTimePicker);
+document.getElementById('cancelDatePicker').addEventListener('click',closeDateTimePicker);
+pickerModal.addEventListener('click',e=>{
+  if(e.target===pickerModal)closeDateTimePicker();
+});
+document.addEventListener('keydown',e=>{
+  if(e.key==='Escape')closeDateTimePicker();
+});
+
+document.getElementById('confirmDatePicker').addEventListener('click',()=>{
+  const error=document.getElementById('pickerError');
+
+  if(!dateTimePicker||!dateTimePicker.isValid()){
+    error.textContent='Please choose a future date and time.';
+    return;
+  }
+
+  const d=dateTimePicker.getValue();
+  if(d.getTime()<=Date.now()){
+    error.textContent='Please choose a future date and time.';
+    return;
+  }
+
+  const pad=n=>String(n).padStart(2,'0');
+  scheduleTimeInput.value=
+    d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate())+
+    'T'+pad(d.getHours())+':'+pad(d.getMinutes());
+
+  selectedDateTimeLabel.textContent=d.toLocaleString([],{
+    dateStyle:'medium',
+    timeStyle:'short'
+  });
+  error.textContent='';
+  closeDateTimePicker();
+});
+</script>
+
 <script type="module">
-
-// ===================================
-// FIREBASE SDK
-// ===================================
-
-import { initializeApp }
-from "https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js";
-
+import {initializeApp} from 'https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js';
 import {
-  getAuth,
-  signInWithEmailAndPassword,
-  onAuthStateChanged,
-  signOut
-} from "https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js";
-
+  getAuth,signInWithEmailAndPassword,onAuthStateChanged,signOut
+} from 'https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js';
 import {
-  getDatabase,
-  ref,
-  onValue,
-  set,
-  update
-} from "https://www.gstatic.com/firebasejs/12.19.0/firebase-database.js";
+  getDatabase,ref,onValue,set,update,push,remove
+} from 'https://www.gstatic.com/firebasejs/12.19.0/firebase-database.js';
 
-// ===================================
-// FIREBASE CONFIG
-// ===================================
-
-const firebaseConfig = {
-  apiKey: "AIzaSyATczBXkLVCVpaje7ejU-_rYPbSJx7LHOY",
-  authDomain: "getespform.firebaseapp.com",
-  databaseURL: "https://getespform-default-rtdb.firebaseio.com",
-  projectId: "getespform",
-  storageBucket: "getespform.firebasestorage.app",
-  messagingSenderId: "746315429668",
-  appId: "1:746315429668:web:5b57917675277642ee25b1"
+const firebaseConfig={
+  apiKey:'AIzaSyATczBXkLVCVpaje7ejU-_rYPbSJx7LHOY',
+  authDomain:'getespform.firebaseapp.com',
+  databaseURL:'https://getespform-default-rtdb.firebaseio.com',
+  projectId:'getespform',
+  storageBucket:'getespform.firebasestorage.app',
+  messagingSenderId:'746315429668',
+  appId:'1:746315429668:web:5b57917675277642ee25b1'
 };
 
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getDatabase(app);
+const app=initializeApp(firebaseConfig);
+const auth=getAuth(app);
+const db=getDatabase(app);
 
-const relayRef = ref(db, "relayControl");
-const connectionRef = ref(db, ".info/connected");
+const relayRef=ref(db,'relayControl');
+const connectionRef=ref(db,'.info/connected');
+const schedulesRef=ref(db,'schedules');
 
-let relayStates = [false,false,false,false];
-let dataUnsubscribe = null;
-let connectionUnsubscribe = null;
+let relayStates=[false,false,false,false];
+let dataUnsubscribe=null;
+let connectionUnsubscribe=null;
+let scheduleUnsubscribe=null;
+let remoteSchedules={};
 
-const names = [
-  "Living Room",
-  "Bedroom",
-  "Kitchen",
-  "Other Room"
-];
+const names=['Living Room','Bedroom','Kitchen','Other Room'];
+const $=id=>document.getElementById(id);
 
-// ===================================
-// RENDER RELAY CARDS
-// ===================================
-
+// Relay card rendering
 function renderCards(){
-
-  const container = document.getElementById("relayCards");
-  container.innerHTML = "";
+  const container=$('relayCards');
+  container.innerHTML='';
 
   relayStates.forEach((state,i)=>{
+    const card=document.createElement('div');
+    card.className='relay';
 
-    const card = document.createElement("div");
-    card.className = "relay";
+    const title=document.createElement('h3');
+    title.textContent='Relay '+(i+1);
 
-    const title = document.createElement("h3");
-    title.textContent = "Relay " + (i+1);
+    const name=document.createElement('div');
+    name.className='muted';
+    name.textContent=names[i];
 
-    const name = document.createElement("div");
-    name.className = "muted";
-    name.textContent = names[i];
+    const status=document.createElement('div');
+    status.className='state'+(state?' active':'');
+    status.textContent=state?'● ON':'● OFF';
 
-    const status = document.createElement("div");
-    status.className = "state" + (state ? " active" : "");
-    status.textContent = state ? "● ON" : "● OFF";
-
-    const button = document.createElement("button");
-    button.className = "toggle" + (state ? " active" : "");
-    button.textContent = state ? "TURN OFF" : "TURN ON";
-
-    button.disabled = !auth.currentUser;
-
-    button.onclick = ()=>{
-      changeRelay(i,!relayStates[i]);
-    };
+    const button=document.createElement('button');
+    button.className='toggle'+(state?' active':'');
+    button.textContent=state?'TURN OFF':'TURN ON';
+    button.disabled=!auth.currentUser;
+    button.onclick=()=>changeRelay(i,!relayStates[i]);
 
     card.append(title,name,status,button);
     container.appendChild(card);
   });
 }
 
-// ===================================
-// RELAY DATABASE CONTROL
-// ===================================
-
 async function changeRelay(index,state){
-
-  if(!auth.currentUser) return;
-
+  if(!auth.currentUser)return;
   try{
-    await set(
-      ref(db,"relayControl/relay"+(index+1)),
-      state
-    );
+    await set(ref(db,'relayControl/relay'+(index+1)),state);
   }catch(error){
-    alert("Relay update failed: "+error.message);
+    alert('Relay update failed: '+error.message);
   }
 }
 
 async function allRelays(state){
-
-  if(!auth.currentUser) return;
-
+  if(!auth.currentUser)return;
   try{
     await update(relayRef,{
       relay1:state,
@@ -429,275 +828,258 @@ async function allRelays(state){
       relay4:state
     });
   }catch(error){
-    alert("Master control failed: "+error.message);
+    alert('Master control failed: '+error.message);
   }
 }
 
-document.getElementById("allOn").onclick =
-  ()=>allRelays(true);
+$('allOn').onclick=()=>allRelays(true);
+$('allOff').onclick=()=>allRelays(false);
 
-document.getElementById("allOff").onclick =
-  ()=>allRelays(false);
-
-// ===================================
-// LIVE DATABASE LISTENER
-// ===================================
-
+// Firebase relay listener
 function startDatabaseListener(){
+  if(dataUnsubscribe)dataUnsubscribe();
 
-  if(dataUnsubscribe) dataUnsubscribe();
-
-  dataUnsubscribe = onValue(relayRef,snapshot=>{
-
-    const data = snapshot.val() || {};
-
-    relayStates = [1,2,3,4].map(i=>
-      data["relay"+i] === true
-    );
-
+  dataUnsubscribe=onValue(relayRef,snapshot=>{
+    const data=snapshot.val()||{};
+    relayStates=[1,2,3,4].map(i=>data['relay'+i]===true);
     renderCards();
-
-    document.getElementById("lastUpdate").textContent =
-      "Last update: "+new Date().toLocaleTimeString();
-
+    $('lastUpdate').textContent='Last update: '+new Date().toLocaleTimeString();
   },error=>{
-
-    document.getElementById("lastUpdate").textContent =
-      "Database error: "+error.message;
+    $('lastUpdate').textContent='Database error: '+error.message;
   });
 }
 
-// ===================================
-// CONNECTION STATUS
-// ===================================
-
+// Firebase connection status
 function startConnectionListener(){
+  if(connectionUnsubscribe)connectionUnsubscribe();
 
-  if(connectionUnsubscribe) connectionUnsubscribe();
-
-  connectionUnsubscribe = onValue(connectionRef,snapshot=>{
-
-    const online = snapshot.val() === true;
-
-    document.getElementById("connectionText").textContent =
-      online ? "Database Connected" : "Database Disconnected";
-
-    document.getElementById("connectionLabel").textContent =
-      online ? "ONLINE" : "OFFLINE";
-
-    document.getElementById("connectionDot")
-      .classList.toggle("online",online);
+  connectionUnsubscribe=onValue(connectionRef,snapshot=>{
+    const online=snapshot.val()===true;
+    $('connectionText').textContent=online?'Database Connected':'Database Disconnected';
+    $('connectionLabel').textContent=online?'ONLINE':'OFFLINE';
+    $('connectionDot').classList.toggle('online',online);
   });
 }
 
-// ===================================
-// LOGIN
-// ===================================
+// Login
+$('loginBtn').onclick=async()=>{
+  const email=$('email').value.trim();
+  const password=$('password').value;
 
-document.getElementById("loginBtn").onclick = async()=>{
-
-  const email = document.getElementById("email").value.trim();
-  const password = document.getElementById("password").value;
-
-  if(!email || !password){
-    message.textContent = "Enter email and password.";
+  if(!email||!password){
+    $('message').textContent='Enter email and password.';
     return;
   }
 
-  const button = document.getElementById("loginBtn");
-  button.disabled = true;
-  button.textContent = "SIGNING IN...";
+  const button=$('loginBtn');
+  button.disabled=true;
+  button.textContent='SIGNING IN...';
+  $('message').textContent='';
 
   try{
     await signInWithEmailAndPassword(auth,email,password);
   }catch(error){
-    message.textContent = error.message;
+    $('message').textContent=error.message;
   }finally{
-    button.disabled = false;
-    button.textContent = "LOGIN";
+    button.disabled=false;
+    button.textContent='LOGIN';
   }
 };
 
-// ===================================
-// AUTH STATE
-// ===================================
-
+// Authentication state
 onAuthStateChanged(auth,user=>{
-
   if(user){
-
-    login.style.display = "none";
-    dashboard.style.display = "block";
-
-    userLabel.textContent = user.email || "Signed in";
+    $('login').style.display='none';
+    $('dashboard').style.display='block';
+    $('userLabel').textContent=user.email||'Signed in';
 
     startDatabaseListener();
     startConnectionListener();
-    restoreSchedules();
-
+    startScheduleListener();
   }else{
+    $('login').style.display='block';
+    $('dashboard').style.display='none';
 
-    login.style.display = "block";
-    dashboard.style.display = "none";
+    if(dataUnsubscribe)dataUnsubscribe();
+    if(connectionUnsubscribe)connectionUnsubscribe();
+    if(scheduleUnsubscribe)scheduleUnsubscribe();
 
-    if(dataUnsubscribe) dataUnsubscribe();
-    if(connectionUnsubscribe) connectionUnsubscribe();
-
-    dataUnsubscribe = null;
-    connectionUnsubscribe = null;
+    dataUnsubscribe=null;
+    connectionUnsubscribe=null;
+    scheduleUnsubscribe=null;
+    remoteSchedules={};
   }
 });
 
-document.getElementById("logoutBtn").onclick =
-  ()=>signOut(auth);
+$('logoutBtn').onclick=()=>signOut(auth);
 
-// ===================================
-// LOCAL SCHEDULER
-// ===================================
+// Schedule listener: Firebase is the website's schedule source.
+function startScheduleListener(){
+  if(scheduleUnsubscribe)scheduleUnsubscribe();
 
-const STORAGE_KEY = "csm_smart_home_schedules";
+  scheduleUnsubscribe=onValue(schedulesRef,snapshot=>{
+    remoteSchedules=snapshot.val()||{};
+    renderSchedules();
+  },error=>{
+    $('scheduleList').textContent='Schedule sync error: '+error.message;
+  });
+}
 
-function getSchedules(){
-  try{
-    return JSON.parse(localStorage.getItem(STORAGE_KEY)||"[]");
-  }catch{
-    return [];
+function scheduleDescription(item){
+  const target=item.relay===0?'All Relays':'Relay '+item.relay;
+  const action=item.state?'ON':'OFF';
+
+  if(item.mode==='daily'){
+    return target+' • '+action+' • Daily at '+
+      String(item.hour).padStart(2,'0')+':'+
+      String(item.minute).padStart(2,'0');
   }
+
+  return target+' • '+action+' • '+
+    new Date(Number(item.timestamp)*1000).toLocaleString();
 }
 
-function saveSchedules(items){
-  localStorage.setItem(STORAGE_KEY,JSON.stringify(items));
-}
-
+// Render saved schedules
 function renderSchedules(){
+  const list=$('scheduleList');
+  list.innerHTML='';
 
-  const list = document.getElementById("scheduleList");
-  list.innerHTML = "";
-
-  const items = getSchedules();
+  const items=Object.entries(remoteSchedules);
 
   if(!items.length){
-    list.innerHTML = '<p class="muted">No schedules yet.</p>';
+    list.innerHTML='<p class="muted">No schedules saved on the controller yet.</p>';
     return;
   }
 
-  items.forEach(item=>{
+  items.sort((a,b)=>{
+    const x=a[1],y=b[1];
+    const tx=x.mode==='daily'?(x.hour*60+x.minute):Number(x.timestamp||0);
+    const ty=y.mode==='daily'?(y.hour*60+y.minute):Number(y.timestamp||0);
+    return tx-ty;
+  });
 
-    const div = document.createElement("div");
-    div.className = "schedule-item";
+  items.forEach(([id,item])=>{
+    if(!item||item.relay===undefined)return;
 
-    const title = document.createElement("strong");
-    title.textContent =
-      item.target+" • "+(item.state?"ON":"OFF");
+    const div=document.createElement('div');
+    div.className='schedule-item';
 
-    const time = document.createElement("div");
-    time.className = "muted";
-    time.textContent = new Date(item.time).toLocaleString();
+    const title=document.createElement('strong');
+    title.textContent=scheduleDescription(item);
 
-    const cancel = document.createElement("button");
-    cancel.className = "danger";
-    cancel.textContent = "CANCEL";
+    const meta=document.createElement('div');
+    meta.className='muted';
+    meta.textContent=item.mode==='daily'
+      ?'Repeats every day'
+      :'One-time schedule';
 
-    cancel.onclick = ()=>{
-      saveSchedules(
-        getSchedules().filter(x=>x.id!==item.id)
-      );
-      renderSchedules();
+    const cancel=document.createElement('button');
+    cancel.className='danger';
+    cancel.textContent='CANCEL';
+
+    cancel.onclick=async()=>{
+      if(!auth.currentUser)return;
+      cancel.disabled=true;
+
+      try{
+        await remove(ref(db,'schedules/'+id));
+      }catch(error){
+        alert('Could not cancel schedule: '+error.message);
+        cancel.disabled=false;
+      }
     };
 
-    div.append(title,time,cancel);
+    div.append(title,meta,cancel);
     list.appendChild(div);
   });
 }
 
-// ===================================
-// ADD SCHEDULE
-// ===================================
+// Schedule mode selector
+$('scheduleMode').addEventListener('change',()=>{
+  const daily=$('scheduleMode').value==='daily';
 
-document.getElementById("addSchedule").onclick = ()=>{
+  $('scheduleDateLabel').textContent=
+    daily?'Select Time (date is ignored for Daily)':'Date and Time';
 
-  const timeValue =
-    document.getElementById("scheduleTime").value;
+  $('selectedDateTime').textContent=
+    'Select '+(daily?'time':'date & time');
 
-  if(!timeValue){
-    alert("Select date and time.");
+  $('scheduleTime').value='';
+});
+
+// Save schedules to Firebase
+$('addSchedule').onclick=async()=>{
+  if(!auth.currentUser){
+    alert('Please sign in first.');
     return;
   }
 
-  const time = new Date(timeValue).getTime();
-
-  if(!Number.isFinite(time) || time<=Date.now()){
-    alert("Choose a future time.");
+  const value=$('scheduleTime').value;
+  if(!value){
+    alert('Select date and time using the date disc.');
     return;
   }
 
-  const index =
-    document.getElementById("scheduleRelay").value;
+  const selected=new Date(value);
+  if(!Number.isFinite(selected.getTime())){
+    alert('Invalid date/time.');
+    return;
+  }
 
-  const state =
-    document.getElementById("scheduleAction").value==="true";
+  const mode=$('scheduleMode').value;
 
-  const item = {
-    id:Date.now().toString(),
-    time,
-    target:index==="all"
-      ?"All Relays"
-      :"Relay "+(Number(index)+1),
-    index,
-    state
-  };
+  if(mode==='once'&&selected.getTime()<=Date.now()){
+    alert('Choose a future date and time.');
+    return;
+  }
 
-  const items = getSchedules();
-  items.push(item);
-  saveSchedules(items);
+  const relayChoice=$('scheduleRelay').value;
+  const relayNumbers=relayChoice==='all'
+    ?[1,2,3,4]
+    :[Number(relayChoice)];
 
-  renderSchedules();
+  const state=$('scheduleAction').value==='true';
 
-  document.getElementById("scheduleTime").value="";
-};
+  const button=$('addSchedule');
+  button.disabled=true;
+  button.textContent='SAVING...';
 
-// ===================================
-// EXECUTE SCHEDULE
-// ===================================
+  try{
+    const groupId=push(schedulesRef).key;
 
-async function processSchedules(){
+    for(const relay of relayNumbers){
+      const itemRef=push(schedulesRef);
 
-  if(!auth.currentUser) return;
+      const item={
+        mode:mode,
+        relay:relay,
+        state:state,
+        enabled:true,
+        groupId:groupId
+      };
 
-  const now = Date.now();
-  const items = getSchedules();
-
-  const due = items.filter(item=>item.time<=now);
-
-  if(!due.length) return;
-
-  saveSchedules(items.filter(item=>item.time>now));
-  renderSchedules();
-
-  for(const item of due){
-
-    try{
-
-      if(item.index==="all"){
-        await allRelays(item.state);
+      if(mode==='once'){
+        item.timestamp=Math.floor(selected.getTime()/1000);
       }else{
-        await changeRelay(Number(item.index),item.state);
+        item.hour=selected.getHours();
+        item.minute=selected.getMinutes();
       }
 
-    }catch(error){
-      console.error("Schedule failed:",error);
+      await set(itemRef,item);
     }
+
+    $('scheduleTime').value='';
+    $('selectedDateTime').textContent=
+      'Select '+(mode==='daily'?'time':'date & time');
+
+    alert('Schedule saved to Firebase. ESP8266 will sync it and save it locally.');
+  }catch(error){
+    alert('Schedule save failed: '+error.message);
+  }finally{
+    button.disabled=false;
+    button.textContent='+ ADD SCHEDULE';
   }
-}
-
-function restoreSchedules(){
-  renderSchedules();
-  processSchedules();
-}
-
-setInterval(processSchedules,1000);
-
+};
 </script>
-
 </body>
 </html>
