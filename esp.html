@@ -1,0 +1,703 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#080d18">
+<title>CSM Smart Home Control</title>
+
+<style>
+:root{
+  --bg:#080d18;
+  --panel:#111b2c;
+  --panel2:#17243a;
+  --text:#eef4ff;
+  --muted:#8fa2bd;
+  --blue:#38bdf8;
+  --green:#22c55e;
+  --red:#ef4444;
+  --border:#263650;
+}
+*{box-sizing:border-box}
+body{
+  margin:0;
+  background:var(--bg);
+  color:var(--text);
+  font-family:Arial,sans-serif;
+}
+header,main{
+  max-width:900px;
+  margin:auto;
+}
+header{padding:25px 18px 15px}
+.brand{
+  color:var(--blue);
+  font-size:12px;
+  font-weight:bold;
+  letter-spacing:3px;
+}
+h1{font-size:27px;margin:10px 0}
+.muted{color:var(--muted);font-size:13px}
+main{padding:12px 16px 30px}
+.panel{
+  background:var(--panel);
+  border:1px solid var(--border);
+  border-radius:17px;
+  padding:18px;
+  margin-bottom:16px;
+}
+.row{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+}
+.status{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  font-size:12px;
+  color:var(--muted);
+}
+.dot{
+  width:9px;height:9px;
+  border-radius:50%;
+  background:#64748b;
+}
+.dot.online{
+  background:var(--green);
+  box-shadow:0 0 10px var(--green);
+}
+input,select{
+  width:100%;
+  padding:13px;
+  margin:7px 0 12px;
+  border-radius:10px;
+  border:1px solid var(--border);
+  background:#0b1423;
+  color:var(--text);
+  font-size:14px;
+}
+button{
+  border:0;
+  border-radius:10px;
+  padding:12px 15px;
+  color:white;
+  font-weight:bold;
+  font-size:13px;
+  cursor:pointer;
+}
+button:disabled{opacity:.45;cursor:not-allowed}
+.primary{background:#0284c7}
+.secondary{background:#263750}
+.danger{background:#b91c1c}
+.success{background:#15803d}
+.cards{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:12px;
+}
+.relay{
+  background:var(--panel2);
+  border:1px solid var(--border);
+  border-radius:15px;
+  padding:17px;
+}
+.relay h3{margin:0 0 8px;font-size:16px}
+.state{
+  font-size:12px;
+  color:var(--muted);
+  margin:13px 0;
+}
+.state.active{color:var(--green)}
+.toggle{width:100%;background:#334155}
+.toggle.active{background:#15803d}
+.actions{display:flex;gap:9px;flex-wrap:wrap}
+.actions button{flex:1;min-width:100px}
+.section-title{font-size:17px;margin:0 0 15px}
+#dashboard{display:none}
+#login{max-width:430px;margin:20px auto}
+#message{font-size:13px;color:#fca5a5;margin-top:10px}
+.schedule-item{
+  padding:13px;
+  background:#0c1728;
+  border:1px solid var(--border);
+  border-radius:10px;
+  margin-top:10px;
+}
+.schedule-item button{margin-top:9px}
+.developer-footer{
+  text-align:center;
+  padding:35px 15px;
+  margin-top:25px;
+}
+.credit-line{
+  width:65px;height:3px;
+  background:linear-gradient(90deg,#38bdf8,#818cf8);
+  border-radius:5px;
+  margin:0 auto 22px;
+}
+.credit-label{
+  font-size:10px;
+  letter-spacing:3px;
+  color:#64748b;
+}
+.developer-name{
+  font-size:21px;
+  font-weight:800;
+  letter-spacing:1px;
+  margin:12px 0;
+  background:linear-gradient(90deg,#38bdf8,#a78bfa);
+  -webkit-background-clip:text;
+  background-clip:text;
+  color:transparent;
+}
+.developer-role{
+  font-size:10px;
+  letter-spacing:2px;
+  color:#94a3b8;
+}
+.copyright{
+  font-size:10px;
+  margin-top:18px;
+  color:#64748b;
+}
+@media(max-width:420px){
+  .cards{gap:9px}
+  .relay{padding:13px}
+  h1{font-size:23px}
+}
+</style>
+</head>
+
+<body>
+
+<header>
+  <div class="brand">CSM / HOME AUTOMATION</div>
+  <h1>Smart Home Control</h1>
+  <div class="muted">Your home, connected intelligently.</div>
+</header>
+
+<main>
+
+<!-- LOGIN -->
+<section class="panel" id="login">
+  <h2 class="section-title">Sign In</h2>
+  <p class="muted">Login with your Firebase account.</p>
+
+  <input id="email" type="email" placeholder="Email address">
+  <input id="password" type="password" placeholder="Password">
+
+  <button class="primary" id="loginBtn" style="width:100%">
+    LOGIN
+  </button>
+  <div id="message"></div>
+</section>
+
+<!-- DASHBOARD -->
+<section id="dashboard">
+
+  <!-- CONNECTION -->
+  <div class="panel">
+    <div class="row">
+      <div>
+        <div class="muted">SYSTEM CONNECTION</div>
+        <h3 id="connectionText">Connecting...</h3>
+      </div>
+      <div class="status">
+        <span class="dot" id="connectionDot"></span>
+        <span id="connectionLabel">OFFLINE</span>
+      </div>
+    </div>
+
+    <div class="row" style="margin-top:15px">
+      <span class="muted" id="userLabel">Signed in</span>
+      <button class="secondary" id="logoutBtn">LOGOUT</button>
+    </div>
+  </div>
+
+  <!-- MASTER CONTROL -->
+  <div class="panel">
+    <h2 class="section-title">Master Control</h2>
+    <div class="actions">
+      <button class="success" id="allOn">⚡ ALL ON</button>
+      <button class="danger" id="allOff">ALL OFF</button>
+    </div>
+    <p class="muted" id="lastUpdate">Waiting for Firebase...</p>
+  </div>
+
+  <!-- RELAYS -->
+  <div class="panel">
+    <div class="row">
+      <h2 class="section-title">Relay Control</h2>
+      <span class="muted">4 Channels</span>
+    </div>
+    <div class="cards" id="relayCards"></div>
+  </div>
+
+  <!-- SCHEDULE -->
+  <div class="panel">
+    <h2 class="section-title">⏰ Schedule Automation</h2>
+    <p class="muted">
+      Schedule relay ON/OFF at a selected time.
+      Keep this webpage open for scheduled actions.
+    </p>
+
+    <label class="muted">Select Relay</label>
+    <select id="scheduleRelay">
+      <option value="all">All Relays</option>
+      <option value="0">Relay 1</option>
+      <option value="1">Relay 2</option>
+      <option value="2">Relay 3</option>
+      <option value="3">Relay 4</option>
+    </select>
+
+    <label class="muted">Action</label>
+    <select id="scheduleAction">
+      <option value="true">Turn ON</option>
+      <option value="false">Turn OFF</option>
+    </select>
+
+    <label class="muted">Date and Time</label>
+    <input id="scheduleTime" type="datetime-local">
+
+    <button class="primary" id="addSchedule" style="width:100%">
+      + ADD SCHEDULE
+    </button>
+
+    <div id="scheduleList"></div>
+  </div>
+
+  <!-- INFORMATION -->
+  <div class="panel">
+    <h2 class="section-title">System Information</h2>
+    <div class="row">
+      <span class="muted">Database</span>
+      <strong>Realtime Database</strong>
+    </div>
+    <div class="row" style="margin-top:13px">
+      <span class="muted">Controller</span>
+      <strong>NodeMCU ESP8266</strong>
+    </div>
+    <div class="row" style="margin-top:13px">
+      <span class="muted">Communication</span>
+      <strong>Firebase Stream</strong>
+    </div>
+  </div>
+
+</section>
+
+<!-- DEVELOPER CREDIT -->
+<footer class="developer-footer">
+  <div class="credit-line"></div>
+  <div class="credit-label">DESIGNED & DEVELOPED BY</div>
+  <div class="developer-name">CSM Mohasin Alam</div>
+  <div class="developer-role">
+    SMART HOME AUTOMATION DEVELOPER
+  </div>
+  <div class="copyright">
+    © 2026 CSM Mohasin Alam. All Rights Reserved.
+  </div>
+</footer>
+
+</main>
+
+<script type="module">
+
+// ===================================
+// FIREBASE SDK
+// ===================================
+
+import { initializeApp }
+from "https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js";
+
+import {
+  getAuth,
+  signInWithEmailAndPassword,
+  onAuthStateChanged,
+  signOut
+} from "https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js";
+
+import {
+  getDatabase,
+  ref,
+  onValue,
+  set,
+  update
+} from "https://www.gstatic.com/firebasejs/12.19.0/firebase-database.js";
+
+// ===================================
+// FIREBASE CONFIG
+// ===================================
+
+const firebaseConfig = {
+  apiKey: "AIzaSyATczBXkLVCVpaje7ejU-_rYPbSJx7LHOY",
+  authDomain: "getespform.firebaseapp.com",
+  databaseURL: "https://getespform-default-rtdb.firebaseio.com",
+  projectId: "getespform",
+  storageBucket: "getespform.firebasestorage.app",
+  messagingSenderId: "746315429668",
+  appId: "1:746315429668:web:5b57917675277642ee25b1"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getDatabase(app);
+
+const relayRef = ref(db, "relayControl");
+const connectionRef = ref(db, ".info/connected");
+
+let relayStates = [false,false,false,false];
+let dataUnsubscribe = null;
+let connectionUnsubscribe = null;
+
+const names = [
+  "Living Room",
+  "Bedroom",
+  "Kitchen",
+  "Other Room"
+];
+
+// ===================================
+// RENDER RELAY CARDS
+// ===================================
+
+function renderCards(){
+
+  const container = document.getElementById("relayCards");
+  container.innerHTML = "";
+
+  relayStates.forEach((state,i)=>{
+
+    const card = document.createElement("div");
+    card.className = "relay";
+
+    const title = document.createElement("h3");
+    title.textContent = "Relay " + (i+1);
+
+    const name = document.createElement("div");
+    name.className = "muted";
+    name.textContent = names[i];
+
+    const status = document.createElement("div");
+    status.className = "state" + (state ? " active" : "");
+    status.textContent = state ? "● ON" : "● OFF";
+
+    const button = document.createElement("button");
+    button.className = "toggle" + (state ? " active" : "");
+    button.textContent = state ? "TURN OFF" : "TURN ON";
+
+    button.disabled = !auth.currentUser;
+
+    button.onclick = ()=>{
+      changeRelay(i,!relayStates[i]);
+    };
+
+    card.append(title,name,status,button);
+    container.appendChild(card);
+  });
+}
+
+// ===================================
+// RELAY DATABASE CONTROL
+// ===================================
+
+async function changeRelay(index,state){
+
+  if(!auth.currentUser) return;
+
+  try{
+    await set(
+      ref(db,"relayControl/relay"+(index+1)),
+      state
+    );
+  }catch(error){
+    alert("Relay update failed: "+error.message);
+  }
+}
+
+async function allRelays(state){
+
+  if(!auth.currentUser) return;
+
+  try{
+    await update(relayRef,{
+      relay1:state,
+      relay2:state,
+      relay3:state,
+      relay4:state
+    });
+  }catch(error){
+    alert("Master control failed: "+error.message);
+  }
+}
+
+document.getElementById("allOn").onclick =
+  ()=>allRelays(true);
+
+document.getElementById("allOff").onclick =
+  ()=>allRelays(false);
+
+// ===================================
+// LIVE DATABASE LISTENER
+// ===================================
+
+function startDatabaseListener(){
+
+  if(dataUnsubscribe) dataUnsubscribe();
+
+  dataUnsubscribe = onValue(relayRef,snapshot=>{
+
+    const data = snapshot.val() || {};
+
+    relayStates = [1,2,3,4].map(i=>
+      data["relay"+i] === true
+    );
+
+    renderCards();
+
+    document.getElementById("lastUpdate").textContent =
+      "Last update: "+new Date().toLocaleTimeString();
+
+  },error=>{
+
+    document.getElementById("lastUpdate").textContent =
+      "Database error: "+error.message;
+  });
+}
+
+// ===================================
+// CONNECTION STATUS
+// ===================================
+
+function startConnectionListener(){
+
+  if(connectionUnsubscribe) connectionUnsubscribe();
+
+  connectionUnsubscribe = onValue(connectionRef,snapshot=>{
+
+    const online = snapshot.val() === true;
+
+    document.getElementById("connectionText").textContent =
+      online ? "Database Connected" : "Database Disconnected";
+
+    document.getElementById("connectionLabel").textContent =
+      online ? "ONLINE" : "OFFLINE";
+
+    document.getElementById("connectionDot")
+      .classList.toggle("online",online);
+  });
+}
+
+// ===================================
+// LOGIN
+// ===================================
+
+document.getElementById("loginBtn").onclick = async()=>{
+
+  const email = document.getElementById("email").value.trim();
+  const password = document.getElementById("password").value;
+
+  if(!email || !password){
+    message.textContent = "Enter email and password.";
+    return;
+  }
+
+  const button = document.getElementById("loginBtn");
+  button.disabled = true;
+  button.textContent = "SIGNING IN...";
+
+  try{
+    await signInWithEmailAndPassword(auth,email,password);
+  }catch(error){
+    message.textContent = error.message;
+  }finally{
+    button.disabled = false;
+    button.textContent = "LOGIN";
+  }
+};
+
+// ===================================
+// AUTH STATE
+// ===================================
+
+onAuthStateChanged(auth,user=>{
+
+  if(user){
+
+    login.style.display = "none";
+    dashboard.style.display = "block";
+
+    userLabel.textContent = user.email || "Signed in";
+
+    startDatabaseListener();
+    startConnectionListener();
+    restoreSchedules();
+
+  }else{
+
+    login.style.display = "block";
+    dashboard.style.display = "none";
+
+    if(dataUnsubscribe) dataUnsubscribe();
+    if(connectionUnsubscribe) connectionUnsubscribe();
+
+    dataUnsubscribe = null;
+    connectionUnsubscribe = null;
+  }
+});
+
+document.getElementById("logoutBtn").onclick =
+  ()=>signOut(auth);
+
+// ===================================
+// LOCAL SCHEDULER
+// ===================================
+
+const STORAGE_KEY = "csm_smart_home_schedules";
+
+function getSchedules(){
+  try{
+    return JSON.parse(localStorage.getItem(STORAGE_KEY)||"[]");
+  }catch{
+    return [];
+  }
+}
+
+function saveSchedules(items){
+  localStorage.setItem(STORAGE_KEY,JSON.stringify(items));
+}
+
+function renderSchedules(){
+
+  const list = document.getElementById("scheduleList");
+  list.innerHTML = "";
+
+  const items = getSchedules();
+
+  if(!items.length){
+    list.innerHTML = '<p class="muted">No schedules yet.</p>';
+    return;
+  }
+
+  items.forEach(item=>{
+
+    const div = document.createElement("div");
+    div.className = "schedule-item";
+
+    const title = document.createElement("strong");
+    title.textContent =
+      item.target+" • "+(item.state?"ON":"OFF");
+
+    const time = document.createElement("div");
+    time.className = "muted";
+    time.textContent = new Date(item.time).toLocaleString();
+
+    const cancel = document.createElement("button");
+    cancel.className = "danger";
+    cancel.textContent = "CANCEL";
+
+    cancel.onclick = ()=>{
+      saveSchedules(
+        getSchedules().filter(x=>x.id!==item.id)
+      );
+      renderSchedules();
+    };
+
+    div.append(title,time,cancel);
+    list.appendChild(div);
+  });
+}
+
+// ===================================
+// ADD SCHEDULE
+// ===================================
+
+document.getElementById("addSchedule").onclick = ()=>{
+
+  const timeValue =
+    document.getElementById("scheduleTime").value;
+
+  if(!timeValue){
+    alert("Select date and time.");
+    return;
+  }
+
+  const time = new Date(timeValue).getTime();
+
+  if(!Number.isFinite(time) || time<=Date.now()){
+    alert("Choose a future time.");
+    return;
+  }
+
+  const index =
+    document.getElementById("scheduleRelay").value;
+
+  const state =
+    document.getElementById("scheduleAction").value==="true";
+
+  const item = {
+    id:Date.now().toString(),
+    time,
+    target:index==="all"
+      ?"All Relays"
+      :"Relay "+(Number(index)+1),
+    index,
+    state
+  };
+
+  const items = getSchedules();
+  items.push(item);
+  saveSchedules(items);
+
+  renderSchedules();
+
+  document.getElementById("scheduleTime").value="";
+};
+
+// ===================================
+// EXECUTE SCHEDULE
+// ===================================
+
+async function processSchedules(){
+
+  if(!auth.currentUser) return;
+
+  const now = Date.now();
+  const items = getSchedules();
+
+  const due = items.filter(item=>item.time<=now);
+
+  if(!due.length) return;
+
+  saveSchedules(items.filter(item=>item.time>now));
+  renderSchedules();
+
+  for(const item of due){
+
+    try{
+
+      if(item.index==="all"){
+        await allRelays(item.state);
+      }else{
+        await changeRelay(Number(item.index),item.state);
+      }
+
+    }catch(error){
+      console.error("Schedule failed:",error);
+    }
+  }
+}
+
+function restoreSchedules(){
+  renderSchedules();
+  processSchedules();
+}
+
+setInterval(processSchedules,1000);
+
+</script>
+
+</body>
+</html>
