@@ -2,13 +2,15 @@
 <html lang="bn">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>CSM Smart Home Control</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600&display=swap">
 <style>
   :root{
     --bg:#0b0f17; --card:#131a26; --card2:#18212f; --line:#222d3f;
     --text:#e8edf5; --muted:#8190a8; --accent:#4da3ff;
     --on:#22c55e; --off:#ef4444; --warn:#f59e0b;
+    color-scheme:dark;
   }
   *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
   body{font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
@@ -16,6 +18,8 @@
   header{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 0 16px}
   h1{font-size:1.2rem;font-weight:700}
   h1 small{display:block;font-size:.72rem;color:var(--muted);font-weight:400;margin-top:2px}
+  h2{font-size:1.05rem;margin-bottom:4px}
+  .sub{color:var(--muted);font-size:.8rem;margin-bottom:14px}
   .pill{display:inline-flex;align-items:center;gap:6px;font-size:.75rem;padding:6px 10px;border-radius:999px;background:var(--card);border:1px solid var(--line);color:var(--muted)}
   .dot{width:8px;height:8px;border-radius:50%;background:var(--off)}
   .pill.ok .dot{background:var(--on);box-shadow:0 0 8px var(--on)}
@@ -23,16 +27,16 @@
   .panel{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px}
   /* login */
   #loginView{max-width:380px;margin:12vh auto 0}
-  #loginView h2{font-size:1.1rem;margin-bottom:4px}
   #loginView p{color:var(--muted);font-size:.85rem;margin-bottom:14px}
-  input{width:100%;padding:12px 14px;margin-bottom:10px;border-radius:10px;border:1px solid var(--line);background:var(--card2);color:var(--text);font-size:1rem;outline:none}
-  input:focus{border-color:var(--accent)}
+  input[type=email],input[type=password],select{width:100%;padding:12px 14px;margin-bottom:10px;border-radius:10px;border:1px solid var(--line);background:var(--card2);color:var(--text);font-size:1rem;outline:none}
+  input:focus,select:focus{border-color:var(--accent)}
   .btn{border:0;border-radius:10px;padding:12px 14px;font-size:.95rem;font-weight:600;cursor:pointer;color:#fff;background:var(--accent);transition:transform .08s,opacity .2s}
   .btn:active{transform:scale(.97)}
-  .btn:disabled{opacity:.5;cursor:not-allowed}
+  .btn:disabled{opacity:.45;cursor:not-allowed}
   .btn.full{width:100%}
   .btn.ghost{background:var(--card2);border:1px solid var(--line);color:var(--text)}
   .btn.on{background:var(--on)} .btn.off{background:var(--off)}
+  .btn.small{padding:7px 10px;font-size:.8rem}
   .err{color:var(--off);font-size:.85rem;min-height:1.2em;margin-top:6px}
   /* dashboard */
   #dash{display:none}
@@ -41,16 +45,91 @@
   .grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
   .relay{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px;transition:border-color .25s,box-shadow .25s}
   .relay.is-on{border-color:var(--on);box-shadow:0 0 0 1px var(--on) inset,0 0 18px rgba(34,197,94,.15)}
-  .relay .top{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+  .relay .top{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
   .relay .name{font-weight:600}
   .badge{font-size:.72rem;font-weight:700;padding:4px 9px;border-radius:999px;background:#2a3446;color:var(--muted)}
   .badge.on{background:rgba(34,197,94,.18);color:var(--on)}
   .badge.off{background:rgba(239,68,68,.15);color:var(--off)}
   .badge.wait{background:rgba(245,158,11,.18);color:var(--warn)}
-  .hint{font-size:.72rem;color:var(--muted);min-height:1.1em;margin-bottom:10px}
-  .btns{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .mid{display:flex;justify-content:center;padding:4px 0 8px}
+  .hint{font-size:.72rem;color:var(--muted);min-height:1.1em;text-align:center}
+  /* switch */
+  .switch{position:relative;display:inline-block;width:64px;height:36px;flex:none}
+  .switch input{opacity:0;width:0;height:0;position:absolute}
+  .slider{position:absolute;inset:0;background:#2a3446;border-radius:36px;transition:background .25s;cursor:pointer}
+  .slider:before{content:"";position:absolute;width:28px;height:28px;left:4px;top:4px;background:#fff;border-radius:50%;transition:transform .25s;box-shadow:0 1px 4px rgba(0,0,0,.4)}
+  .switch input:checked + .slider{background:var(--on)}
+  .switch input:checked + .slider:before{transform:translateX(28px)}
+  .switch input:focus-visible + .slider{outline:2px solid var(--accent);outline-offset:2px}
+  /* schedule */
+  .sched{margin-top:16px}
+  .frow{display:flex;gap:12px;align-items:center;margin-bottom:10px}
+  .frow .f1{flex:1}
+  .frow select{margin-bottom:0}
+  .actsw{display:flex;align-items:center;gap:10px}
+  .actsw b{min-width:2.2em;font-size:.95rem}
+  #sDateBtn{margin-bottom:10px;text-align:left}
+  #sList{margin-top:14px;display:flex;flex-direction:column;gap:8px}
+  .item{display:flex;align-items:center;gap:10px;background:var(--card2);border:1px solid var(--line);border-radius:12px;padding:10px 12px}
+  .item .info{flex:1;min-width:0}
+  .item .l1{font-weight:600;font-size:.92rem}
+  .item .l2{font-size:.78rem;color:var(--muted);margin-top:2px}
+  .chip{font-size:.68rem;font-weight:700;padding:3px 8px;border-radius:999px;white-space:nowrap}
+  .chip.p{background:rgba(245,158,11,.18);color:var(--warn)}
+  .chip.d{background:rgba(34,197,94,.18);color:var(--on)}
+  .chip.m{background:rgba(239,68,68,.15);color:var(--off)}
+  .empty{color:var(--muted);font-size:.85rem;text-align:center;padding:10px}
+  .tools{display:flex;justify-content:flex-end;margin-top:10px}
   footer{text-align:center;color:var(--muted);font-size:.75rem;padding:22px 0 8px}
   @media (max-width:380px){.grid{grid-template-columns:1fr}}
+
+  /* ===== date-time popup ===== */
+  .modal{position:fixed;inset:0;background:rgba(0,0,0,.7);display:none;align-items:center;justify-content:center;z-index:50;padding:12px}
+  .modal.open{display:flex}
+  .mpanel{background:#2a3037;border-radius:22px;padding:14px;width:min(100%,560px);max-height:100%;overflow:auto;box-shadow:0 20px 60px rgba(0,0,0,.6)}
+  #picker{width:min(100%,520px,calc(100vh - 190px));min-width:260px;margin:0 auto}
+  .picktext{text-align:center;font-size:.9rem;margin:10px 0;min-height:1.3em;color:#cfe6f5}
+  .picktext.bad{color:#ffcf85}
+  .mbtns{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+
+  /* ===== dial component CSS (tomar design) ===== */
+  .rdp{
+    --rdp-font:'Outfit','Avenir Next','Segoe UI',system-ui,sans-serif;
+    --rdp-cyan:#86e6ff; --rdp-amber:#ffcf85;
+    position:relative; width:100%; aspect-ratio:1/1; container-type:inline-size;
+    font-family:var(--rdp-font); border-radius:50%; outline:none;
+    -webkit-user-select:none; user-select:none; -webkit-tap-highlight-color:transparent;
+  }
+  .rdp:focus-visible{ outline:2px solid rgba(111,220,255,.6); outline-offset:6px }
+  .rdp-shadow{ position:absolute; inset:3.1%; border-radius:50%; pointer-events:none;
+    box-shadow:0 2.2cqw 5cqw rgba(0,0,0,.45), 0 0 3.4cqw rgba(90,170,255,.16) }
+  .rdp-c{ position:absolute; inset:0; width:100%; height:100%; display:block }
+  .rdp-fg{ touch-action:none }
+  .rdp-time{ position:absolute; left:50%; top:calc(50% - .6cqw); transform:translate(-50%,-50%);
+    display:flex; align-items:center; white-space:nowrap; pointer-events:none;
+    font-size:11.25cqw; font-weight:600; line-height:1; color:var(--rdp-cyan);
+    text-shadow:0 0 .08em rgba(100,215,255,.7), 0 0 .38em rgba(50,160,255,.42) }
+  .rdp-h,.rdp-m{ display:inline-block; width:1.22em }
+  .rdp-h{ text-align:right }
+  .rdp-m{ text-align:left }
+  .rdp-colon{ display:inline-flex; flex-direction:column; gap:.2em; margin:0 .2em; animation:rdp-blink 2s ease-in-out infinite }
+  .rdp-colon i{ width:.13em; height:.13em; border-radius:50%; background:currentColor }
+  @keyframes rdp-blink{ 0%,100%{opacity:1} 50%{opacity:.3} }
+  .rdp-invalid .rdp-time{ color:var(--rdp-amber); text-shadow:0 0 .08em rgba(255,200,120,.6), 0 0 .38em rgba(255,160,60,.35) }
+  .rdp-ampm{ position:absolute; left:50%; top:calc(50% + 9.4cqw); transform:translate(-50%,-50%);
+    font:400 4.4cqw/1 var(--rdp-font); letter-spacing:.08em; color:#cfe6f5;
+    padding:.45em 1.1em; border:1px solid transparent; border-radius:999px; background:transparent; cursor:pointer;
+    transition:background .2s,border-color .2s }
+  .rdp-ampm:hover{ background:rgba(111,220,255,.09); border-color:rgba(111,220,255,.35) }
+  .rdp-ampm:focus-visible{ outline:2px solid var(--rdp-cyan); outline-offset:2px }
+  .rdp-pill{ position:absolute; left:50%; top:16.72%; transform:translate(-50%,-50%);
+    display:flex; align-items:baseline; gap:.5cqw; padding:.8cqw 2.2cqw; border-radius:999px;
+    background:rgba(22,27,32,.88); border:1.5px solid #5fd6ff;
+    box-shadow:0 0 2.4cqw rgba(95,214,255,.45), inset 0 0 1.6cqw rgba(95,214,255,.12);
+    font-size:3.5cqw; font-weight:400; line-height:1.15; color:#eaf9ff; pointer-events:none; white-space:nowrap }
+  .rdp-pill small{ font-size:.42em; letter-spacing:.08em; color:#7fcbe8; font-weight:500 }
+  .rdp-sr{ position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap }
+  @media (prefers-reduced-motion:reduce){ .rdp-colon{ animation:none } .rdp-ampm{ transition:none } }
 </style>
 </head>
 <body>
@@ -85,18 +164,583 @@
     </div>
 
     <div id="grid" class="grid"></div>
+
+    <!-- SCHEDULE -->
+    <section class="panel sched">
+      <h2>Schedule</h2>
+      <div class="sub">Schedule ESP8266-er nijer memory-te save hoy. WiFi chole gele-o shomoy hole relay nijei on/off hobe.</div>
+
+      <div class="frow">
+        <div class="f1">
+          <select id="sRelay">
+            <option value="1">Relay 1</option>
+            <option value="2">Relay 2</option>
+            <option value="3">Relay 3</option>
+            <option value="4">Relay 4</option>
+          </select>
+        </div>
+        <div class="actsw">
+          <label class="switch"><input type="checkbox" id="sAction" checked><span class="slider"></span></label>
+          <b id="sActionTxt" style="color:var(--on)">ON</b>
+        </div>
+      </div>
+
+      <button id="sDateBtn" class="btn ghost full">Date ar time select koro</button>
+      <button id="sSave" class="btn full" disabled>Schedule save koro</button>
+      <div id="sMsg" class="err"></div>
+
+      <div id="sList"></div>
+      <div class="tools"><button id="sClear" class="btn ghost small">Finished schedule mucho</button></div>
+    </section>
+
     <footer>Developer: CSM Mohasin Alam</footer>
   </div>
 </div>
 
+<!-- DATE TIME POPUP -->
+<div id="modal" class="modal">
+  <div class="mpanel">
+    <div id="picker"></div>
+    <div id="pickText" class="picktext"></div>
+    <div class="mbtns">
+      <button id="mCancel" class="btn ghost">Cancel</button>
+      <button id="mSet" class="btn">Set</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== Radial date-time dial (tomar component) ===== -->
+<script>
+(function(){
+'use strict';
+
+var VB=640, C=320, R_OUT=300, R_BAND=213, R_IN=138, R_RING=128, R_MIN=176, R_LBL=257;
+var TAU=Math.PI*2, PAST=7;
+var FONT="'Outfit','Avenir Next','Segoe UI',system-ui,sans-serif";
+var F={
+  hour:'300 38px '+FONT, hourSel:'400 38px '+FONT,
+  wd:'500 14.5px '+FONT, dn:'400 31px '+FONT, mo:'600 10.5px '+FONT,
+  min:'300 23px '+FONT, knob:'500 23px '+FONT, ghost:'400 20px '+FONT
+};
+var reduce=!!(window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+
+function rad(a){return a*Math.PI/180;}
+function pt(r,a){return [C+r*Math.sin(rad(a)), C-r*Math.cos(rad(a))];}
+function mod(a,n){return ((a%n)+n)%n;}
+function clamp(v,a,b){return Math.min(b,Math.max(a,v));}
+function normDelta(a){return mod(a+180,360)-180;}
+function pad(n){return (n<10?'0':'')+n;}
+function hexRgb(c){return [1,3,5].map(function(i){return parseInt(c.slice(i,i+2),16);});}
+function palette(c1,c2,n){
+  var a=hexRgb(c1), b=hexRgb(c2), out=[];
+  for(var k=0;k<=n;k++){
+    var t=k/n;
+    out.push('rgb('+a.map(function(v,i){return Math.round(v+(b[i]-v)*t);}).join(',')+')');
+  }
+  return out;
+}
+var PAL_H=palette('#a9b5c1','#f2fcff',10);
+var PAL_D=palette('#9eabb8','#ffffff',10);
+
+function sectorPath(c,r1,r2,a1,a2){
+  c.beginPath();
+  c.arc(C,C,r2,rad(a1-90),rad(a2-90),false);
+  c.arc(C,C,r1,rad(a2-90),rad(a1-90),true);
+  c.closePath();
+}
+
+function create(target,opts){
+  opts=opts||{};
+  var root=typeof target==='string'?document.querySelector(target):target;
+  if(!root) throw new Error('RadialDateTimePicker: target not found');
+  var N=opts.days||60, STEP=opts.minuteStep||5;
+  var start=opts.startDate?new Date(opts.startDate):new Date(); start.setHours(0,0,0,0);
+  var minDate=opts.minDate!==undefined?new Date(opts.minDate):new Date();
+
+  /* ---------- DOM ---------- */
+  root.classList.add('rdp');
+  root.setAttribute('tabindex','0');
+  root.setAttribute('role','group');
+  root.setAttribute('aria-label','Date and time dial. Left and right arrows change the day, up and down change the hour, shift with up or down changes the minutes, A and P set AM or PM.');
+  root.innerHTML=
+    '<div class="rdp-shadow"></div>'+
+    '<canvas class="rdp-c rdp-bg"></canvas>'+
+    '<canvas class="rdp-c rdp-fg"></canvas>'+
+    '<div class="rdp-pill"><span class="rdp-pill-t">09:30</span><small>24H</small></div>'+
+    '<div class="rdp-time" aria-hidden="true"><span class="rdp-h">09</span><span class="rdp-colon"><i></i><i></i></span><span class="rdp-m">30</span></div>'+
+    '<button type="button" class="rdp-ampm" aria-label="Toggle AM or PM">AM</button>'+
+    '<span class="rdp-sr" aria-live="polite"></span>';
+  var bg=root.querySelector('.rdp-bg'), fg=root.querySelector('.rdp-fg');
+  var bx=bg.getContext('2d'), fx=fg.getContext('2d');
+  var hEl=root.querySelector('.rdp-h'), mEl=root.querySelector('.rdp-m');
+  var apEl=root.querySelector('.rdp-ampm'), pillT=root.querySelector('.rdp-pill-t');
+  var srEl=root.querySelector('.rdp-sr');
+  var input=null;
+  if(opts.name){ input=document.createElement('input'); input.type='hidden'; input.name=opts.name; root.appendChild(input); }
+
+  /* ---------- dates ---------- */
+  var days=[];
+  for(var i=-PAST;i<N;i++){
+    var dt=new Date(start.getFullYear(),start.getMonth(),start.getDate()+i);
+    days.push({
+      i:i, date:dt,
+      wd:dt.toLocaleDateString('en-US',{weekday:'short'}).toUpperCase(),
+      dn:String(dt.getDate()),
+      mo:dt.getDate()===1?dt.toLocaleDateString('en-US',{month:'short'}).toUpperCase():''
+    });
+  }
+
+  /* ---------- state ---------- */
+  var S={dateIdx:2,hour:9,minute:30,pm:false};
+  var hs=9, hsT=9, ds=2, dsT=2, ma=180, maT=180;
+  var drag=null, hoverMin=null, wheelAcc=0, box=null;
+  var W=0, SC=1;
+
+  function snapStr(){return S.dateIdx+'|'+S.hour+'|'+S.minute+'|'+S.pm;}
+  function selectedDate(){
+    var d=days[S.dateIdx+PAST].date, h24=(S.hour%12)+(S.pm?12:0);
+    return new Date(d.getFullYear(),d.getMonth(),d.getDate(),h24,S.minute);
+  }
+  function detail(){
+    var date=selectedDate(), h24=(S.hour%12)+(S.pm?12:0);
+    return {
+      date:date,
+      iso:date.getFullYear()+'-'+pad(date.getMonth()+1)+'-'+pad(date.getDate())+'T'+pad(h24)+':'+pad(S.minute),
+      valid:date.getTime()>=minDate.getTime(),
+      hour24:h24, minute:S.minute
+    };
+  }
+  function emit(type){
+    var d=detail();
+    root.dispatchEvent(new CustomEvent('rdp:'+type,{detail:d,bubbles:true}));
+    var cb=type==='change'?opts.onChange:opts.onInput;
+    if(typeof cb==='function') cb(d);
+  }
+  var lastLive=null, lastCommit=null, lastBuzz=0;
+  function buzz(){
+    var n=Date.now();
+    if(n-lastBuzz<28) return;
+    lastBuzz=n;
+    try{ if(navigator.vibrate) navigator.vibrate(6); }catch(e){}
+  }
+  function commit(){
+    var s=snapStr();
+    if(s!==lastCommit){ lastCommit=s; emit('change'); }
+  }
+
+  function derive(){
+    S.hour=mod(Math.round(hsT)-1,12)+1;
+    S.dateIdx=clamp(Math.round(dsT),0,N-1);
+  }
+  function setMinute(m){
+    if(m===S.minute) return;
+    S.minute=m;
+    maT+=normDelta(m*6-mod(maT,360));
+  }
+  function applyState(idx,hour,minute,pm){
+    S.dateIdx=idx; S.hour=hour; S.pm=pm;
+    dsT=idx;
+    var base=Math.round(hsT);
+    hsT=base+(mod(hour-base+6,12)-6);
+    S.minute=minute;
+    maT+=normDelta(minute*6-mod(maT,360));
+    updateUI(); kick();
+  }
+  function stepHour(n){ hsT=Math.round(hsT)+n; derive(); updateUI(); commit(); kick(); }
+  function stepDate(n){
+    var t=clamp(Math.round(dsT)+n,0,N-1);
+    if(t===Math.round(dsT)) return;
+    dsT=t; derive(); updateUI(); commit(); kick();
+  }
+  function stepMinute(n){ setMinute(mod(S.minute+n,60)); updateUI(); commit(); kick(); }
+  function setPm(v){ if(S.pm===v) return; S.pm=v; updateUI(); commit(); }
+
+  /* ---------- DOM sync (only writes what changed) ---------- */
+  var cache={h:'',m:'',ap:'',pill:'',inv:null,iso:''}, srTimer=0;
+  function updateUI(){
+    var hT=pad(S.hour), mT=pad(S.minute), ap=S.pm?'PM':'AM';
+    if(cache.h!==hT){ hEl.textContent=hT; cache.h=hT; }
+    if(cache.m!==mT){ mEl.textContent=mT; cache.m=mT; }
+    if(cache.ap!==ap){ apEl.textContent=ap; cache.ap=ap; }
+    var h24=(S.hour%12)+(S.pm?12:0);
+    var pill=pad(h24)+':'+pad(hoverMin!==null?hoverMin:S.minute);
+    if(cache.pill!==pill){ pillT.textContent=pill; cache.pill=pill; }
+
+    var d=detail();
+    if(cache.inv!==!d.valid){
+      cache.inv=!d.valid;
+      root.classList.toggle('rdp-invalid',!d.valid);
+      root.setAttribute('aria-invalid',String(!d.valid));
+    }
+    if(input && cache.iso!==d.iso){ input.value=d.iso; cache.iso=d.iso; }
+
+    var sn=snapStr();
+    if(lastLive!==null && sn!==lastLive){ buzz(); emit('input'); }
+    lastLive=sn;
+
+    clearTimeout(srTimer);
+    srTimer=setTimeout(function(){
+      srEl.textContent=d.date.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric',year:'numeric'})+', '+S.hour+':'+mT+' '+ap+(d.valid?'':'. This time has already passed.');
+    },500);
+  }
+
+  /* ---------- static layer (drawn once per resize) ---------- */
+  function drawStatic(){
+    var c=bx, g;
+    c.setTransform(1,0,0,1,0,0); c.clearRect(0,0,bg.width,bg.height);
+    c.setTransform(SC,0,0,SC,0,0);
+
+    g=c.createLinearGradient(0,C-R_OUT,0,C+R_OUT);
+    g.addColorStop(0,'#343b43'); g.addColorStop(1,'#21262c');
+    c.fillStyle=g; c.beginPath(); c.arc(C,C,R_OUT,0,TAU); c.fill();
+    g=c.createLinearGradient(C-R_OUT,C-R_OUT,C+R_OUT,C+R_OUT);
+    g.addColorStop(0,'rgba(157,180,202,.65)'); g.addColorStop(.5,'rgba(92,111,130,.3)'); g.addColorStop(1,'rgba(157,180,202,.4)');
+    c.strokeStyle=g; c.lineWidth=1.8; c.beginPath(); c.arc(C,C,R_OUT-.9,0,TAU); c.stroke();
+
+    // hour lens (top)
+    c.save();
+    c.shadowColor='rgba(95,208,255,.55)'; c.shadowBlur=10*SC;
+    sectorPath(c,R_BAND+18,R_OUT-6,-14,14);
+    c.fillStyle='rgba(95,205,255,.10)'; c.fill();
+    c.lineWidth=1.3; c.strokeStyle='rgba(95,208,255,.8)'; c.stroke();
+    c.restore();
+
+    // dividers between the hour arc and the date arc
+    c.strokeStyle='rgba(190,210,230,.24)'; c.lineWidth=1.4; c.beginPath();
+    [75,285].forEach(function(a){
+      var p1=pt(R_BAND,a), p2=pt(R_OUT,a);
+      c.moveTo(p1[0],p1[1]); c.lineTo(p2[0],p2[1]);
+    });
+    c.stroke();
+
+    // date highlight (bottom)
+    g=c.createLinearGradient(0,C+R_BAND,0,C+R_OUT);
+    g.addColorStop(0,'#0a7dff'); g.addColorStop(1,'#37b6ff');
+    c.save();
+    c.shadowColor='rgba(30,150,255,.85)'; c.shadowBlur=24*SC;
+    c.fillStyle=g;
+    sectorPath(c,R_BAND+2,R_OUT-2,166,194); c.fill();
+    sectorPath(c,R_BAND+2,R_OUT-2,166,194); c.fill();
+    c.restore();
+    c.strokeStyle='rgba(143,214,255,.65)'; c.lineWidth=1.2;
+    sectorPath(c,R_BAND+2,R_OUT-2,166,194); c.stroke();
+
+    // minute band
+    g=c.createLinearGradient(C-R_BAND,C-R_BAND,C+R_BAND,C+R_BAND);
+    g.addColorStop(0,'#5a626b'); g.addColorStop(1,'#383e46');
+    c.fillStyle=g; c.beginPath(); c.arc(C,C,R_BAND,0,TAU); c.fill();
+    c.strokeStyle='rgba(255,255,255,.16)'; c.lineWidth=1.2; c.beginPath(); c.arc(C,C,R_BAND,0,TAU); c.stroke();
+    c.strokeStyle='rgba(255,255,255,.14)'; c.lineWidth=2; c.lineCap='round';
+    c.beginPath(); c.arc(C,C,R_BAND-6,rad(-240),rad(-130)); c.stroke();
+
+    // gap + ticks
+    c.fillStyle='#1f2429'; c.beginPath(); c.arc(C,C,R_IN,0,TAU); c.fill();
+    c.strokeStyle='rgba(255,255,255,.08)'; c.lineWidth=1; c.beginPath(); c.arc(C,C,R_IN,0,TAU); c.stroke();
+    var m, a, p1, p2;
+    c.lineCap='round';
+    c.strokeStyle='rgba(255,255,255,.16)'; c.lineWidth=1; c.beginPath();
+    for(m=0;m<60;m++){ if(m%5===0) continue; a=m*6; p1=pt(R_IN+3,a); p2=pt(R_IN+7,a); c.moveTo(p1[0],p1[1]); c.lineTo(p2[0],p2[1]); }
+    c.stroke();
+    c.strokeStyle='rgba(255,255,255,.38)'; c.lineWidth=1.6; c.beginPath();
+    for(m=0;m<60;m+=5){ a=m*6; p1=pt(R_IN+3,a); p2=pt(R_IN+12,a); c.moveTo(p1[0],p1[1]); c.lineTo(p2[0],p2[1]); }
+    c.stroke();
+
+    // center disc + glowing ring
+    g=c.createRadialGradient(C-20,C-30,10,C,C,R_RING);
+    g.addColorStop(0,'#30363d'); g.addColorStop(1,'#171b1f');
+    c.fillStyle=g; c.beginPath(); c.arc(C,C,R_RING-3,0,TAU); c.fill();
+    g=c.createLinearGradient(C-R_RING,C-R_RING,C+R_RING,C+R_RING);
+    g.addColorStop(0,'#55c2ff'); g.addColorStop(1,'#1b6bff');
+    c.save();
+    c.shadowColor='rgba(40,140,255,.9)'; c.shadowBlur=16*SC;
+    c.strokeStyle=g; c.lineWidth=3.4;
+    c.beginPath(); c.arc(C,C,R_RING,0,TAU); c.stroke();
+    c.beginPath(); c.arc(C,C,R_RING,0,TAU); c.stroke();
+    c.restore();
+  }
+
+  /* ---------- dynamic layer (cheap, only this redraws while moving) ---------- */
+  function drawHours(c){
+    c.save();
+    sectorPath(c,R_BAND-4,R_OUT+6,-75,75); c.clip();
+    for(var hh=1;hh<=12;hh++){
+      var d=mod(hh-hs+6,12)-6, ad=Math.abs(d);
+      if(ad>3) continue;
+      var a=d*30, p=pt(R_LBL,a), near=Math.max(0,1-ad);
+      c.globalAlpha=clamp((3-ad)/0.8,0,1);
+      c.font=near>0.5?F.hourSel:F.hour;
+      c.fillStyle=PAL_H[Math.round(near*10)];
+      c.save();
+      c.translate(p[0],p[1]); c.rotate(rad(a*0.85)); c.scale(1+0.3*near,1+0.3*near);
+      c.fillText(String(hh),0,0);
+      c.restore();
+    }
+    c.restore();
+  }
+  function drawDates(c){
+    c.save();
+    sectorPath(c,R_BAND-4,R_OUT+6,75,285); c.clip();
+    var lo=Math.max(-PAST,Math.floor(ds-4)), hi=Math.min(N-1,Math.ceil(ds+4)), k, it, d, ad, a;
+
+    c.strokeStyle='rgba(190,210,230,.17)'; c.lineWidth=1.2; c.beginPath();
+    for(k=lo;k<=hi;k++){
+      a=180-(k-ds)*30-15;
+      var l1=pt(R_BAND,a), l2=pt(R_OUT,a);
+      c.moveTo(l1[0],l1[1]); c.lineTo(l2[0],l2[1]);
+    }
+    c.stroke();
+
+    var hasSpacing=('letterSpacing' in c);
+    for(k=lo;k<=hi;k++){
+      it=days[k+PAST]; d=k-ds; ad=Math.abs(d);
+      if(ad>4) continue;
+      a=180-d*30;
+      var p=pt(R_LBL,a), near=Math.max(0,1-ad), past=k<0;
+      var fade=clamp((3.7-ad)/0.8,0,1)*(past?0.45:1);
+      if(fade<=0) continue;
+      c.globalAlpha=fade;
+      var col=past?'#6c7783':PAL_D[Math.round(near*10)];
+      c.save();
+      c.translate(p[0],p[1]); c.rotate(rad((a-180)*0.5)); c.scale(1+0.1*near,1+0.1*near);
+      c.fillStyle=col;
+      c.font=F.wd; if(hasSpacing) c.letterSpacing='1.2px';
+      c.fillText(it.wd,0,-16);
+      if(hasSpacing) c.letterSpacing='0px';
+      c.font=F.dn; c.fillText(it.dn,0,11);
+      if(it.mo){ c.font=F.mo; c.fillStyle='#6fdcff'; c.fillText(it.mo,0,-33); }
+      if(k===0){ c.fillStyle='#6fdcff'; c.beginPath(); c.arc(0,35,2.6,0,TAU); c.fill(); }
+      c.restore();
+    }
+    c.restore();
+  }
+  function drawMinutes(c){
+    var a=mod(ma,360), m, la, p, rot;
+    if(a>=1){
+      c.lineCap='round';
+      c.strokeStyle='rgba(127,227,255,.2)'; c.lineWidth=7;
+      c.beginPath(); c.arc(C,C,R_BAND-1.5,rad(-90),rad(a-90)); c.stroke();
+      c.strokeStyle='rgba(127,227,255,.85)'; c.lineWidth=2.4;
+      c.beginPath(); c.arc(C,C,R_BAND-1.5,rad(-90),rad(a-90)); c.stroke();
+    }
+    c.font=F.min; c.fillStyle='#a9b5c1';
+    for(m=0;m<60;m+=5){
+      la=m*6;
+      if(Math.abs(normDelta(la-a))<7) continue;
+      p=pt(R_MIN,la); rot=(la>90&&la<270)?la-180:la;
+      c.save(); c.translate(p[0],p[1]); c.rotate(rad(rot)); c.fillText(pad(m),0,0); c.restore();
+    }
+    if(hoverMin!==null && hoverMin!==S.minute){
+      p=pt(R_MIN,hoverMin*6);
+      c.save();
+      c.setLineDash([3,3]); c.lineWidth=1.3; c.strokeStyle='rgba(180,220,255,.6)'; c.fillStyle='rgba(255,255,255,.05)';
+      c.beginPath(); c.arc(p[0],p[1],23,0,TAU); c.fill(); c.stroke();
+      c.setLineDash([]);
+      c.font=F.ghost; c.fillStyle='#d9ecf9'; c.fillText(pad(hoverMin),p[0],p[1]);
+      c.restore();
+    }
+    p=pt(R_MIN,a);
+    var kr=(drag&&drag.mode==='minute')?28:25;
+    var halo=c.createRadialGradient(p[0],p[1],kr*0.6,p[0],p[1],kr+14);
+    halo.addColorStop(0,'rgba(120,200,255,.30)'); halo.addColorStop(1,'rgba(120,200,255,0)');
+    c.fillStyle=halo; c.beginPath(); c.arc(p[0],p[1],kr+14,0,TAU); c.fill();
+    var kg=c.createRadialGradient(p[0]-kr*0.25,p[1]-kr*0.35,2,p[0],p[1],kr);
+    kg.addColorStop(0,'rgba(207,233,255,.55)'); kg.addColorStop(1,'rgba(111,156,196,.22)');
+    c.fillStyle=kg; c.beginPath(); c.arc(p[0],p[1],kr,0,TAU); c.fill();
+    c.strokeStyle='rgba(205,232,255,.85)'; c.lineWidth=1.6; c.stroke();
+    c.font=F.knob; c.fillStyle='#ffffff'; c.fillText(pad(S.minute),p[0],p[1]);
+  }
+  function render(){
+    if(!W) return;
+    var c=fx;
+    c.setTransform(1,0,0,1,0,0); c.clearRect(0,0,fg.width,fg.height);
+    c.setTransform(SC,0,0,SC,0,0);
+    c.textAlign='center'; c.textBaseline='middle'; c.globalAlpha=1;
+    drawHours(c); drawDates(c);
+    c.globalAlpha=1;
+    drawMinutes(c);
+  }
+
+  /* ---------- animation loop (time-based, so it feels the same at 60 and 120 Hz) ---------- */
+  var raf=0, lastTs=0;
+  function kick(){ if(!raf) raf=requestAnimationFrame(tick); }
+  function tick(ts){
+    raf=0;
+    var dtm=Math.min(50,lastTs?ts-lastTs:16.7); lastTs=ts;
+    var k=reduce?1:1-Math.pow(0.8,dtm/16.7), moving=false;
+    if(!(drag&&drag.mode==='hour')){ hs+=(hsT-hs)*k; if(Math.abs(hsT-hs)<0.002) hs=hsT; else moving=true; }
+    if(!(drag&&drag.mode==='date')){ ds+=(dsT-ds)*k; if(Math.abs(dsT-ds)<0.002) ds=dsT; else moving=true; }
+    ma+=(maT-ma)*k; if(Math.abs(maT-ma)<0.05) ma=maT; else moving=true;
+    render();
+    if(moving) kick(); else lastTs=0;
+  }
+
+  /* ---------- sizing ---------- */
+  function resize(){
+    var r=root.getBoundingClientRect();
+    if(!r.width) return;
+    var dpr=Math.min(window.devicePixelRatio||1,2);
+    var px=Math.round(r.width*dpr);
+    if(bg.width!==px||W!==px){
+      bg.width=bg.height=fg.width=fg.height=px; W=px;
+    }
+    SC=px/VB; box=r;
+    drawStatic(); render();
+  }
+  if(window.ResizeObserver) new ResizeObserver(resize).observe(root);
+  else window.addEventListener('resize',resize);
+
+  /* ---------- pointer ---------- */
+  function polar(e,fresh){
+    if(fresh||!box) box=fg.getBoundingClientRect();
+    var s=VB/box.width, x=(e.clientX-box.left)*s-C, y=(e.clientY-box.top)*s-C;
+    var a=Math.atan2(x,-y)*180/Math.PI; if(a<0) a+=360;
+    return {r:Math.hypot(x,y),a:a};
+  }
+  function isTop(a){return a<=75||a>=285;}
+  function minuteFromAngle(a){ return mod(Math.round(a/(6*STEP))*STEP,60); }
+  function setHover(v){ if(v!==hoverMin){ hoverMin=v; updateUI(); kick(); } }
+
+  fg.addEventListener('contextmenu',function(e){e.preventDefault();});
+  fg.addEventListener('pointerdown',function(e){
+    if(e.button!==undefined&&e.button!==0) return;
+    var p=polar(e,true);
+    if(p.r>R_OUT+10||p.r<R_IN) return;
+    var mode=p.r>=R_BAND?(isTop(p.a)?'hour':'date'):'minute';
+    drag={mode:mode,lastA:p.a,moved:0,id:e.pointerId,v:0,t:performance.now()};
+    try{fg.setPointerCapture(e.pointerId);}catch(err){}
+    if(mode==='minute'){ hoverMin=null; setMinute(minuteFromAngle(p.a)); updateUI(); }
+    e.preventDefault();
+    root.focus({preventScroll:true});
+    fg.style.cursor=mode==='minute'?'pointer':'grabbing';
+    kick();
+  });
+  fg.addEventListener('pointermove',function(e){
+    var p;
+    if(!drag){
+      p=polar(e,true);
+      if(p.r>=R_IN&&p.r<R_BAND){ setHover(minuteFromAngle(p.a)); fg.style.cursor='pointer'; }
+      else { setHover(null); fg.style.cursor=(p.r>=R_BAND&&p.r<=R_OUT)?'grab':''; }
+      return;
+    }
+    if(e.pointerId!==drag.id) return;
+    p=polar(e,false);
+    var dA=normDelta(p.a-drag.lastA);
+    drag.lastA=p.a; drag.moved+=Math.abs(dA);
+    var now=performance.now(), dtm=Math.max(1,now-drag.t), dU;
+    if(drag.mode==='hour'){
+      dU=-dA/30; hs+=dU; hsT=hs; derive();
+      drag.v=drag.v*0.7+(dU/dtm)*0.3;
+    } else if(drag.mode==='date'){
+      dU=dA/30; ds=clamp(ds+dU,-0.3,N-1+0.3); dsT=ds; derive();
+      drag.v=drag.v*0.7+(dU/dtm)*0.3;
+    } else {
+      setMinute(minuteFromAngle(p.a));
+    }
+    drag.t=now;
+    updateUI(); kick();
+  });
+  function endDrag(e){
+    if(!drag||e.pointerId!==drag.id) return;
+    var d=drag; drag=null;
+    try{fg.releasePointerCapture(e.pointerId);}catch(err){}
+    var p=polar(e,true);
+    var idle=performance.now()-d.t, v=idle>90?0:d.v;
+    var push=clamp(v*170,-5,5);
+    if(d.mode==='hour'){
+      if(d.moved<4){
+        var ts=p.a>180?p.a-360:p.a;
+        hsT=Math.round(hs)+clamp(Math.round(ts/30),-2,2);
+      } else hsT=Math.round(hs+push);
+    } else if(d.mode==='date'){
+      var t=clamp(Math.round(ds+(d.moved<4?0:push)),0,N-1);
+      if(d.moved<4){
+        var c2=Math.round(ds)+clamp(Math.round((180-p.a)/30),-3,3);
+        if(c2>=0&&c2<=N-1) t=c2;
+      }
+      dsT=t;
+    }
+    fg.style.cursor='';
+    derive(); updateUI(); commit(); kick();
+  }
+  fg.addEventListener('pointerup',endDrag);
+  fg.addEventListener('pointercancel',endDrag);
+  fg.addEventListener('pointerleave',function(){ if(!drag) setHover(null); });
+  fg.addEventListener('wheel',function(e){
+    var p=polar(e,true);
+    if(p.r>R_OUT+10||p.r<R_IN) return;
+    e.preventDefault();
+    wheelAcc+=e.deltaY;
+    if(Math.abs(wheelAcc)<50) return;
+    var dir=wheelAcc>0?1:-1; wheelAcc=0;
+    if(p.r>=R_BAND){ if(isTop(p.a)) stepHour(dir); else stepDate(dir); }
+    else stepMinute(dir*STEP);
+  },{passive:false});
+
+  root.addEventListener('keydown',function(e){
+    var used=true;
+    switch(e.key){
+      case 'ArrowLeft': stepDate(-1); break;
+      case 'ArrowRight': stepDate(1); break;
+      case 'PageUp': stepDate(-7); break;
+      case 'PageDown': stepDate(7); break;
+      case 'ArrowUp': if(e.shiftKey) stepMinute(STEP); else stepHour(1); break;
+      case 'ArrowDown': if(e.shiftKey) stepMinute(-STEP); else stepHour(-1); break;
+      case 'a': case 'A': setPm(false); break;
+      case 'p': case 'P': setPm(true); break;
+      default: used=false;
+    }
+    if(used) e.preventDefault();
+  });
+  apEl.addEventListener('click',function(){ setPm(!S.pm); });
+
+  /* ---------- public api ---------- */
+  function setValue(date){
+    var d=new Date(date);
+    var idx=Math.round((new Date(d.getFullYear(),d.getMonth(),d.getDate())-start)/864e5);
+    if(isNaN(idx)||idx<0||idx>=N) return false;
+    var h24=d.getHours();
+    applyState(idx,h24%12||12,(Math.round(d.getMinutes()/STEP)*STEP)%60,h24>=12);
+    commit();
+    return true;
+  }
+
+  /* ---------- init ---------- */
+  if(opts.value){
+    var v=new Date(opts.value), vi=Math.round((new Date(v.getFullYear(),v.getMonth(),v.getDate())-start)/864e5);
+    if(vi>=0&&vi<N){
+      var vh=v.getHours();
+      S.dateIdx=vi; S.hour=vh%12||12; S.pm=vh>=12; S.minute=(Math.round(v.getMinutes()/STEP)*STEP)%60;
+    }
+  }
+  hs=hsT=S.hour; ds=dsT=S.dateIdx; ma=maT=S.minute*6;
+  derive(); updateUI();
+  lastCommit=snapStr();
+  resize();
+  if(document.fonts&&document.fonts.load){
+    Promise.all(['300 38px Outfit','400 38px Outfit','500 20px Outfit','600 20px Outfit'].map(function(f){return document.fonts.load(f);}))
+      .then(function(){ render(); }).catch(function(){});
+  }
+
+  return {
+    root:root,
+    getValue:function(){ return selectedDate(); },
+    setValue:setValue,
+    isValid:function(){ return detail().valid; }
+  };
+}
+
+window.RadialDateTimePicker=create;
+})();
+</script>
+
+<!-- ===== App ===== -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js";
 import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut }
   from "https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js";
-import { getDatabase, ref, onValue, set, update }
+import { getDatabase, ref, onValue, set, update, remove }
   from "https://www.gstatic.com/firebasejs/12.19.0/firebase-database.js";
 
-// ===== Firebase config (ager moto, kono path/config change kori ni) =====
 const firebaseConfig = {
   apiKey: "AIzaSyATczBXkLVCVpaje7ejU-_rYPbSJx7LHOY",
   authDomain: "getespform.firebaseapp.com",
@@ -112,32 +756,33 @@ const auth = getAuth(app);
 const db   = getDatabase(app);
 
 const KEYS = ["relay1","relay2","relay3","relay4"];
-let control = {};   // website ja command dise  (/relayControl)
-let status  = {};   // ESP8266 asole ja korse    (/relayStatus)
+const MAX_SLOTS = 10;           // firmware-er MAX_SCHED er sathe mile thakte hobe
+let control = {};               // /relayControl : website er command
+let status  = {};               // /relayStatus  : ESP8266 er asol state
+let sched   = {};               // /schedules    : slot number -> {relay,on,t,st}
 let unsubs  = [];
 
 const $ = id => document.getElementById(id);
 
-// ===== UI build =====
+/* ================= Relay cards ================= */
 const grid = $("grid");
 KEYS.forEach((k,i)=>{
   const d = document.createElement("div");
   d.className = "relay"; d.id = "card-"+k;
   d.innerHTML = `
     <div class="top"><span class="name">Relay ${i+1}</span><span class="badge" id="badge-${k}">--</span></div>
-    <div class="hint" id="hint-${k}"></div>
-    <div class="btns">
-      <button class="btn on"  data-k="${k}" data-v="1">ON</button>
-      <button class="btn off" data-k="${k}" data-v="0">OFF</button>
-    </div>`;
+    <div class="mid">
+      <label class="switch"><input type="checkbox" data-k="${k}" aria-label="Relay ${i+1}"><span class="slider"></span></label>
+    </div>
+    <div class="hint" id="hint-${k}"></div>`;
   grid.appendChild(d);
 });
 
-grid.addEventListener("click", e=>{
-  const b = e.target.closest("button[data-k]");
-  if(!b) return;
+grid.addEventListener("change", e=>{
+  const cb = e.target.closest("input[data-k]");
+  if(!cb) return;
   // Boolean hisebe likhi, String na
-  set(ref(db, "relayControl/"+b.dataset.k), b.dataset.v === "1").catch(showErr);
+  set(ref(db, "relayControl/"+cb.dataset.k), cb.checked).catch(showErr);
 });
 
 function setAll(v){
@@ -150,18 +795,21 @@ $("allOff").onclick = ()=>setAll(false);
 function render(){
   KEYS.forEach(k=>{
     const card=$("card-"+k), badge=$("badge-"+k), hint=$("hint-"+k);
+    const cb = card.querySelector("input[data-k]");
     const c = control[k], s = status[k];
     let state, text, cls, msg="";
     if(typeof s === "boolean"){
       state = s;
       text = s ? "ON":"OFF"; cls = s ? "on":"off";
-      if(typeof c === "boolean" && c !== s){ text="WAIT"; cls="wait"; msg="Device er reply er opekkhay..."; }
+      if(typeof c === "boolean" && c !== s){
+        state = c; text = c ? "ON..." : "OFF..."; cls = "wait"; msg = "Device confirm korche...";
+      }
     } else {
-      // ESP8266 ekhono status pathay ni
       state = !!c;
       text = c===true ? "ON?" : c===false ? "OFF?" : "--"; cls="wait";
       msg = "Device status paoa jay ni";
     }
+    if(cb.checked !== state) cb.checked = state;
     card.classList.toggle("is-on", state === true && cls==="on");
     badge.textContent = text;
     badge.className = "badge "+cls;
@@ -171,14 +819,147 @@ function render(){
 
 function showErr(e){ alert("Error: "+(e.code||e.message)); }
 
-// ===== Connection status =====
+/* ================= Schedule ================= */
+let schedDate = null;     // select kora Date
+let picker = null;
+
+const fmt = d => d.toLocaleString([], {weekday:"short", day:"numeric", month:"short", hour:"2-digit", minute:"2-digit"});
+const sMsg = t => { $("sMsg").textContent = t || ""; };
+
+function updateDateBtn(){
+  $("sDateBtn").textContent = schedDate ? fmt(schedDate) : "Date ar time select koro";
+  $("sSave").disabled = !schedDate;
+}
+function updateActionTxt(){
+  const on = $("sAction").checked;
+  const el = $("sActionTxt");
+  el.textContent = on ? "ON" : "OFF";
+  el.style.color = on ? "var(--on)" : "var(--off)";
+}
+$("sAction").addEventListener("change", updateActionTxt);
+
+/* ---- popup ---- */
+function showPick(d){
+  const el = $("pickText");
+  if(!d || !d.date) return;
+  el.textContent = fmt(d.date) + (d.valid ? "" : "  (ager somoy)");
+  el.className = "picktext" + (d.valid ? "" : " bad");
+}
+function openPicker(){
+  $("modal").classList.add("open");
+  const init = schedDate || new Date(Date.now() + 5*60000);
+  if(!picker){
+    picker = window.RadialDateTimePicker("#picker", {
+      days: 60, minuteStep: 1, value: init, minDate: new Date(),
+      onInput: showPick, onChange: showPick
+    });
+  } else {
+    picker.setValue(init);
+  }
+  showPick({date: picker.getValue(), valid: picker.isValid()});
+}
+function closePicker(){ $("modal").classList.remove("open"); }
+
+$("sDateBtn").onclick = openPicker;
+$("mCancel").onclick  = closePicker;
+$("modal").addEventListener("click", e=>{ if(e.target === $("modal")) closePicker(); });
+document.addEventListener("keydown", e=>{ if(e.key === "Escape") closePicker(); });
+$("mSet").onclick = ()=>{
+  if(!picker) return;
+  const d = picker.getValue();
+  if(d.getTime() <= Date.now()){
+    $("pickText").textContent = "Ei somoy ta ager. Notun somoy select koro.";
+    $("pickText").className = "picktext bad";
+    return;
+  }
+  schedDate = d;
+  updateDateBtn();
+  sMsg("");
+  closePicker();
+};
+
+/* ---- save ---- */
+$("sSave").onclick = async ()=>{
+  sMsg("");
+  if(!schedDate) return;
+  const t = Math.floor(schedDate.getTime()/1000);
+  if(t*1000 <= Date.now() + 10000){ sMsg("Ei somoy ta ager. Notun somoy select koro."); return; }
+
+  let slot = 0;
+  for(let n=1; n<=MAX_SLOTS; n++){ if(!sched[n]){ slot = n; break; } }
+  if(!slot){ sMsg(MAX_SLOTS+" ta slot-i bhorti. Age purano schedule delete koro."); return; }
+
+  // format: relay,on,epochSeconds,status   (status p = pending)
+  const val = `${$("sRelay").value},${$("sAction").checked ? 1 : 0},${t},p`;
+  $("sSave").disabled = true;
+  try{
+    await set(ref(db, "schedules/s"+slot), val);
+    schedDate = null;
+    updateDateBtn();
+  }catch(e){
+    showErr(e);
+    $("sSave").disabled = !schedDate;
+  }
+};
+
+/* ---- list ---- */
+function parseSlot(v){
+  const p = String(v).split(",");
+  if(p.length < 4) return null;
+  const relay = +p[0], on = p[1] === "1", t = +p[2], st = p[3];
+  if(!(relay >= 1 && relay <= 4) || !(t > 0)) return null;
+  return {relay, on, t, st};
+}
+
+function renderSched(){
+  const box = $("sList");
+  const items = Object.entries(sched)
+    .map(([n,s])=>({n:+n, ...s}))
+    .sort((a,b)=>a.t - b.t);
+
+  if(!items.length){
+    box.innerHTML = '<div class="empty">Kono schedule nei</div>';
+    return;
+  }
+  box.innerHTML = items.map(s=>{
+    let label = "Pending", cls = "p";
+    if(s.st === "d"){ label = "Done"; cls = "d"; }
+    else if(s.st === "m"){ label = "Missed"; cls = "m"; }
+    else if(s.t*1000 < Date.now() - 60000){ label = "Overdue"; }
+    return `
+      <div class="item">
+        <div class="info">
+          <div class="l1">Relay ${s.relay} &rarr; ${s.on ? "ON" : "OFF"}</div>
+          <div class="l2">${fmt(new Date(s.t*1000))}</div>
+        </div>
+        <span class="chip ${cls}">${label}</span>
+        <button class="btn ghost small" data-del="${s.n}">Delete</button>
+      </div>`;
+  }).join("");
+}
+
+$("sList").addEventListener("click", e=>{
+  const b = e.target.closest("button[data-del]");
+  if(!b) return;
+  remove(ref(db, "schedules/s"+b.dataset.del)).catch(showErr);
+});
+
+$("sClear").onclick = ()=>{
+  Object.entries(sched).forEach(([n,s])=>{
+    if(s.st !== "p") remove(ref(db, "schedules/s"+n)).catch(showErr);
+  });
+};
+
+setInterval(()=>{ if($("dash").style.display === "block") renderSched(); }, 30000);
+
+/* ================= Connection status ================= */
 onValue(ref(db,".info/connected"), snap=>{
   const ok = snap.val() === true;
   $("connPill").classList.toggle("ok", ok);
   $("connText").textContent = ok ? "Connected" : "Offline";
 });
 
-// ===== Auth =====
+/* ================= Auth ================= */
 $("loginBtn").onclick = async ()=>{
   const btn=$("loginBtn"); $("loginErr").textContent="";
   btn.disabled=true; btn.textContent="Logging in...";
@@ -201,12 +982,25 @@ onAuthStateChanged(auth, user=>{
     $("userMail").textContent = user.email;
     unsubs.push(onValue(ref(db,"relayControl"), s=>{ control = s.val()||{}; render(); }));
     unsubs.push(onValue(ref(db,"relayStatus"),  s=>{ status  = s.val()||{}; render(); }));
+    unsubs.push(onValue(ref(db,"schedules"), s=>{
+      const v = s.val() || {};
+      sched = {};
+      for(let n=1; n<=MAX_SLOTS; n++){
+        if(v["s"+n] === undefined) continue;
+        const p = parseSlot(v["s"+n]);
+        if(p) sched[n] = p;
+      }
+      renderSched();
+    }));
   } else {
     $("dash").style.display="none";
     $("loginView").style.display="block";
-    control = {}; status = {};
+    control = {}; status = {}; sched = {};
   }
 });
+
+updateActionTxt();
+updateDateBtn();
 </script>
 </body>
 </html>
