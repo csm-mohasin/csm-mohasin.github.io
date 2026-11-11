@@ -28,7 +28,7 @@
   /* login */
   #loginView{max-width:380px;margin:12vh auto 0}
   #loginView p{color:var(--muted);font-size:.85rem;margin-bottom:14px}
-  input[type=email],input[type=password],select{width:100%;padding:12px 14px;margin-bottom:10px;border-radius:10px;border:1px solid var(--line);background:var(--card2);color:var(--text);font-size:1rem;outline:none}
+  input[type=email],input[type=password],input[type=text],input[type=number],select{width:100%;padding:12px 14px;margin-bottom:10px;border-radius:10px;border:1px solid var(--line);background:var(--card2);color:var(--text);font-size:1rem;outline:none}
   input:focus,select:focus{border-color:var(--accent)}
   .btn{border:0;border-radius:10px;padding:12px 14px;font-size:.95rem;font-weight:600;cursor:pointer;color:#fff;background:var(--accent);transition:transform .08s,opacity .2s}
   .btn:active{transform:scale(.97)}
@@ -61,25 +61,34 @@
   .switch input:checked + .slider{background:var(--on)}
   .switch input:checked + .slider:before{transform:translateX(28px)}
   .switch input:focus-visible + .slider{outline:2px solid var(--accent);outline-offset:2px}
-  /* schedule */
+  /* panels */
   .sched{margin-top:16px}
   .frow{display:flex;gap:12px;align-items:center;margin-bottom:10px}
   .frow .f1{flex:1}
-  .frow select{margin-bottom:0}
+  .frow select,.frow input{margin-bottom:0}
   .actsw{display:flex;align-items:center;gap:10px}
   .actsw b{min-width:2.2em;font-size:.95rem}
   #sDateBtn{margin-bottom:10px;text-align:left}
-  #sList{margin-top:14px;display:flex;flex-direction:column;gap:8px}
+  .days{display:flex;gap:6px;margin-bottom:6px}
+  .day{flex:1;padding:9px 0;border-radius:9px;border:1px solid var(--line);background:var(--card2);color:var(--muted);font-size:.78rem;font-weight:600;cursor:pointer}
+  .day.sel{background:var(--accent);border-color:var(--accent);color:#fff}
+  .dayhint{font-size:.74rem;color:var(--muted);margin-bottom:12px;display:flex;justify-content:space-between;align-items:center;gap:8px}
+  .list{margin-top:14px;display:flex;flex-direction:column;gap:8px}
   .item{display:flex;align-items:center;gap:10px;background:var(--card2);border:1px solid var(--line);border-radius:12px;padding:10px 12px}
   .item .info{flex:1;min-width:0}
-  .item .l1{font-weight:600;font-size:.92rem}
+  .item .l1{font-weight:600;font-size:.92rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .item .l2{font-size:.78rem;color:var(--muted);margin-top:2px}
   .chip{font-size:.68rem;font-weight:700;padding:3px 8px;border-radius:999px;white-space:nowrap}
   .chip.p{background:rgba(245,158,11,.18);color:var(--warn)}
   .chip.d{background:rgba(34,197,94,.18);color:var(--on)}
   .chip.m{background:rgba(239,68,68,.15);color:var(--off)}
+  .chip.r{background:rgba(77,163,255,.18);color:var(--accent)}
   .empty{color:var(--muted);font-size:.85rem;text-align:center;padding:10px}
   .tools{display:flex;justify-content:flex-end;margin-top:10px}
+  .ldot{width:10px;height:10px;border-radius:50%;flex:none;background:var(--muted)}
+  .ldot.on{background:var(--on)} .ldot.off{background:var(--off)}
+  .pform{margin-top:14px;padding-top:14px;border-top:1px solid var(--line)}
+  a.link{color:var(--accent);font-size:.9rem;display:inline-block;margin-top:6px}
   footer{text-align:center;color:var(--muted);font-size:.75rem;padding:22px 0 8px}
   @media (max-width:380px){.grid{grid-template-columns:1fr}}
 
@@ -186,11 +195,59 @@
       </div>
 
       <button id="sDateBtn" class="btn ghost full">Date ar time select koro</button>
+
+      <div id="sDays" class="days"></div>
+      <div class="dayhint"><span id="sDaysHint"></span><button id="sDaily" type="button" class="btn ghost small">Daily</button></div>
+
       <button id="sSave" class="btn full" disabled>Schedule save koro</button>
       <div id="sMsg" class="err"></div>
 
-      <div id="sList"></div>
+      <div id="sList" class="list"></div>
       <div class="tools"><button id="sClear" class="btn ghost small">Finished schedule mucho</button></div>
+    </section>
+
+    <!-- COUNTDOWN TIMER -->
+    <section class="panel sched">
+      <h2>Countdown Timer</h2>
+      <div class="sub">Nijer preset banao (Firebase-e save thake). Preset-e Start chaple timer shuru hoy. Cholte thaka timer upore Schedule list-e dekha jay.</div>
+
+      <div id="pList" class="list"></div>
+
+      <div class="pform">
+        <input id="pName" type="text" maxlength="30" placeholder="Preset-er naam (jemon: Fan 30 min)">
+        <div class="frow">
+          <div class="f1">
+            <select id="pRelay">
+              <option value="1">Relay 1</option>
+              <option value="2">Relay 2</option>
+              <option value="3">Relay 3</option>
+              <option value="4">Relay 4</option>
+            </select>
+          </div>
+          <div class="f1"><input id="pMin" type="number" min="1" max="1440" step="1" value="30" placeholder="Minute"></div>
+        </div>
+        <select id="pKind">
+          <option value="now-1">Ekhon ON, tarpor OFF</option>
+          <option value="now-0">Ekhon OFF, tarpor ON</option>
+          <option value="later-1">Shomoy sheshe ON</option>
+          <option value="later-0">Shomoy sheshe OFF</option>
+        </select>
+        <button id="pSave" class="btn full">Preset save koro</button>
+        <div id="pMsg" class="err"></div>
+      </div>
+    </section>
+
+    <!-- ACTIVITY LOG -->
+    <section class="panel sched">
+      <h2>Activity Log</h2>
+      <div class="sub">Kon relay kokhon, kibhabe change hoyeche (shesh 40 ta). 30 diner puran log nijei muche jay.</div>
+      <div id="aList" class="list"></div>
+    </section>
+
+    <!-- DEVICE -->
+    <section class="panel sched">
+      <h2>Device</h2>
+      <div id="devInfo" class="sub" style="margin-bottom:0"></div>
     </section>
 
     <footer>Developer: CSM Mohasin Alam</footer>
@@ -738,7 +795,8 @@ window.RadialDateTimePicker=create;
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js";
 import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut }
   from "https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js";
-import { getDatabase, ref, onValue, set, update, remove }
+import { getDatabase, ref, onValue, set, update, remove, push, query,
+         limitToLast, limitToFirst, orderByKey, startAt, endAt, get }
   from "https://www.gstatic.com/firebasejs/12.19.0/firebase-database.js";
 
 const firebaseConfig = {
@@ -756,13 +814,23 @@ const auth = getAuth(app);
 const db   = getDatabase(app);
 
 const KEYS = ["relay1","relay2","relay3","relay4"];
-const MAX_SLOTS = 10;           // firmware-er MAX_SCHED er sathe mile thakte hobe
-let control = {};               // /relayControl : website er command
-let status  = {};               // /relayStatus  : ESP8266 er asol state
-let sched   = {};               // /schedules    : slot number -> {relay,on,t,st}
+const MAX_SLOTS = 20;           // firmware-er MAX_SCHED er sathe mile thakte hobe
+const DAY_NAMES = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];   // bit0 = Sunday
+const SRC_NAMES = { w:"Website", s:"Schedule / Timer", a:"Offline AP", b:"ESP started" };
+
+let control = {};   // /relayControl : website er command
+let status  = {};   // /relayStatus  : ESP8266 er asol state
+let sched   = {};   // /schedules    : slot number -> {relay,on,t,st,mask,last}
+let presets = {};   // /presets      : id -> {name,relay,kind,action,min}
+let logs    = [];   // /activityLog
+let dev     = {};   // /deviceInfo
 let unsubs  = [];
+let selDays = new Set();
 
 const $ = id => document.getElementById(id);
+const fmt = d => d.toLocaleString([], {weekday:"short", day:"numeric", month:"short", hour:"2-digit", minute:"2-digit"});
+const fmtTime = d => d.toLocaleTimeString([], {hour:"2-digit", minute:"2-digit"});
+function showErr(e){ alert("Error: "+(e.code||e.message)); }
 
 /* ================= Relay cards ================= */
 const grid = $("grid");
@@ -781,8 +849,7 @@ KEYS.forEach((k,i)=>{
 grid.addEventListener("change", e=>{
   const cb = e.target.closest("input[data-k]");
   if(!cb) return;
-  // Boolean hisebe likhi, String na
-  set(ref(db, "relayControl/"+cb.dataset.k), cb.checked).catch(showErr);
+  set(ref(db, "relayControl/"+cb.dataset.k), cb.checked).catch(showErr);   // Boolean
 });
 
 function setAll(v){
@@ -817,14 +884,11 @@ function render(){
   });
 }
 
-function showErr(e){ alert("Error: "+(e.code||e.message)); }
-
 /* ================= Schedule ================= */
-let schedDate = null;     // select kora Date
+let schedDate = null;
 let picker = null;
-
-const fmt = d => d.toLocaleString([], {weekday:"short", day:"numeric", month:"short", hour:"2-digit", minute:"2-digit"});
 const sMsg = t => { $("sMsg").textContent = t || ""; };
+const freeSlot = () => { for(let n=1; n<=MAX_SLOTS; n++){ if(!sched[n]) return n; } return 0; };
 
 function updateDateBtn(){
   $("sDateBtn").textContent = schedDate ? fmt(schedDate) : "Date ar time select koro";
@@ -837,6 +901,31 @@ function updateActionTxt(){
   el.style.color = on ? "var(--on)" : "var(--off)";
 }
 $("sAction").addEventListener("change", updateActionTxt);
+
+/* ---- repeat days ---- */
+const daysBox = $("sDays");
+DAY_NAMES.forEach((n,i)=>{
+  const b = document.createElement("button");
+  b.type = "button"; b.className = "day"; b.dataset.d = i; b.textContent = n.slice(0,2);
+  daysBox.appendChild(b);
+});
+function paintDays(){
+  daysBox.querySelectorAll("button").forEach(b=>b.classList.toggle("sel", selDays.has(+b.dataset.d)));
+  $("sDaysHint").textContent = selDays.size === 0 ? "Kono din select na korle ekbar-i cholbe"
+    : selDays.size === 7 ? "Roj repeat hobe"
+    : "Repeat: " + [...selDays].sort().map(d=>DAY_NAMES[d]).join(", ");
+}
+daysBox.addEventListener("click", e=>{
+  const b = e.target.closest("button[data-d]");
+  if(!b) return;
+  const d = +b.dataset.d;
+  if(selDays.has(d)) selDays.delete(d); else selDays.add(d);
+  paintDays();
+});
+$("sDaily").onclick = ()=>{
+  selDays = selDays.size === 7 ? new Set() : new Set([0,1,2,3,4,5,6]);
+  paintDays();
+};
 
 /* ---- popup ---- */
 function showPick(d){
@@ -885,17 +974,17 @@ $("sSave").onclick = async ()=>{
   const t = Math.floor(schedDate.getTime()/1000);
   if(t*1000 <= Date.now() + 10000){ sMsg("Ei somoy ta ager. Notun somoy select koro."); return; }
 
-  let slot = 0;
-  for(let n=1; n<=MAX_SLOTS; n++){ if(!sched[n]){ slot = n; break; } }
+  const slot = freeSlot();
   if(!slot){ sMsg(MAX_SLOTS+" ta slot-i bhorti. Age purano schedule delete koro."); return; }
 
-  // format: relay,on,epochSeconds,status   (status p = pending)
-  const val = `${$("sRelay").value},${$("sAction").checked ? 1 : 0},${t},p`;
+  const mask = [...selDays].reduce((m,d)=>m | (1<<d), 0);   // 0 = ekbar, 1..127 = repeat
+  // format: relay,on,epochSeconds,status,repeatMask,lastRun
+  const val = `${$("sRelay").value},${$("sAction").checked ? 1 : 0},${t},p,${mask},0`;
   $("sSave").disabled = true;
   try{
     await set(ref(db, "schedules/s"+slot), val);
-    schedDate = null;
-    updateDateBtn();
+    schedDate = null; selDays = new Set();
+    updateDateBtn(); paintDays();
   }catch(e){
     showErr(e);
     $("sSave").disabled = !schedDate;
@@ -907,9 +996,11 @@ function parseSlot(v){
   const p = String(v).split(",");
   if(p.length < 4) return null;
   const relay = +p[0], on = p[1] === "1", t = +p[2], st = p[3];
+  const mask = (+p[4]) || 0, last = (+p[5]) || 0;
   if(!(relay >= 1 && relay <= 4) || !(t > 0)) return null;
-  return {relay, on, t, st};
+  return {relay, on, t, st, mask, last};
 }
+const repeatLabel = m => m === 127 ? "Daily" : DAY_NAMES.filter((n,i)=>m & (1<<i)).join(", ");
 
 function renderSched(){
   const box = $("sList");
@@ -922,15 +1013,25 @@ function renderSched(){
     return;
   }
   box.innerHTML = items.map(s=>{
-    let label = "Pending", cls = "p";
-    if(s.st === "d"){ label = "Done"; cls = "d"; }
-    else if(s.st === "m"){ label = "Missed"; cls = "m"; }
-    else if(s.t*1000 < Date.now() - 60000){ label = "Overdue"; }
+    const dt = new Date(s.t*1000);
+    let label, cls, l2;
+    if(s.mask){
+      label = "Repeat"; cls = "r";
+      l2 = `${repeatLabel(s.mask)} &middot; ${fmtTime(dt)}`;
+      if(s.t*1000 > Date.now()) l2 += ` &middot; ${fmt(dt)} theke`;
+      if(s.last) l2 += ` &middot; shesh: ${fmt(new Date(s.last*1000))}`;
+    } else {
+      label = "Pending"; cls = "p";
+      if(s.st === "d"){ label = "Done"; cls = "d"; }
+      else if(s.st === "m"){ label = "Missed"; cls = "m"; }
+      else if(s.t*1000 < Date.now() - 60000){ label = "Overdue"; }
+      l2 = fmt(dt);
+    }
     return `
       <div class="item">
         <div class="info">
           <div class="l1">Relay ${s.relay} &rarr; ${s.on ? "ON" : "OFF"}</div>
-          <div class="l2">${fmt(new Date(s.t*1000))}</div>
+          <div class="l2">${l2}</div>
         </div>
         <span class="chip ${cls}">${label}</span>
         <button class="btn ghost small" data-del="${s.n}">Delete</button>
@@ -946,11 +1047,131 @@ $("sList").addEventListener("click", e=>{
 
 $("sClear").onclick = ()=>{
   Object.entries(sched).forEach(([n,s])=>{
-    if(s.st !== "p") remove(ref(db, "schedules/s"+n)).catch(showErr);
+    if(!s.mask && s.st !== "p") remove(ref(db, "schedules/s"+n)).catch(showErr);
   });
 };
 
+// 1 diner puran finished (ekbar-er) schedule nijei muche felo
+function autoCleanSched(){
+  const limit = Date.now()/1000 - 86400;
+  Object.entries(sched).forEach(([n,s])=>{
+    if(!s.mask && s.st !== "p" && s.t < limit) remove(ref(db, "schedules/s"+n)).catch(()=>{});
+  });
+}
+
 setInterval(()=>{ if($("dash").style.display === "block") renderSched(); }, 30000);
+
+/* ================= Countdown presets ================= */
+const pMsg = t => { $("pMsg").textContent = t || ""; };
+const presetDesc = p => p.kind === "now"
+  ? `Ekhon ${p.action ? "ON" : "OFF"}, ${p.min} min pore ${p.action ? "OFF" : "ON"}`
+  : `${p.min} min pore ${p.action ? "ON" : "OFF"}`;
+
+function renderPresets(){
+  const box = $("pList");
+  box.textContent = "";
+  const items = Object.entries(presets);
+  if(!items.length){
+    const d = document.createElement("div");
+    d.className = "empty"; d.textContent = "Kono preset nei. Niche notun preset banao.";
+    box.appendChild(d);
+    return;
+  }
+  items.forEach(([id,p])=>{
+    const row = document.createElement("div"); row.className = "item";
+    const info = document.createElement("div"); info.className = "info";
+    const l1 = document.createElement("div"); l1.className = "l1"; l1.textContent = p.name;
+    const l2 = document.createElement("div"); l2.className = "l2"; l2.textContent = `Relay ${p.relay} \u00b7 ${presetDesc(p)}`;
+    info.append(l1, l2);
+    const go = document.createElement("button");
+    go.className = "btn on small"; go.textContent = "Start"; go.dataset.start = id;
+    const del = document.createElement("button");
+    del.className = "btn ghost small"; del.textContent = "Delete"; del.dataset.pdel = id;
+    row.append(info, go, del);
+    box.appendChild(row);
+  });
+}
+
+$("pSave").onclick = async ()=>{
+  const [kind, act] = $("pKind").value.split("-");
+  const min = parseInt($("pMin").value, 10);
+  const relay = +$("pRelay").value;
+  if(!(min >= 1 && min <= 1440)){ pMsg("Minute 1 theke 1440 er moddhe dao."); return; }
+  const name = $("pName").value.trim().slice(0,30) || `Relay ${relay} \u00b7 ${min} min`;
+  try{
+    await push(ref(db,"presets"), {name, relay, kind, action: act === "1", min});
+    $("pName").value = ""; pMsg("");
+  }catch(e){ showErr(e); }
+};
+
+async function startPreset(p){
+  pMsg("");
+  const slot = freeSlot();
+  if(!slot){ pMsg("Schedule slot bhorti. Finished schedule mucho."); return; }
+  const t = Math.floor(Date.now()/1000) + p.min*60;
+  const finalOn = p.kind === "now" ? !p.action : p.action;
+  try{
+    // age ESP-ke shomoy-er schedule dei, tarpor (dorkar hole) ekhon-er command
+    await set(ref(db, "schedules/s"+slot), `${p.relay},${finalOn ? 1 : 0},${t},p,0,0`);
+    if(p.kind === "now") await set(ref(db, "relayControl/relay"+p.relay), p.action);
+  }catch(e){ showErr(e); }
+}
+
+$("pList").addEventListener("click", e=>{
+  const s = e.target.closest("button[data-start]");
+  if(s){ const p = presets[s.dataset.start]; if(p) startPreset(p); return; }
+  const d = e.target.closest("button[data-pdel]");
+  if(d) remove(ref(db, "presets/"+d.dataset.pdel)).catch(showErr);
+});
+
+/* ================= Activity log ================= */
+function renderLog(){
+  const box = $("aList");
+  if(!logs.length){ box.innerHTML = '<div class="empty">Ekhono kono activity nei</div>'; return; }
+  box.innerHTML = logs.map(l=>{
+    const when = l.t ? fmt(new Date(l.t*1000)) : "somoy jana nei";
+    const src = SRC_NAMES[l.src] || "?";
+    const title = l.relay === 0 ? "ESP chalu hoyeche" : `Relay ${l.relay} &rarr; ${l.on ? "ON" : "OFF"}`;
+    const dot = l.relay === 0 ? "" : (l.on ? "on" : "off");
+    return `
+      <div class="item">
+        <span class="ldot ${dot}"></span>
+        <div class="info">
+          <div class="l1">${title}</div>
+          <div class="l2">${when} &middot; ${src}</div>
+        </div>
+      </div>`;
+  }).join("");
+}
+
+async function cleanupLog(){
+  try{
+    const cutoff = String(Math.floor(Date.now()/1000) - 30*86400);
+    const snap = await get(query(ref(db,"activityLog"), orderByKey(), startAt("1"), endAt(cutoff), limitToFirst(200)));
+    const v = snap.val();
+    if(!v) return;
+    const o = {}; Object.keys(v).forEach(k=>o[k] = null);
+    await update(ref(db,"activityLog"), o);
+  }catch(e){}
+}
+
+/* ================= Device ================= */
+function renderDev(){
+  const el = $("devInfo");
+  el.textContent = "";
+  if(!dev.ip){ el.textContent = "Device info ekhono ashe ni (ESP online hole dekhabe)."; return; }
+  el.append(`ESP IP: ${dev.ip}  \u00b7  Firmware: ${dev.fw || "?"}`);
+  if(/^\d{1,3}(\.\d{1,3}){3}$/.test(dev.ip)){
+    const br = document.createElement("br");
+    const a = document.createElement("a");
+    a.className = "link"; a.href = `http://${dev.ip}/update`; a.target = "_blank"; a.rel = "noopener";
+    a.textContent = "Firmware update page (OTA) kholo";
+    const note = document.createElement("div");
+    note.textContent = "Ei link-e jete phone/computer ESP-r ekoi WiFi-te thakte hobe.";
+    note.style.marginTop = "2px";
+    el.append(br, a, note);
+  }
+}
 
 /* ================= Connection status ================= */
 onValue(ref(db,".info/connected"), snap=>{
@@ -980,8 +1201,10 @@ onAuthStateChanged(auth, user=>{
     $("loginView").style.display="none";
     $("dash").style.display="block";
     $("userMail").textContent = user.email;
+
     unsubs.push(onValue(ref(db,"relayControl"), s=>{ control = s.val()||{}; render(); }));
     unsubs.push(onValue(ref(db,"relayStatus"),  s=>{ status  = s.val()||{}; render(); }));
+
     unsubs.push(onValue(ref(db,"schedules"), s=>{
       const v = s.val() || {};
       sched = {};
@@ -991,16 +1214,36 @@ onAuthStateChanged(auth, user=>{
         if(p) sched[n] = p;
       }
       renderSched();
+      autoCleanSched();
     }));
+
+    unsubs.push(onValue(ref(db,"presets"), s=>{ presets = s.val()||{}; renderPresets(); }));
+
+    unsubs.push(onValue(query(ref(db,"activityLog"), limitToLast(40)), s=>{
+      const v = s.val() || {};
+      logs = Object.entries(v).map(([k,val])=>{
+        const p = String(val).split(",");
+        return {k, t:+p[0] || 0, relay:+p[1] || 0, on:p[2] === "1", src:p[3] || "?"};
+      }).sort((a,b)=> a.k < b.k ? 1 : -1);
+      renderLog();
+    }));
+
+    unsubs.push(onValue(ref(db,"deviceInfo"), s=>{ dev = s.val()||{}; renderDev(); }));
+
+    cleanupLog();
   } else {
     $("dash").style.display="none";
     $("loginView").style.display="block";
-    control = {}; status = {}; sched = {};
+    control = {}; status = {}; sched = {}; presets = {}; logs = []; dev = {};
   }
 });
 
 updateActionTxt();
 updateDateBtn();
+paintDays();
+renderPresets();
+renderLog();
+renderDev();
 </script>
 </body>
 </html>
