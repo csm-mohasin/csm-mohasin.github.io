@@ -31,6 +31,7 @@
 
   <div id="panel" class="hide">
     <div class="state" id="state">…</div>
+    <div class="muted" id="sub" style="margin:0 0 6px"></div>
     <button class="red" id="lock">🔒 Lock</button>
     <button class="green" id="unlock">🔓 Unlock</button>
     <button id="logout" style="background:#223055">Logout</button>
@@ -54,8 +55,11 @@
   });
 
   const $ = id => document.getElementById(id);
-  const ref = firebase.database().ref("pc/lock");
-  let off = null;
+  const db = firebase.database();
+  const cmdRef = db.ref("pc/lock"), statRef = db.ref("pc/status");
+  const TS = firebase.database.ServerValue.TIMESTAMP;
+  let offs = [], offset = 0, cmd = null, pc = null, tm = null;
+  db.ref(".info/serverTimeOffset").on("value", s => { offset = s.val() || 0; render(); });
 
   $("login").onsubmit = async e => {
     e.preventDefault();
@@ -63,18 +67,31 @@
     catch (err) { $("msg").textContent = err.message; }
   };
   $("logout").onclick = () => firebase.auth().signOut();
-  $("lock").onclick = () => ref.set(true).catch(e => $("msg").textContent = e.message);
-  $("unlock").onclick = () => ref.set(false).catch(e => $("msg").textContent = e.message);
+  const send = v => db.ref().update({ "pc/lock": v, "pc/lockAt": TS }).catch(e => $("msg").textContent = e.message);
+  $("lock").onclick = () => send(true);
+  $("unlock").onclick = () => send(false);
+
+  function render() {
+    const online = pc && pc.ts && (Date.now() + offset - pc.ts) < 45000;
+    let big, sub = "Command: " + (cmd === null ? "…" : cmd ? "Lock" : "Unlock");
+    if (!pc) { big = "⚪ No report yet"; }
+    else if (!online) { big = "⚫ PC offline"; sub += " · last seen " + new Date(pc.ts).toLocaleTimeString(); }
+    else if (pc.locked) { big = "🔒 Locked"; }
+    else { big = "🔓 Unlocked"; if (pc.override && cmd) sub += " · unlocked with PIN on PC"; }
+    $("state").textContent = big;
+    $("sub").textContent = sub;
+  }
 
   firebase.auth().onAuthStateChanged(u => {
     $("login").classList.toggle("hide", !!u);
     $("panel").classList.toggle("hide", !u);
     $("msg").textContent = "";
-    if (off) { ref.off("value", off); off = null; }
+    offs.forEach(f => f()); offs = []; clearInterval(tm);
     if (u) {
-      off = ref.on("value", s => {
-        $("state").textContent = s.val() === true ? "🔒 Locked" : "🔓 Unlocked";
-      });
+      const c = cmdRef.on("value", s => { cmd = s.val() === true; render(); });
+      const p = statRef.on("value", s => { pc = null; s.forEach(ch => { pc = ch.val(); return true; }); render(); });
+      offs.push(() => cmdRef.off("value", c), () => statRef.off("value", p));
+      tm = setInterval(render, 5000);
     }
   });
 </script>
