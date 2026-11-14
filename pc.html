@@ -6,16 +6,21 @@
 <title>PC Lock</title>
 <style>
   *{box-sizing:border-box}
-  body{margin:0;min-height:100vh;display:grid;place-items:center;background:#0b1220;color:#e8eefc;font-family:system-ui,sans-serif}
-  .card{width:min(92vw,360px);background:#131c31;border:1px solid #223055;border-radius:18px;padding:24px;text-align:center}
-  h1{font-size:20px;margin:0 0 16px}
-  input,button{width:100%;padding:13px;border-radius:12px;border:1px solid #2a3a66;font-size:16px;margin-top:10px}
+  body{margin:0;min-height:100vh;display:grid;place-items:start center;padding:16px;background:#0b1220;color:#e8eefc;font-family:system-ui,sans-serif}
+  .card{width:min(100%,400px);background:#131c31;border:1px solid #223055;border-radius:18px;padding:22px;text-align:center}
+  h1{font-size:20px;margin:0 0 14px}
+  h2{font-size:13px;margin:0 0 8px;color:#8fa0c8;font-weight:600;text-align:left;text-transform:uppercase;letter-spacing:.04em}
+  input,button{width:100%;padding:12px;border-radius:12px;border:1px solid #2a3a66;font-size:16px;margin-top:8px}
   input{background:#0b1220;color:#e8eefc}
   button{background:#3b6cff;color:#fff;border:0;font-weight:600;cursor:pointer}
-  button.red{background:#e5484d}
-  button.green{background:#2fa36b}
-  .state{font-size:42px;margin:6px 0}
+  button.red{background:#e5484d} button.green{background:#2fa36b} button.gray{background:#223055} button.amber{background:#c98a14}
+  .row{display:flex;gap:8px} .row>*{flex:1;min-width:0}
+  .state{font-size:40px;margin:4px 0}
+  .sub{color:#8fa0c8;font-size:13px;min-height:18px;margin-bottom:6px}
   .muted{color:#8fa0c8;font-size:13px;margin-top:12px}
+  .sec{margin-top:20px;padding-top:14px;border-top:1px solid #223055}
+  .log{max-height:240px;overflow:auto;text-align:left;font-size:13px;line-height:1.5}
+  .lg{padding:5px 0;border-bottom:1px solid #1b2744}
   .hide{display:none}
 </style>
 </head>
@@ -31,10 +36,60 @@
 
   <div id="panel" class="hide">
     <div class="state" id="state">…</div>
-    <div class="muted" id="sub" style="margin:0 0 6px"></div>
-    <button class="red" id="lock">🔒 Lock</button>
-    <button class="green" id="unlock">🔓 Unlock</button>
-    <button id="logout" style="background:#223055">Logout</button>
+    <div class="sub" id="sub"></div>
+    <div class="row">
+      <button class="red" id="lock">🔒 Lock</button>
+      <button class="green" id="unlock">🔓 Unlock</button>
+    </div>
+
+    <div class="sec">
+      <h2>⏱ Timer</h2>
+      <input id="mins" type="number" min="1" max="1440" value="30" inputmode="numeric" placeholder="Minutes">
+      <div class="row">
+        <button class="red" id="lockfor">Lock for…</button>
+        <button class="green" id="unlockfor">Unlock for…</button>
+      </div>
+      <div class="muted" style="margin-top:6px;text-align:left">Minutes above. When it ends the PC switches to the opposite state.</div>
+    </div>
+
+    <div class="sec">
+      <h2>💬 Lock screen message</h2>
+      <input id="text" maxlength="200" placeholder="Message shown on the lock screen">
+      <div class="row">
+        <button id="sendmsg">Send</button>
+        <button class="gray" id="clearmsg">Clear</button>
+      </div>
+    </div>
+
+    <div class="sec">
+      <h2>⏻ Power</h2>
+      <div class="row">
+        <button class="amber" data-power="sleep">Sleep</button>
+        <button class="amber" data-power="restart">Restart</button>
+        <button class="red" data-power="shutdown">Shutdown</button>
+      </div>
+    </div>
+
+    <div class="sec">
+      <h2>📷 Camera</h2>
+      <div class="row">
+        <button id="snapnow">📸 Snapshot now</button>
+        <button class="red" id="livebtn">🔴 Start live (3 min)</button>
+      </div>
+      <div id="camwrap" class="hide" style="margin-top:10px">
+        <img id="camimg" style="width:100%;border-radius:10px;display:block">
+        <div class="muted" id="camupdated"></div>
+      </div>
+      <div class="muted" id="lastsnap" style="margin-top:8px;text-align:left"></div>
+    </div>
+
+    <div class="sec">
+      <h2>📜 Activity</h2>
+      <div class="log" id="log">…</div>
+      <button class="gray" id="clearlog">Clear log</button>
+    </div>
+
+    <button id="logout" class="gray" style="margin-top:20px">Logout</button>
   </div>
   <div class="muted" id="msg"></div>
 </div>
@@ -43,7 +98,6 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
 <script>
-  // Paste your Firebase web config here
   firebase.initializeApp({
     apiKey: "AIzaSyDP2Ma8tbTaliztjNvWOYsxjW9cWOEdh40",
     authDomain: "csmlockpc.firebaseapp.com",
@@ -56,30 +110,84 @@
 
   const $ = id => document.getElementById(id);
   const db = firebase.database();
-  const cmdRef = db.ref("pc/lock"), statRef = db.ref("pc/status");
   const TS = firebase.database.ServerValue.TIMESTAMP;
-  let offs = [], offset = 0, cmd = null, pc = null, tm = null;
+  let offset = 0, cmd = null, pc = null, timer = null, offs = [], tm = null;
   db.ref(".info/serverTimeOffset").on("value", s => { offset = s.val() || 0; render(); });
+  const now = () => Date.now() + offset;
+  const fail = e => { $("msg").textContent = e.message; };
 
   $("login").onsubmit = async e => {
     e.preventDefault();
     try { await firebase.auth().signInWithEmailAndPassword($("email").value, $("pass").value); }
-    catch (err) { $("msg").textContent = err.message; }
+    catch (err) { fail(err); }
   };
   $("logout").onclick = () => firebase.auth().signOut();
-  const send = v => db.ref().update({ "pc/lock": v, "pc/lockAt": TS }).catch(e => $("msg").textContent = e.message);
+
+  // every Lock/Unlock press writes lockAt (so the PC re-locks even if lock was already true) and clears any timer
+  const send = (v, t) => db.ref().update({ "pc/lock": v, "pc/lockAt": TS, "pc/timer": t || null }).catch(fail);
+  const mins = () => Math.max(1, Math.min(1440, parseInt($("mins").value) || 30));
   $("lock").onclick = () => send(true);
   $("unlock").onclick = () => send(false);
+  $("lockfor").onclick = () => send(true, { mode: "lock", until: now() + mins() * 60000, at: TS });
+  $("unlockfor").onclick = () => send(false, { mode: "unlock", until: now() + mins() * 60000, at: TS });
+
+  $("sendmsg").onclick = () => db.ref("pc/message").set($("text").value.trim().slice(0, 200) || null).catch(fail);
+  $("clearmsg").onclick = () => { $("text").value = ""; db.ref("pc/message").set(null).catch(fail); };
+
+  document.querySelectorAll("[data-power]").forEach(b => b.onclick = () => {
+    if (confirm(b.textContent.trim() + " the PC?")) db.ref("pc/power").set({ action: b.dataset.power, at: TS }).catch(fail);
+  });
+  $("clearlog").onclick = () => { if (confirm("Clear the log?")) db.ref("pcx/log").remove().catch(fail); };
+
+  let liveOn = false, liveTimer = null;
+  $("snapnow").onclick = () => db.ref("pc/snapshotReq").set({ at: TS }).catch(fail);
+  function setLive(on) {
+    liveOn = on;
+    db.ref("pc/camera").set({ live: on, at: TS }).catch(fail);
+    $("livebtn").textContent = on ? "⏹ Stop live" : "\uD83D\uDD34 Start live (3 min)";
+    $("camwrap").classList.toggle("hide", !on);
+    clearTimeout(liveTimer);
+    if (on) liveTimer = setTimeout(() => setLive(false), 180000);
+  }
+  $("livebtn").onclick = () => setLive(!liveOn);
 
   function render() {
-    const online = pc && pc.ts && (Date.now() + offset - pc.ts) < 45000;
-    let big, sub = "Command: " + (cmd === null ? "…" : cmd ? "Lock" : "Unlock");
+    const online = pc && pc.ts && (now() - pc.ts) < 45000;
+    let big, sub = ["Command: " + (cmd === null ? "…" : cmd ? "Lock" : "Unlock")];
     if (!pc) { big = "⚪ No report yet"; }
-    else if (!online) { big = "⚫ PC offline"; sub += " · last seen " + new Date(pc.ts).toLocaleTimeString(); }
+    else if (!online) { big = "⚫ PC offline"; sub.push("last seen " + new Date(pc.ts).toLocaleTimeString()); }
     else if (pc.locked) { big = "🔒 Locked"; }
-    else { big = "🔓 Unlocked"; if (pc.override && cmd) sub += " · unlocked with PIN on PC"; }
+    else { big = "🔓 Unlocked"; if (pc.override && cmd) sub.push("unlocked by " + (pc.why === "timer" ? "timer" : "PIN") + " on PC"); }
+    if (timer && timer.until > now()) {
+      const m = Math.ceil((timer.until - now()) / 60000);
+      sub.push("⏱ " + (timer.mode === "lock" ? "locked" : "unlocked") + " for " + m + " more min, then " + (timer.mode === "lock" ? "unlocks" : "locks"));
+    }
     $("state").textContent = big;
-    $("sub").textContent = sub;
+    $("sub").textContent = sub.join(" · ");
+  }
+
+  const LBL = { boot: "🟢 PC started", lock: "🔒 Locked", unlock: "🔓 Unlocked", pin_fail: "❌ Wrong PIN",
+    pin_fail_photo: "❌📸 Wrong PIN (photo)", pin_block: "⛔ Blocked 30s", power: "⏻ Power", timer: "⏱ Timer",
+    pin_changed: "🔑 PIN changed", snapshot: "📸 Snapshot", cam_fail: "📷 Camera unavailable",
+    live_start: "🔴 Live view started" };
+  function renderLog(s) {
+    const rows = [];
+    s.forEach(c => { rows.push(c.val()); });
+    rows.reverse();
+    const el = $("log");
+    el.textContent = "";
+    if (!rows.length) { el.textContent = "No events yet."; return; }
+    rows.forEach(r => {
+      const d = document.createElement("div");
+      d.className = "lg";
+      d.textContent = new Date(r.ts).toLocaleString() + " — " + (LBL[r.type] || r.type) + (r.detail ? " (" + r.detail + ")" : "");
+      if (r.url) {
+        const a = document.createElement("a");
+        a.href = r.url; a.target = "_blank"; a.rel = "noopener"; a.textContent = " [photo]"; a.style.marginLeft = "4px";
+        d.appendChild(a);
+      }
+      el.appendChild(d);
+    });
   }
 
   firebase.auth().onAuthStateChanged(u => {
@@ -88,9 +196,25 @@
     $("msg").textContent = "";
     offs.forEach(f => f()); offs = []; clearInterval(tm);
     if (u) {
-      const c = cmdRef.on("value", s => { cmd = s.val() === true; render(); });
-      const p = statRef.on("value", s => { pc = null; s.forEach(ch => { pc = ch.val(); return true; }); render(); });
-      offs.push(() => cmdRef.off("value", c), () => statRef.off("value", p));
+      const a = db.ref("pc/lock"), b = db.ref("pcx/status"), c = db.ref("pc/timer"), d = db.ref("pcx/log").limitToLast(25);
+      const e = db.ref("pcx/live"), f = db.ref("pcx/snapshot");
+      const fa = a.on("value", s => { cmd = s.val() === true; render(); }, fail);
+      const fb = b.on("value", s => { pc = null; s.forEach(ch => { pc = ch.val(); return true; }); render(); }, fail);
+      const fc = c.on("value", s => { timer = s.val(); render(); }, fail);
+      const fd = d.on("value", renderLog, fail);
+      const fe = e.on("value", s => {
+        let v = null; s.forEach(ch => { v = ch.val(); return true; });
+        if (v) { $("camimg").src = v.url; $("camupdated").textContent = "Updated " + new Date(v.ts).toLocaleTimeString(); }
+      }, fail);
+      const ff = f.on("value", s => {
+        let v = null; s.forEach(ch => { v = ch.val(); return true; });
+        $("lastsnap").innerHTML = v
+          ? ("Last photo (" + v.reason + ", " + new Date(v.ts).toLocaleTimeString() + "): "
+             + '<a href="' + v.url + '" target="_blank" rel="noopener">open</a>')
+          : "No photo yet.";
+      }, fail);
+      offs.push(() => a.off("value", fa), () => b.off("value", fb), () => c.off("value", fc), () => d.off("value", fd),
+                () => e.off("value", fe), () => f.off("value", ff));
       tm = setInterval(render, 5000);
     }
   });
