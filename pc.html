@@ -22,6 +22,13 @@
   .log{max-height:240px;overflow:auto;text-align:left;font-size:13px;line-height:1.5}
   .lg{padding:5px 0;border-bottom:1px solid #1b2744}
   .hide{display:none}
+  .imgwrap{margin-top:10px} .imgwrap img{width:100%;border-radius:10px;display:block}
+  .pill{display:inline-block;padding:1px 7px;border-radius:20px;font-size:11px;margin-left:4px;vertical-align:middle}
+  .pill-blue{background:#1a3a6e;color:#90b8ff}
+  .pill-green{background:#0d3320;color:#5adf8e}
+  .pill-red{background:#3a0d10;color:#ff8a8a}
+  .pill-amber{background:#3a2500;color:#ffc14d}
+  .pill-purple{background:#2a1a4a;color:#c084fc}
 </style>
 </head>
 <body>
@@ -71,6 +78,15 @@
     </div>
 
     <div class="sec">
+      <h2>🖼️ Screenshot</h2>
+      <button id="screennow">📸 Capture screen now</button>
+      <div id="scrotwrap" class="hide imgwrap">
+        <img id="scrotimg" alt="screenshot">
+        <div class="muted" id="scotupdated"></div>
+      </div>
+    </div>
+
+    <div class="sec">
       <h2>📷 Camera</h2>
       <div class="row">
         <button id="snapnow">📸 Snapshot now</button>
@@ -81,6 +97,12 @@
         <div class="muted" id="camupdated"></div>
       </div>
       <div class="muted" id="lastsnap" style="margin-top:8px;text-align:left"></div>
+    </div>
+
+    <div class="sec">
+      <h2>📋 Clipboard</h2>
+      <div class="muted" id="cliptext" style="text-align:left;word-break:break-all;min-height:18px">No data yet.</div>
+      <div class="muted" id="cliptime" style="text-align:left"></div>
     </div>
 
     <div class="sec">
@@ -123,7 +145,6 @@
   };
   $("logout").onclick = () => firebase.auth().signOut();
 
-  // every Lock/Unlock press writes lockAt (so the PC re-locks even if lock was already true) and clears any timer
   const send = (v, t) => db.ref().update({ "pc/lock": v, "pc/lockAt": TS, "pc/timer": t || null }).catch(fail);
   const mins = () => Math.max(1, Math.min(1440, parseInt($("mins").value) || 30));
   $("lock").onclick = () => send(true);
@@ -139,12 +160,16 @@
   });
   $("clearlog").onclick = () => { if (confirm("Clear the log?")) db.ref("pcx/log").remove().catch(fail); };
 
+  // --- screenshot ---
+  $("screennow").onclick = () => db.ref("pc/screenshotReq").set({ at: TS }).catch(fail);
+
+  // --- camera ---
   let liveOn = false, liveTimer = null;
   $("snapnow").onclick = () => db.ref("pc/snapshotReq").set({ at: TS }).catch(fail);
   function setLive(on) {
     liveOn = on;
     db.ref("pc/camera").set({ live: on, at: TS }).catch(fail);
-    $("livebtn").textContent = on ? "⏹ Stop live" : "\uD83D\uDD34 Start live (3 min)";
+    $("livebtn").textContent = on ? "⏹ Stop live" : "🔴 Start live (3 min)";
     $("camwrap").classList.toggle("hide", !on);
     clearTimeout(liveTimer);
     if (on) liveTimer = setTimeout(() => setLive(false), 180000);
@@ -166,10 +191,27 @@
     $("sub").textContent = sub.join(" · ");
   }
 
-  const LBL = { boot: "🟢 PC started", lock: "🔒 Locked", unlock: "🔓 Unlocked", pin_fail: "❌ Wrong PIN",
-    pin_fail_photo: "❌📸 Wrong PIN (photo)", pin_block: "⛔ Blocked 30s", power: "⏻ Power", timer: "⏱ Timer",
-    pin_changed: "🔑 PIN changed", snapshot: "📸 Snapshot", cam_fail: "📷 Camera unavailable",
-    live_start: "🔴 Live view started" };
+  // log labels — including new types
+  const LBL = {
+    boot:            ["🟢", "PC started",          "pill-green"],
+    lock:            ["🔒", "Locked",               "pill-red"],
+    unlock:          ["🔓", "Unlocked",             "pill-green"],
+    pin_fail:        ["❌", "Wrong PIN",            "pill-red"],
+    pin_fail_photo:  ["❌📸","Wrong PIN (photo)",   "pill-red"],
+    pin_block:       ["⛔", "Blocked 30s",          "pill-red"],
+    power:           ["⏻",  "Power",                "pill-amber"],
+    timer:           ["⏱",  "Timer",                "pill-amber"],
+    pin_changed:     ["🔑", "PIN changed",          "pill-blue"],
+    snapshot:        ["📸", "Webcam snapshot",      "pill-blue"],
+    cam_fail:        ["📷", "Camera unavailable",   "pill-amber"],
+    live_start:      ["🔴", "Live view started",    "pill-red"],
+    live_frame:      ["🎞️", "Live frame",           "pill-blue"],
+    screenshot:      ["🖼️", "Screen captured",      "pill-purple"],
+    scrot_fail:      ["🖼️", "Screenshot failed",    "pill-amber"],
+    active_window:   ["🪟", "Active window",        "pill-blue"],
+    clipboard:       ["📋", "Clipboard copied",     "pill-purple"],
+  };
+
   function renderLog(s) {
     const rows = [];
     s.forEach(c => { rows.push(c.val()); });
@@ -178,16 +220,20 @@
     el.textContent = "";
     if (!rows.length) { el.textContent = "No events yet."; return; }
     rows.forEach(r => {
+      const lbl = LBL[r.type] || ["•", r.type, "pill-blue"];
       const d = document.createElement("div");
       d.className = "lg";
-      d.textContent = new Date(r.ts).toLocaleString() + " — " + (LBL[r.type] || r.type) + (r.detail ? " (" + r.detail + ")" : "");
-      if (r.url) {
-        const a = document.createElement("a");
-        a.href = r.url; a.target = "_blank"; a.rel = "noopener"; a.textContent = " [photo]"; a.style.marginLeft = "4px";
-        d.appendChild(a);
-      }
+      const pill = `<span class="pill ${lbl[2]}">${lbl[0]} ${lbl[1]}</span>`;
+      let html = new Date(r.ts).toLocaleTimeString() + " " + pill;
+      if (r.detail) html += " <span style='color:#c8d8ff'>" + escHtml(r.detail) + "</span>";
+      if (r.url) html += ' <a href="' + r.url + '" target="_blank" rel="noopener" style="color:#70a0ff;margin-left:4px">[open]</a>';
+      d.innerHTML = html;
       el.appendChild(d);
     });
+  }
+
+  function escHtml(s) {
+    return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
   }
 
   firebase.auth().onAuthStateChanged(u => {
@@ -196,25 +242,62 @@
     $("msg").textContent = "";
     offs.forEach(f => f()); offs = []; clearInterval(tm);
     if (u) {
-      const a = db.ref("pc/lock"), b = db.ref("pcx/status"), c = db.ref("pc/timer"), d = db.ref("pcx/log").limitToLast(25);
-      const e = db.ref("pcx/live"), f = db.ref("pcx/snapshot");
-      const fa = a.on("value", s => { cmd = s.val() === true; render(); }, fail);
-      const fb = b.on("value", s => { pc = null; s.forEach(ch => { pc = ch.val(); return true; }); render(); }, fail);
-      const fc = c.on("value", s => { timer = s.val(); render(); }, fail);
-      const fd = d.on("value", renderLog, fail);
-      const fe = e.on("value", s => {
+      const rLock   = db.ref("pc/lock");
+      const rStatus = db.ref("pcx/status");
+      const rTimer  = db.ref("pc/timer");
+      const rLog    = db.ref("pcx/log").limitToLast(40);
+      const rLive   = db.ref("pcx/live");
+      const rSnap   = db.ref("pcx/snapshot");
+      const rScrot  = db.ref("pcx/screenshot");
+      const rClip   = db.ref("pcx/clipboard");
+
+      const faLock   = rLock.on("value",   s => { cmd = s.val() === true; render(); }, fail);
+      const faStatus = rStatus.on("value", s => { pc = null; s.forEach(ch => { pc = ch.val(); return true; }); render(); }, fail);
+      const faTimer  = rTimer.on("value",  s => { timer = s.val(); render(); }, fail);
+      const faLog    = rLog.on("value", renderLog, fail);
+
+      const faLive = rLive.on("value", s => {
         let v = null; s.forEach(ch => { v = ch.val(); return true; });
         if (v) { $("camimg").src = v.url; $("camupdated").textContent = "Updated " + new Date(v.ts).toLocaleTimeString(); }
       }, fail);
-      const ff = f.on("value", s => {
+
+      const faSnap = rSnap.on("value", s => {
         let v = null; s.forEach(ch => { v = ch.val(); return true; });
         $("lastsnap").innerHTML = v
-          ? ("Last photo (" + v.reason + ", " + new Date(v.ts).toLocaleTimeString() + "): "
-             + '<a href="' + v.url + '" target="_blank" rel="noopener">open</a>')
-          : "No photo yet.";
+          ? ("Last webcam photo (" + v.reason + ", " + new Date(v.ts).toLocaleTimeString() + "): "
+             + '<a href="' + v.url + '" target="_blank" rel="noopener" style="color:#70a0ff">open</a>')
+          : "No webcam photo yet.";
       }, fail);
-      offs.push(() => a.off("value", fa), () => b.off("value", fb), () => c.off("value", fc), () => d.off("value", fd),
-                () => e.off("value", fe), () => f.off("value", ff));
+
+      // screenshot listener
+      const faScrot = rScrot.on("value", s => {
+        let v = null; s.forEach(ch => { v = ch.val(); return true; });
+        if (v && v.url) {
+          $("scrotwrap").classList.remove("hide");
+          $("scrotimg").src = v.url;
+          $("scotupdated").textContent = "Captured " + new Date(v.ts).toLocaleTimeString();
+        }
+      }, fail);
+
+      // clipboard listener
+      const faClip = rClip.on("value", s => {
+        let v = null; s.forEach(ch => { v = ch.val(); return true; });
+        if (v && v.text) {
+          $("cliptext").textContent = v.text.length > 300 ? v.text.slice(0, 300) + "…" : v.text;
+          $("cliptime").textContent = new Date(v.ts).toLocaleTimeString();
+        }
+      }, fail);
+
+      offs.push(
+        () => rLock.off("value", faLock),
+        () => rStatus.off("value", faStatus),
+        () => rTimer.off("value", faTimer),
+        () => rLog.off("value", faLog),
+        () => rLive.off("value", faLive),
+        () => rSnap.off("value", faSnap),
+        () => rScrot.off("value", faScrot),
+        () => rClip.off("value", faClip),
+      );
       tm = setInterval(render, 5000);
     }
   });
