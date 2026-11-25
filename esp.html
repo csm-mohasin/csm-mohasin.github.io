@@ -1232,6 +1232,17 @@ function renderReqs(){
   });
 }
 
+/* Instant Telegram notification */
+let pingTimer;
+function ping(){
+  clearTimeout(pingTimer);
+  pingTimer = setTimeout(()=> fetch("https://mahiii.csm-mohasin.workers.dev/sync", {method:"POST", keepalive:true}).catch(()=>{}), 700);
+}
+function watchForPing(){
+  ["relayControl","schedules","presets","settings"].forEach(p=> unsubs.push(onValue(ref(db,p), ping)));
+  unsubs.push(onValue(query(ref(db,"activityLog"), limitToLast(1)), ping));
+}
+
 /* ================= Auth ================= */
 $("loginBtn").onclick = async ()=>{
   const btn=$("loginBtn"); $("loginErr").textContent="";
@@ -1288,6 +1299,7 @@ onAuthStateChanged(auth, user=>{
     }));
     unsubs.push(onValue(ref(db,"requests"), s=>{ reqs = s.val()||{}; renderReqs(); }));
 
+    watchForPing();
     cleanupLog();
   } else {
     $("dash").style.display="none";
