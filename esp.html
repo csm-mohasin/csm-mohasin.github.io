@@ -167,6 +167,16 @@
       </div>
     </header>
 
+    <section class="panel sched" style="margin-bottom:14px">
+      <h2>Guest Permission</h2>
+      <div class="sub">ON thakle guest-ke tomar Allow er opekkha korte hobe. OFF thakle QR scan korlei access pabe.</div>
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <b id="apTxt">OFF</b>
+        <label class="switch"><input type="checkbox" id="apSw" aria-label="Guest permission"><span class="slider"></span></label>
+      </div>
+      <div id="reqList" class="list"></div>
+    </section>
+
     <div class="bar">
       <button id="allOn" class="btn on">ALL ON</button>
       <button id="allOff" class="btn off">ALL OFF</button>
@@ -796,7 +806,8 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/12.19.0/fireba
 import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut }
   from "https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js";
 import { getDatabase, ref, onValue, set, update, remove, push, query,
-         limitToLast, limitToFirst, orderByKey, startAt, endAt, get }
+         limitToLast, limitToFirst, orderByKey, startAt, endAt, get,
+         serverTimestamp }
   from "https://www.gstatic.com/firebasejs/12.19.0/firebase-database.js";
 
 const firebaseConfig = {
@@ -812,6 +823,17 @@ const firebaseConfig = {
 const app  = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db   = getDatabase(app);
+
+/* ================= Telegram (website theke instant) ================= */
+// BotFather theke bot token, @userinfobot theke chat id boshao
+const TG_BOT_TOKEN = "YOUR_BOT_TOKEN";
+const TG_CHAT_ID   = "YOUR_CHAT_ID";
+function tgEnabled(){ return !TG_BOT_TOKEN.startsWith("YOUR") && !TG_CHAT_ID.startsWith("YOUR"); }
+function sendTelegram(text){
+  if(!tgEnabled()) return;
+  const url = `https://api.telegram.org/bot${TG_BOT_TOKEN}/sendMessage?chat_id=${TG_CHAT_ID}&text=${encodeURIComponent(text)}`;
+  fetch(url).catch(()=>{});   // fail silently, dashboard block hobe na
+}
 
 const KEYS = ["relay1","relay2","relay3","relay4"];
 const MAX_SLOTS = 20;           // firmware-er MAX_SCHED er sathe mile thakte hobe
@@ -849,12 +871,15 @@ KEYS.forEach((k,i)=>{
 grid.addEventListener("change", e=>{
   const cb = e.target.closest("input[data-k]");
   if(!cb) return;
+  const idx = KEYS.indexOf(cb.dataset.k) + 1;
   set(ref(db, "relayControl/"+cb.dataset.k), cb.checked).catch(showErr);   // Boolean
+  sendTelegram(`Relay ${idx} ${cb.checked ? "ON" : "OFF"} (Website)`);      // instant, ESP-er opekkha kore na
 });
 
 function setAll(v){
   const o = {}; KEYS.forEach(k=>o[k]=v);
   update(ref(db,"relayControl"), o).catch(showErr);
+  sendTelegram(`Sob relay ${v ? "ON" : "OFF"} kora holo (Website)`);
 }
 $("allOn").onclick  = ()=>setAll(true);
 $("allOff").onclick = ()=>setAll(false);
@@ -1113,7 +1138,10 @@ async function startPreset(p){
   try{
     // age ESP-ke shomoy-er schedule dei, tarpor (dorkar hole) ekhon-er command
     await set(ref(db, "schedules/s"+slot), `${p.relay},${finalOn ? 1 : 0},${t},p,0,0`);
-    if(p.kind === "now") await set(ref(db, "relayControl/relay"+p.relay), p.action);
+    if(p.kind === "now") {
+      await set(ref(db, "relayControl/relay"+p.relay), p.action);
+      sendTelegram(`Relay ${p.relay} ${p.action ? "ON" : "OFF"} (Preset: ${p.name})`);
+    }
   }catch(e){ showErr(e); }
 }
 
@@ -1180,6 +1208,30 @@ onValue(ref(db,".info/connected"), snap=>{
   $("connText").textContent = ok ? "Connected" : "Offline";
 });
 
+/* ================= Guest permission ================= */
+let reqs = {}, timeOffset = 0;
+onValue(ref(db,".info/serverTimeOffset"), s=> timeOffset = s.val() || 0);
+$("apSw").onchange = e => set(ref(db,"settings/approval"), e.target.checked).catch(showErr);
+
+function renderReqs(){
+  const box = $("reqList"); box.textContent = "";
+  const min = Date.now() + timeOffset - 5*60000;
+  Object.entries(reqs).filter(([,r])=> !r.status && r.t > min).forEach(([id,r])=>{
+    const row = document.createElement("div");
+    row.style.cssText = "display:flex;gap:8px;align-items:center;margin-top:10px";
+    const name = document.createElement("b");
+    name.textContent = "Guest code: " + r.code; name.style.flex = "1";
+    row.append(name);
+    [["allow","Allow","btn on"],["deny","Deny","btn off"]].forEach(([status,label,cls])=>{
+      const b = document.createElement("button");
+      b.className = cls; b.textContent = label; b.style.cssText = "flex:none;padding:8px 16px";
+      b.onclick = ()=> update(ref(db,"requests/"+id), {status, at:serverTimestamp()}).catch(showErr);
+      row.append(b);
+    });
+    box.append(row);
+  });
+}
+
 /* ================= Auth ================= */
 $("loginBtn").onclick = async ()=>{
   const btn=$("loginBtn"); $("loginErr").textContent="";
@@ -1229,6 +1281,12 @@ onAuthStateChanged(auth, user=>{
     }));
 
     unsubs.push(onValue(ref(db,"deviceInfo"), s=>{ dev = s.val()||{}; renderDev(); }));
+
+    unsubs.push(onValue(ref(db,"settings/approval"), s=>{
+      const on = s.val() === true;
+      $("apSw").checked = on; $("apTxt").textContent = on ? "ON" : "OFF";
+    }));
+    unsubs.push(onValue(ref(db,"requests"), s=>{ reqs = s.val()||{}; renderReqs(); }));
 
     cleanupLog();
   } else {
